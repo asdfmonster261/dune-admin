@@ -1046,3 +1046,24 @@ body {
 .job-row.status-preview-skipped .job-title {
   color: var(--warn);
 }
+
+/* ── Placeholder phase plans ─────────────────────────────────────────── */
+
+.phase-plan {
+  text-align: left;
+  max-width: 540px;
+  margin: 14px auto 0;
+  padding-left: 18px;
+  color: var(--text-dim);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.phase-plan code {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  padding: 0 4px;
+  font-family: var(--mono);
+  font-size: 11px;
+}

@@ -8,6 +8,10 @@ import AuditTab from './tabs/AuditTab'
 import AdminActionsTab from './tabs/AdminActionsTab'
 import SettingsTab from './tabs/SettingsTab'
 import OpsTab from './tabs/OpsTab'
+import StorageTab from './tabs/StorageTab'
+import BuildingTab from './tabs/BuildingTab'
+import MapTab from './tabs/MapTab'
+import ExchangeTab from './tabs/ExchangeTab'
 
 type TabId =
   | 'overview'
@@ -18,7 +22,10 @@ type TabId =
   | 'admin'
   | 'settings'
   | 'ops'
-  | 'niche'
+  | 'storage'
+  | 'building'
+  | 'map'
+  | 'exchange'
 
 type Tab = { id: TabId; label: string; phase: number; description: string }
 
@@ -73,11 +80,28 @@ const TABS: Tab[] = [
     description: 'Schedule announcements and restarts with player handoff.',
   },
   {
-    id: 'niche',
-    label: 'Niche',
+    id: 'storage',
+    label: 'Storage',
     phase: 8,
-    description:
-      'Hagga POI map, Deep Desert observations, server-side storage, blueprints, bases, exchange.',
+    description: 'Browse server-side storage containers (Spicefield depots, exchanges, caches); give items.',
+  },
+  {
+    id: 'building',
+    label: 'Building',
+    phase: 9,
+    description: 'Player-built content: vehicle backups, base backups, blueprint export/import.',
+  },
+  {
+    id: 'map',
+    label: 'Map',
+    phase: 10,
+    description: 'Hagga Basin POI map + Deep Desert observation overlay.',
+  },
+  {
+    id: 'exchange',
+    label: 'Exchange',
+    phase: 11,
+    description: 'Browse exchange orders, manage artificial economy bots (buyer/seller/populator).',
   },
 ]
 
@@ -150,13 +174,10 @@ export default function App() {
         {active === 'admin' && <AdminActionsTab />}
         {active === 'settings' && <SettingsTab />}
         {active === 'ops' && <OpsTab />}
-        {!['overview', 'players', 'database', 'logs', 'audit', 'admin', 'settings', 'ops'].includes(active) && (
-          <div className="placeholder">
-            <span className="phase-chip">Phase {tab.phase}</span>
-            <h2>Not built yet</h2>
-            <p>This tab lands in its corresponding phase.</p>
-          </div>
-        )}
+        {active === 'storage' && <StorageTab />}
+        {active === 'building' && <BuildingTab />}
+        {active === 'map' && <MapTab />}
+        {active === 'exchange' && <ExchangeTab />}
       </main>
     </>
   )
