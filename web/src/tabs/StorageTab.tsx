@@ -16,6 +16,11 @@ type StorageRow = {
   owner_actor_class: string | null
   owner_player_name: string | null
   owner_item_template: string | null
+  // Set when this inventory is a sub-inventory of an item that lives in a
+  // player's slot (e.g. a MiningTool inside Bing's BackpackInventory). The
+  // backend chains one hop up the parent chain; owner_player_name is
+  // already COALESCEd with this so the row groups under the right player.
+  root_player_name: string | null
 }
 
 type StorageDetail = {
@@ -217,7 +222,7 @@ export default function StorageTab() {
           <span className="split-row-name">
             {g.name}
             {g.sub && <span style={{ opacity: 0.6 }}> · {g.sub}</span>}
-            <span style={{ opacity: 0.7 }}> · {r.component_name || typeLabel(r.inventory_type).text}</span>
+            <span style={{ opacity: 0.7 }}> · {r.component_name || r.owner_item_template || typeLabel(r.inventory_type).text}</span>
           </span>
           <span className="split-row-meta mono">
             {r.item_count}/{cap(r.max_item_count)}
@@ -252,7 +257,7 @@ export default function StorageTab() {
             style={{ paddingLeft: indent + 28 }}
           >
             <span className="split-row-name">
-              {r.component_name || typeLabel(r.inventory_type).text}
+              {r.component_name || r.owner_item_template || typeLabel(r.inventory_type).text}
             </span>
             <span className="split-row-meta mono">
               {r.item_count}/{cap(r.max_item_count)}

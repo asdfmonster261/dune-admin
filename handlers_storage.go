@@ -62,7 +62,7 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(ps.character_name ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
 					len(args), len(args), len(args)))
 		}
 	}
@@ -74,9 +74,12 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 
 	// Owner labelling: most inventories anchor to an actor; that actor's
 	// owner_account_id points back at dune.accounts, which is what
-	// player_state joins through. So character_name is available even when
-	// the inventory is on a player's pawn, a vehicle they own, or a
-	// container they placed — none of which equal player_controller_id.
+	// player_state joins through. Item-anchored inventories (a weapon's
+	// mod slots, a mining tool's storage, a container item) follow a
+	// chain — the item lives inside SOME inventory, which usually
+	// belongs to a player actor. We chase one hop up the chain
+	// (parent_item.inventory_id → that inventory's actor → that actor's
+	// player) and COALESCE so the root player surfaces in the sidebar.
 	sql := fmt.Sprintf(`
 		SELECT i.id,
 		       i.inventory_type,
@@ -88,14 +91,18 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
-		       a.class                          AS owner_actor_class,
-		       ps.character_name                AS owner_player_name,
-		       parent_item.template_id          AS owner_item_template
+		       COALESCE(a.class, root_actor.class)              AS owner_actor_class,
+		       COALESCE(ps.character_name, root_ps.character_name) AS owner_player_name,
+		       parent_item.template_id                          AS owner_item_template,
+		       root_ps.character_name                           AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
 		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
-		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
+		LEFT JOIN dune.items parent_item       ON parent_item.id = i.item_id
+		LEFT JOIN dune.inventories root_inv    ON root_inv.id = parent_item.inventory_id
+		LEFT JOIN dune.actors root_actor       ON root_actor.id = root_inv.actor_id
+		LEFT JOIN dune.player_state root_ps    ON root_ps.account_id = root_actor.owner_account_id
 		%s
 		ORDER BY i.id DESC
 		LIMIT $1
@@ -159,14 +166,18 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.item_id,
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
-		       a.class                 AS owner_actor_class,
-		       ps.character_name       AS owner_player_name,
-		       parent_item.template_id AS owner_item_template
+		       COALESCE(a.class, root_actor.class)              AS owner_actor_class,
+		       COALESCE(ps.character_name, root_ps.character_name) AS owner_player_name,
+		       parent_item.template_id                          AS owner_item_template,
+		       root_ps.character_name                           AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a        ON a.id = i.actor_id
 		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
-		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
+		LEFT JOIN dune.items parent_item       ON parent_item.id = i.item_id
+		LEFT JOIN dune.inventories root_inv    ON root_inv.id = parent_item.inventory_id
+		LEFT JOIN dune.actors root_actor       ON root_actor.id = root_inv.actor_id
+		LEFT JOIN dune.player_state root_ps    ON root_ps.account_id = root_actor.owner_account_id
 		WHERE i.id = $1
 	`, id)
 	if err != nil {
