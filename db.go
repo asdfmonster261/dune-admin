@@ -23,7 +23,9 @@ func queryAll(ctx context.Context, pool *pgxpool.Pool, sql string, args ...any) 
 		cols[i] = string(d.Name)
 	}
 
-	var out []map[string]any
+	// Always return a non-nil slice so json.Marshal renders as [] rather
+	// than null; frontend code does .map() on the result without guards.
+	out := make([]map[string]any, 0)
 	for rows.Next() {
 		vals, err := rows.Values()
 		if err != nil {
