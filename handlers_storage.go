@@ -62,7 +62,7 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
 					len(args), len(args), len(args)))
 		}
 	}
@@ -72,14 +72,24 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		where = "WHERE " + strings.Join(conds, " AND ")
 	}
 
-	// Owner labelling: most inventories anchor to an actor; that actor's
-	// owner_account_id points back at dune.accounts, which is what
-	// player_state joins through. Item-anchored inventories (a weapon's
-	// mod slots, a mining tool's storage, a container item) follow a
-	// chain — the item lives inside SOME inventory, which usually
-	// belongs to a player actor. We chase one hop up the chain
-	// (parent_item.inventory_id → that inventory's actor → that actor's
-	// player) and COALESCE so the root player surfaces in the sidebar.
+	// Owner labelling: four chains, in priority order.
+	//   1. Direct: i.actor_id → actors.owner_account_id → player_state.
+	//      Works for player character / vehicle / pawn actors that
+	//      actually carry owner_account_id (only player chars do).
+	//   2. Item-anchored: inv → item → parent_inv → parent_actor → player.
+	//      Surfaces the root owner of a tool's sub-inventory, a weapon's
+	//      mod slots, etc. (parent_item.template_id is also exposed so
+	//      the sidebar can render 'MiningTool_1h_Standard · 0/8' inside
+	//      that player's group.)
+	//   3. Vehicle-module: inv → module → vehicle → owner. Vehicle
+	//      ownership doesn't flow through actors.owner_account_id, so we
+	//      chase the vehicle through permission_actor_rank too.
+	//   4. Permission: i.actor_id → permission_actor_rank.player_id →
+	//      player controller actor → owner_account_id. Catches vehicles,
+	//      placeables (totems, etc.), and any other actor a player owns
+	//      via the build/permission system rather than via being the
+	//      character actor itself. rank=1 filter keeps it to primary
+	//      owners (guild members at lower ranks aren't surfaced).
 	sql := fmt.Sprintf(`
 		SELECT i.id,
 		       i.inventory_type,
@@ -92,9 +102,9 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
 		       COALESCE(a.class, root_actor.class, vehicle_actor.class)        AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name) AS owner_player_name,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS owner_player_name,
 		       parent_item.template_id                                          AS owner_item_template,
-		       COALESCE(root_ps.character_name, vehicle_ps.character_name)     AS root_player_name
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
@@ -104,10 +114,21 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN dune.inventories root_inv    ON root_inv.id = parent_item.inventory_id
 		LEFT JOIN dune.actors root_actor       ON root_actor.id = root_inv.actor_id
 		LEFT JOIN dune.player_state root_ps    ON root_ps.account_id = root_actor.owner_account_id
-		-- Vehicle-module chain: inv → module → vehicle (which IS an actor) → player.
+		-- Vehicle-module chain: inv → module → vehicle → permission → player.
 		LEFT JOIN dune.vehicle_modules vmod    ON vmod.id = i.vehicle_module_id
 		LEFT JOIN dune.actors vehicle_actor    ON vehicle_actor.id = vmod.vehicle_id
-		LEFT JOIN dune.player_state vehicle_ps ON vehicle_ps.account_id = vehicle_actor.owner_account_id
+		LEFT JOIN dune.permission_actor_rank vpar
+		       ON vpar.permission_actor_id = vmod.vehicle_id AND vpar.rank = 1
+		LEFT JOIN dune.actors vehicle_owner    ON vehicle_owner.id = vpar.player_id
+		LEFT JOIN dune.player_state vehicle_ps
+		       ON vehicle_ps.account_id = COALESCE(vehicle_actor.owner_account_id, vehicle_owner.owner_account_id)
+		-- Permission chain: inv's actor → permission_actor_rank → player.
+		-- Covers any actor whose ownership flows through the permission
+		-- system rather than owner_account_id (vehicles, placeables, …).
+		LEFT JOIN dune.permission_actor_rank par
+		       ON par.permission_actor_id = i.actor_id AND par.rank = 1
+		LEFT JOIN dune.actors perm_actor       ON perm_actor.id = par.player_id
+		LEFT JOIN dune.player_state perm_ps    ON perm_ps.account_id = perm_actor.owner_account_id
 		%s
 		ORDER BY i.id DESC
 		LIMIT $1
@@ -171,10 +192,10 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.item_id,
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
-		       COALESCE(a.class, root_actor.class)              AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name) AS owner_player_name,
-		       parent_item.template_id                          AS owner_item_template,
-		       root_ps.character_name                           AS root_player_name
+		       COALESCE(a.class, root_actor.class, vehicle_actor.class)              AS owner_actor_class,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS owner_player_name,
+		       parent_item.template_id                                                AS owner_item_template,
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a        ON a.id = i.actor_id
@@ -183,6 +204,17 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		LEFT JOIN dune.inventories root_inv    ON root_inv.id = parent_item.inventory_id
 		LEFT JOIN dune.actors root_actor       ON root_actor.id = root_inv.actor_id
 		LEFT JOIN dune.player_state root_ps    ON root_ps.account_id = root_actor.owner_account_id
+		LEFT JOIN dune.vehicle_modules vmod    ON vmod.id = i.vehicle_module_id
+		LEFT JOIN dune.actors vehicle_actor    ON vehicle_actor.id = vmod.vehicle_id
+		LEFT JOIN dune.permission_actor_rank vpar
+		       ON vpar.permission_actor_id = vmod.vehicle_id AND vpar.rank = 1
+		LEFT JOIN dune.actors vehicle_owner    ON vehicle_owner.id = vpar.player_id
+		LEFT JOIN dune.player_state vehicle_ps
+		       ON vehicle_ps.account_id = COALESCE(vehicle_actor.owner_account_id, vehicle_owner.owner_account_id)
+		LEFT JOIN dune.permission_actor_rank par
+		       ON par.permission_actor_id = i.actor_id AND par.rank = 1
+		LEFT JOIN dune.actors perm_actor       ON perm_actor.id = par.player_id
+		LEFT JOIN dune.player_state perm_ps    ON perm_ps.account_id = perm_actor.owner_account_id
 		WHERE i.id = $1
 	`, id)
 	if err != nil {
