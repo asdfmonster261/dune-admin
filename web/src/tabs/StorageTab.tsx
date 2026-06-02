@@ -124,17 +124,61 @@ function labelForRow(row: StorageRow): string {
   return `orphan inv #${row.id}`
 }
 
-// Compact meta string for the row: 't<type> · <count>/<max>'.
-// Unlimited inventories (max_item_count = -1) render as ∞.
+// Empirically-derived inventory_type → label mapping. Built from observing
+// what kind of items each type holds for active player characters:
+//
+//   - type 0   "main bag" → mixed items (ore, components, ammo, …)
+//   - type 1   "worn outfit" → equipped clothing + PowerPack (helmet, top,
+//              bottom, boots, gloves are all present)
+//   - type 14  "emote library" → 11 general emotes (Bow, Clap, Sit, …)
+//   - type 15  "equipped tools" → 8-slot loadout of utility items
+//              (LongRifle, MiningTool, healthpack, knife, beacon)
+//   - type 27  "emote radial" → 8-slot quick emote menu (Thumper actions,
+//              ScanHorizon, WatershipperSalute)
+//   - type 29  "contracts" → ContractItem
+//   - type 30  "player bank" → 500 cap, 30 000 volume; the big vault
+//   - type 12, 20, 25, 31, 32, 33 → unknown (all empty in current data)
+//
+// The component_name_hash column gives a different per-component-class
+// identifier that we haven't reversed yet (Funcom uses a custom hash
+// function — none of the standard UE FCrc/FNV/Murmur/CityHash variants
+// produce the observed values from the obvious candidate names). When we
+// finish the binary RE we can swap this to label by component class.
+const TYPE_LABELS: Record<number, { label: string; confidence: 'high' | 'medium' | 'low' }> = {
+  0: { label: 'Backpack', confidence: 'high' },
+  1: { label: 'Worn outfit', confidence: 'high' },
+  12: { label: 'Ability shortcuts?', confidence: 'low' },
+  14: { label: 'Emote library', confidence: 'high' },
+  15: { label: 'Equipped tools', confidence: 'high' },
+  20: { label: 'slot 20', confidence: 'low' },
+  25: { label: 'slot 25', confidence: 'low' },
+  27: { label: 'Emote radial', confidence: 'high' },
+  29: { label: 'Contracts', confidence: 'high' },
+  30: { label: 'Player bank', confidence: 'high' },
+  31: { label: 'slot 31', confidence: 'low' },
+  32: { label: 'slot 32', confidence: 'low' },
+  33: { label: 'slot 33', confidence: 'low' },
+}
+
+function typeLabel(t: number | null): { text: string; confident: boolean } {
+  if (t === null) return { text: '?', confident: false }
+  const e = TYPE_LABELS[t]
+  if (e) return { text: e.label, confident: e.confidence === 'high' }
+  return { text: `t${t}`, confident: false }
+}
+
+// Compact meta string for the row: '<label> · <count>/<max>'.
+// Falls back to 't<type> · <count>/<max>' for unknown / low-confidence
+// types. Unlimited inventories (max_item_count = -1) render as ∞.
 function metaSummary(row: StorageRow): string {
-  const t = row.inventory_type === null ? '?' : row.inventory_type
+  const t = typeLabel(row.inventory_type)
   const max =
     row.max_item_count === null
       ? '?'
       : row.max_item_count < 0
         ? '∞'
         : String(row.max_item_count)
-  return `t${t} · ${row.item_count}/${max}`
+  return `${t.text} · ${row.item_count}/${max}`
 }
 
 function metaTooltip(row: StorageRow): string {
