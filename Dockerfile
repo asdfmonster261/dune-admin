@@ -13,7 +13,7 @@ COPY web/ ./
 RUN npm run build
 
 
-FROM golang:1.23 AS go-builder
+FROM golang:1.25 AS go-builder
 
 WORKDIR /build
 COPY go.mod go.sum* ./

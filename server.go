@@ -17,6 +17,19 @@ func registerRoutes(mux *http.ServeMux) {
 	// Phase 2 — overview
 	mux.HandleFunc("GET /api/v1/overview/snapshot", handleOverviewSnapshot)
 
+	// Phase 3 — database
+	mux.HandleFunc("GET /api/v1/database/tables", handleDBTables)
+	mux.HandleFunc("GET /api/v1/database/describe", handleDBDescribe)
+	mux.HandleFunc("GET /api/v1/database/sample", handleDBSample)
+	mux.HandleFunc("POST /api/v1/database/sql", handleDBSQL)
+
+	// Phase 3 — players
+	mux.HandleFunc("GET /api/v1/players", handleListPlayers)
+	mux.HandleFunc("GET /api/v1/players/{id}", handleGetPlayer)
+	mux.HandleFunc("POST /api/v1/players/give-item", handleGiveItem)
+	mux.HandleFunc("POST /api/v1/players/give-currency", handleGiveCurrency)
+	mux.HandleFunc("POST /api/v1/players/set-faction-rep", handleSetFactionRep)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)

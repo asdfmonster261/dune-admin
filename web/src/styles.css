@@ -439,3 +439,350 @@ body {
   font-variant-numeric: tabular-nums;
   font-weight: 600;
 }
+
+/* ── Split layout (used by Players + Database tabs) ──────────────────── */
+
+.split {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 12px;
+  min-height: 0;
+}
+
+.split-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+}
+
+.split-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  overflow: auto;
+  min-height: 0;
+  max-height: 70vh;
+}
+
+.split-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.split-row:hover {
+  background: var(--surface-2);
+}
+
+.split-row.active {
+  background: var(--surface-3);
+  color: var(--accent);
+}
+
+.split-row-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.split-row-meta {
+  font-size: 11px;
+  color: var(--text-fade);
+}
+
+.split-main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.search {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 7px 10px;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.search:focus {
+  border-color: var(--line-strong);
+}
+
+/* ── Subtabs (under a table or section) ──────────────────────────────── */
+
+.subtabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+}
+
+.subtab {
+  background: transparent;
+  border: 0;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  color: var(--text-dim);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+}
+
+.subtab:hover {
+  color: var(--text);
+}
+
+.subtab.active {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.subtab-name {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-fade);
+}
+
+/* ── Buttons / inputs ────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--line-strong);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn.primary {
+  background: var(--accent);
+  color: var(--accent-fg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.btn.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.input {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 6px 10px;
+  font: inherit;
+  font-family: var(--mono);
+  font-size: 12px;
+  outline: none;
+  min-width: 0;
+}
+
+.input:focus {
+  border-color: var(--line-strong);
+}
+
+.input.small {
+  width: 100px;
+}
+
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--text-fade);
+}
+
+.alert {
+  background: rgba(248, 113, 113, 0.08);
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: var(--danger);
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.alert.inline {
+  display: inline-block;
+  margin: 0 0 0 8px;
+  padding: 4px 8px;
+}
+
+.dim {
+  color: var(--text-fade);
+}
+
+.online-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.5);
+}
+
+/* ── SQL textarea ────────────────────────────────────────────────────── */
+
+.sql-input {
+  width: 100%;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 13px;
+  padding: 10px;
+  resize: vertical;
+  outline: none;
+}
+
+.sql-input:focus {
+  border-color: var(--line-strong);
+}
+
+/* ── Result grid (tables) ────────────────────────────────────────────── */
+
+.grid-wrap {
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  max-height: 60vh;
+}
+
+.grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+.grid th,
+.grid td {
+  text-align: left;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+
+.grid th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-weight: 600;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+}
+
+.grid td {
+  color: var(--text);
+}
+
+.grid td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.grid.compact th,
+.grid.compact td {
+  padding: 3px 8px;
+}
+
+.grid-wrap.bare {
+  border: 0;
+}
+
+/* ── Player detail header ────────────────────────────────────────────── */
+
+.player-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.player-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.01em;
+}
+
+.player-meta {
+  font-size: 12px;
+  color: var(--text-fade);
+  margin-top: 4px;
+}
+
+.player-status {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 900px) {
+  .two-col {
+    grid-template-columns: 1fr;
+  }
+  .split {
+    grid-template-columns: 1fr;
+  }
+}

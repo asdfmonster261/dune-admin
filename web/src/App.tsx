@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { api, type Status } from './api'
 import OverviewTab from './tabs/OverviewTab'
+import PlayersTab from './tabs/PlayersTab'
+import DatabaseTab from './tabs/DatabaseTab'
 
 type TabId =
   | 'overview'
@@ -135,9 +137,10 @@ export default function App() {
         <h1 className="section-title">{tab.label}</h1>
         <p className="section-sub">{tab.description}</p>
 
-        {active === 'overview' ? (
-          <OverviewTab />
-        ) : (
+        {active === 'overview' && <OverviewTab />}
+        {active === 'players' && <PlayersTab />}
+        {active === 'database' && <DatabaseTab />}
+        {active !== 'overview' && active !== 'players' && active !== 'database' && (
           <div className="placeholder">
             <span className="phase-chip">Phase {tab.phase}</span>
             <h2>Not built yet</h2>
