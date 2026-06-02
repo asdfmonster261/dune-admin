@@ -84,8 +84,8 @@ export default function StorageTab() {
               onClick={() => setSelected(row.id)}
             >
               <span className="split-row-name">{labelForRow(row)}</span>
-              <span className="split-row-meta mono">
-                {row.item_count}/{row.max_item_count ?? '∞'}
+              <span className="split-row-meta mono" title={metaTooltip(row)}>
+                {metaSummary(row)}
               </span>
             </button>
           ))}
@@ -122,6 +122,29 @@ function labelForRow(row: StorageRow): string {
   }
   if (row.actor_id) return `actor #${row.actor_id} (inv ${row.id})`
   return `orphan inv #${row.id}`
+}
+
+// Compact meta string for the row: 't<type> · <count>/<max>'.
+// Unlimited inventories (max_item_count = -1) render as ∞.
+function metaSummary(row: StorageRow): string {
+  const t = row.inventory_type === null ? '?' : row.inventory_type
+  const max =
+    row.max_item_count === null
+      ? '?'
+      : row.max_item_count < 0
+        ? '∞'
+        : String(row.max_item_count)
+  return `t${t} · ${row.item_count}/${max}`
+}
+
+function metaTooltip(row: StorageRow): string {
+  const parts = [
+    `inventory_type=${row.inventory_type ?? '?'}`,
+    `items=${row.item_count}`,
+    `max_item_count=${row.max_item_count ?? '?'}`,
+    `max_item_volume=${row.max_item_volume ?? '?'}`,
+  ]
+  return parts.join(' · ')
 }
 
 // Trim Unreal class paths like
