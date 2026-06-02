@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -180,6 +181,28 @@ func toInt64(v any) int64 {
 	return 0
 }
 
+// addItemToInventory is the shared insert used by both Players and Storage
+// give-item flows. Picks the next free position_index in the target
+// inventory and inserts with stats='{}' so the NOT-NULL jsonb constraint
+// is satisfied (the game accepts an empty object as the neutral value).
+func addItemToInventory(ctx context.Context, inventoryID int64, templateID string, stackSize int) error {
+	return txOne(ctx, globalDB, func(tx pgx.Tx) error {
+		var nextPos int64
+		if err := tx.QueryRow(ctx,
+			"SELECT COALESCE(MAX(position_index), -1) + 1 FROM dune.items WHERE inventory_id = $1",
+			inventoryID).Scan(&nextPos); err != nil {
+			return err
+		}
+		_, err := tx.Exec(ctx, `
+			INSERT INTO dune.items
+				(inventory_id, template_id, stack_size, position_index, stats)
+			VALUES
+				($1, $2, $3, $4, '{}'::jsonb)
+		`, inventoryID, templateID, stackSize, nextPos)
+		return err
+	})
+}
+
 func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 	if globalDB == nil {
 		jsonErr(w, fmt.Errorf("db not connected"), 503)
@@ -203,26 +226,7 @@ func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 		"template_id":  req.TemplateID,
 		"stack_size":   req.StackSize,
 	}
-	err := txOne(r.Context(), globalDB, func(tx pgx.Tx) error {
-		// Find next free position_index in this inventory.
-		var nextPos int64
-		if err := tx.QueryRow(r.Context(),
-			"SELECT COALESCE(MAX(position_index), -1) + 1 FROM dune.items WHERE inventory_id = $1",
-			req.InventoryID).Scan(&nextPos); err != nil {
-			return err
-		}
-		// stats is jsonb NOT NULL with no default; an empty object is the
-		// neutral value the game accepts. acquisition_time + quality_level
-		// have schema defaults, so omitting them is fine.
-		_, err := tx.Exec(r.Context(), `
-			INSERT INTO dune.items
-				(inventory_id, template_id, stack_size, position_index, stats)
-			VALUES
-				($1, $2, $3, $4, '{}'::jsonb)
-		`, req.InventoryID, req.TemplateID, req.StackSize, nextPos)
-		return err
-	})
-	if err != nil {
+	if err := addItemToInventory(r.Context(), req.InventoryID, req.TemplateID, req.StackSize); err != nil {
 		auditErr(r, "players.give-item", fields, err)
 		jsonErr(w, err, 500)
 		return

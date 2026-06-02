@@ -1,17 +1,236 @@
+import { useEffect, useState } from 'react'
+import { api } from '../api'
+
+type StorageRow = {
+  id: number
+  inventory_type: number | null
+  max_item_count: number | null
+  max_item_volume: number | null
+  actor_id: number | null
+  exchange_id: number | null
+  item_id: number | null
+  vehicle_module_id: number | null
+  item_count: number
+  owner_player_name: string | null
+  owner_item_template: string | null
+}
+
+type StorageDetail = {
+  inventory: StorageRow
+  items: Record<string, unknown>[]
+}
+
+type OwnerType = '' | 'actor' | 'exchange' | 'item' | 'vmodule' | 'orphan'
+
+const OWNER_LABELS: Record<OwnerType, string> = {
+  '': 'any',
+  actor: 'actor (player / NPC)',
+  exchange: 'exchange',
+  item: 'container item',
+  vmodule: 'vehicle module',
+  orphan: 'orphan (no owner)',
+}
+
 export default function StorageTab() {
+  const [rows, setRows] = useState<StorageRow[]>([])
+  const [filter, setFilter] = useState('')
+  const [ownerType, setOwnerType] = useState<OwnerType>('')
+  const [selected, setSelected] = useState<number | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const params = new URLSearchParams()
+      if (filter) params.set('q', filter)
+      if (ownerType) params.set('type', ownerType)
+      api
+        .get<StorageRow[]>(`/storage${params.toString() ? '?' + params : ''}`)
+        .then((r) => {
+          setRows(r || [])
+          setErr(null)
+        })
+        .catch((e) => setErr((e as Error).message))
+    }, 200)
+    return () => clearTimeout(t)
+  }, [filter, ownerType])
+
   return (
-    <div className="placeholder">
-      <span className="phase-chip">Phase 8</span>
-      <h2>Not built yet</h2>
-      <p>
-        Server-side storage containers — Spicefield depots, exchanges, and caches. The plan:
-      </p>
-      <ul className="phase-plan">
-        <li>List <code>dune.inventories</code> filtered to non-actor types (storage/exchange/cache/depot)</li>
-        <li>Click a container to see its items + capacity</li>
-        <li>Give-item form similar to the Players inventory editor</li>
-        <li>Bulk transfer between containers (later)</li>
-      </ul>
+    <div className="split">
+      <aside className="split-side">
+        <input
+          className="search"
+          placeholder="search by id, player name, container template"
+          value={filter}
+          onChange={(e) => setFilter(e.target.value)}
+        />
+        <select
+          className="input wide"
+          value={ownerType}
+          onChange={(e) => setOwnerType(e.target.value as OwnerType)}
+        >
+          {(Object.keys(OWNER_LABELS) as OwnerType[]).map((k) => (
+            <option key={k} value={k}>
+              {OWNER_LABELS[k]}
+            </option>
+          ))}
+        </select>
+        {err && <div className="alert">{err}</div>}
+        <div className="split-list">
+          {rows.map((row) => (
+            <button
+              key={row.id}
+              className={`split-row ${selected === row.id ? 'active' : ''}`}
+              onClick={() => setSelected(row.id)}
+            >
+              <span className="split-row-name">{labelForRow(row)}</span>
+              <span className="split-row-meta mono">
+                {row.item_count}/{row.max_item_count ?? '∞'}
+              </span>
+            </button>
+          ))}
+          {rows.length === 0 && <div className="hint" style={{ padding: 8 }}>no inventories match.</div>}
+        </div>
+      </aside>
+
+      <main className="split-main">
+        {selected ? (
+          <StorageDetail id={selected} />
+        ) : (
+          <div className="placeholder">
+            <p>Pick an inventory on the left to see its contents.</p>
+          </div>
+        )}
+      </main>
     </div>
+  )
+}
+
+function labelForRow(row: StorageRow): string {
+  if (row.owner_player_name) return `${row.owner_player_name} (#${row.id})`
+  if (row.owner_item_template) return `${row.owner_item_template} (#${row.id})`
+  if (row.exchange_id) return `exchange #${row.exchange_id} (inv ${row.id})`
+  if (row.vehicle_module_id) return `vmodule #${row.vehicle_module_id} (inv ${row.id})`
+  if (row.actor_id) return `actor #${row.actor_id} (inv ${row.id})`
+  return `orphan inv #${row.id}`
+}
+
+function StorageDetail({ id }: { id: number }) {
+  const [d, setD] = useState<StorageDetail | null>(null)
+  const [err, setErr] = useState<string | null>(null)
+
+  const reload = () =>
+    api
+      .get<StorageDetail>(`/storage/${id}`)
+      .then((data) => {
+        setD(data)
+        setErr(null)
+      })
+      .catch((e) => setErr((e as Error).message))
+
+  useEffect(() => {
+    reload()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id])
+
+  if (err) return <div className="alert">{err}</div>
+  if (!d) return <div className="placeholder">loading…</div>
+
+  const inv = d.inventory
+
+  return (
+    <>
+      <div className="card">
+        <div className="player-header">
+          <div>
+            <div className="player-name">{labelForRow(inv)}</div>
+            <div className="player-meta mono">
+              inventory id {inv.id} · type {inv.inventory_type ?? '?'} ·
+              max items {inv.max_item_count ?? '∞'} ·
+              max volume {inv.max_item_volume ?? '∞'}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3 className="card-title">
+          Items <span className="card-title-count">{d.items.length}</span>
+        </h3>
+        {d.items.length === 0 ? (
+          <div className="hint">empty inventory</div>
+        ) : (
+          <div className="grid-wrap">
+            <table className="grid compact">
+              <thead>
+                <tr>
+                  {Object.keys(d.items[0]).map((c) => (
+                    <th key={c}>{c}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {d.items.map((it, i) => (
+                  <tr key={i}>
+                    {Object.keys(d.items[0]).map((c) => (
+                      <td key={c} className="mono">
+                        {it[c] === null || it[c] === undefined ? '∅' : String(it[c])}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <GiveItemForm inventoryId={inv.id} onDone={reload} />
+      </div>
+    </>
+  )
+}
+
+function GiveItemForm({ inventoryId, onDone }: { inventoryId: number; onDone: () => void }) {
+  const [templateId, setTemplateId] = useState('')
+  const [stack, setStack] = useState('1')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setErr(null)
+    try {
+      await api.post(`/storage/${inventoryId}/give-item`, {
+        template_id: templateId,
+        stack_size: Number(stack),
+      })
+      onDone()
+      setTemplateId('')
+      setStack('1')
+    } catch (e) {
+      setErr((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="action-row" onSubmit={submit}>
+      <input
+        className="input"
+        placeholder="template id (e.g. SolarisCoin)"
+        value={templateId}
+        onChange={(e) => setTemplateId(e.target.value)}
+      />
+      <input
+        className="input small"
+        placeholder="stack"
+        value={stack}
+        onChange={(e) => setStack(e.target.value)}
+      />
+      <button className="btn" type="submit" disabled={busy || !templateId}>
+        Give item
+      </button>
+      {err && <span className="alert inline">{err}</span>}
+    </form>
   )
 }

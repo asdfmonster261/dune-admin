@@ -51,6 +51,11 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/v1/ops/restarts", handleOpsRestartsCreate)
 	mux.HandleFunc("DELETE /api/v1/ops/restarts/{id}", handleOpsRestartsDelete)
 
+	// Phase 8 — storage
+	mux.HandleFunc("GET /api/v1/storage", handleStorageList)
+	mux.HandleFunc("GET /api/v1/storage/{id}", handleStorageGet)
+	mux.HandleFunc("POST /api/v1/storage/{id}/give-item", handleStorageGiveItem)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)
