@@ -43,6 +43,14 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/settings", handleSettingsList)
 	mux.HandleFunc("POST /api/v1/settings", handleSettingsSave)
 
+	// Phase 7 — ops (announcements + scheduled restarts)
+	mux.HandleFunc("GET /api/v1/ops/announcements", handleOpsAnnouncementsList)
+	mux.HandleFunc("POST /api/v1/ops/announcements", handleOpsAnnouncementsCreate)
+	mux.HandleFunc("DELETE /api/v1/ops/announcements/{id}", handleOpsAnnouncementsDelete)
+	mux.HandleFunc("GET /api/v1/ops/restarts", handleOpsRestartsList)
+	mux.HandleFunc("POST /api/v1/ops/restarts", handleOpsRestartsCreate)
+	mux.HandleFunc("DELETE /api/v1/ops/restarts/{id}", handleOpsRestartsDelete)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)

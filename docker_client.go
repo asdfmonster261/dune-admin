@@ -41,6 +41,40 @@ func (d *DockerClient) streamingClient() *http.Client {
 	return &http.Client{Transport: d.hc.Transport}
 }
 
+// Start sends a container/start request. 304 = already running, treated
+// as success.
+func (d *DockerClient) Start(ctx context.Context, containerID string) error {
+	req, _ := http.NewRequestWithContext(ctx, "POST",
+		fmt.Sprintf("http://unix/containers/%s/start", containerID), nil)
+	resp, err := d.hc.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusNotModified {
+		return fmt.Errorf("docker start: %s", resp.Status)
+	}
+	return nil
+}
+
+// Stop sends SIGTERM, then SIGKILL after graceSeconds. 60 s matches the
+// game-server's stop_grace_period in our compose.
+func (d *DockerClient) Stop(ctx context.Context, containerID string, graceSeconds int) error {
+	q := url.Values{}
+	q.Set("t", fmt.Sprintf("%d", graceSeconds))
+	req, _ := http.NewRequestWithContext(ctx, "POST",
+		fmt.Sprintf("http://unix/containers/%s/stop?%s", containerID, q.Encode()), nil)
+	resp, err := d.hc.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusNoContent && resp.StatusCode != http.StatusNotModified {
+		return fmt.Errorf("docker stop: %s", resp.Status)
+	}
+	return nil
+}
+
 // LogLine is one decoded line from the docker multiplexed log stream.
 type LogLine struct {
 	Stream string // "stdout" or "stderr"

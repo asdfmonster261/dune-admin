@@ -984,3 +984,65 @@ body {
   color: var(--text-fade);
   cursor: default;
 }
+
+/* ── Ops scheduling ─────────────────────────────────────────────────── */
+
+.ops-form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.job-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.job-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.job-title {
+  font-size: 13px;
+  color: var(--text);
+}
+
+.job-sub {
+  font-size: 11px;
+  color: var(--text-fade);
+  margin-top: 2px;
+}
+
+.job-row.status-warning {
+  border-color: var(--warn);
+  background: rgba(251, 191, 36, 0.05);
+}
+
+.job-row.status-running {
+  border-color: var(--accent);
+  background: rgba(255, 123, 58, 0.05);
+}
+
+.job-row.status-done .job-title {
+  color: var(--ok);
+}
+
+.job-row.status-failed {
+  border-color: var(--danger);
+  background: rgba(248, 113, 113, 0.05);
+}
+
+.job-row.status-preview-skipped .job-title {
+  color: var(--warn);
+}

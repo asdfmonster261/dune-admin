@@ -89,9 +89,16 @@ func init() {
 func main() {
 	flag.Parse()
 
-	if err := connect(context.Background()); err != nil {
+	rootCtx, rootCancel := context.WithCancel(context.Background())
+
+	if err := connect(rootCtx); err != nil {
 		log.Printf("connect: %v — server will start anyway; use /api/v1/reconnect to retry", err)
 	}
+
+	// Background ops worker (Phase 7): polls /data/ops-state.json for
+	// scheduled announcements + restarts and executes them when their
+	// run_at has arrived.
+	startOpsWorker(rootCtx)
 
 	mux := http.NewServeMux()
 	registerRoutes(mux)
@@ -117,6 +124,7 @@ func main() {
 	<-sigCh
 
 	log.Println("shutting down...")
+	rootCancel()
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
