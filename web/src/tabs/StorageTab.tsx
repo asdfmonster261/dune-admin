@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../api'
 
 type StorageRow = {
@@ -34,12 +34,83 @@ const OWNER_LABELS: Record<OwnerType, string> = {
   orphan: 'orphan (no owner)',
 }
 
+// One group in the sidebar tree. Each group is one logical "owner"
+// (a player, an NPC actor, an exchange terminal, a container item, a
+// vehicle module, or the catch-all orphan bucket). The group's rows
+// are the inventory slots that owner has.
+type Group = {
+  key: string
+  kind: 'player' | 'npc' | 'exchange' | 'item' | 'vehicle' | 'orphan'
+  name: string
+  sub?: string
+  rows: StorageRow[]
+}
+
+const KIND_ORDER: Record<Group['kind'], number> = {
+  player: 0, npc: 1, exchange: 2, vehicle: 3, item: 4, orphan: 5,
+}
+
+function buildGroups(rows: StorageRow[]): Group[] {
+  const byKey = new Map<string, Group>()
+  for (const r of rows) {
+    let key: string, kind: Group['kind'], name: string
+    let sub: string | undefined
+    if (r.owner_player_name) {
+      key = `p:${r.owner_player_name}`
+      kind = 'player'
+      name = r.owner_player_name
+      sub = shortClass(r.owner_actor_class) || undefined
+    } else if (r.exchange_id) {
+      key = `e:${r.exchange_id}`
+      kind = 'exchange'
+      name = `Exchange #${r.exchange_id}`
+    } else if (r.item_id) {
+      key = `i:${r.item_id}`
+      kind = 'item'
+      name = r.owner_item_template || `Container item #${r.item_id}`
+      sub = `item ${r.item_id}`
+    } else if (r.actor_id) {
+      key = `n:${r.actor_id}`
+      kind = 'npc'
+      name = shortClass(r.owner_actor_class) || `Actor #${r.actor_id}`
+      sub = `#${r.actor_id}`
+    } else if (r.vehicle_module_id) {
+      key = `v:${r.vehicle_module_id}`
+      kind = 'vehicle'
+      name = `Vehicle module #${r.vehicle_module_id}`
+    } else {
+      key = 'o:orphan'
+      kind = 'orphan'
+      name = 'Orphans'
+    }
+    let g = byKey.get(key)
+    if (!g) {
+      g = { key, kind, name, sub, rows: [] }
+      byKey.set(key, g)
+    }
+    g.rows.push(r)
+  }
+  for (const g of byKey.values()) {
+    g.rows.sort((a, b) => {
+      const an = a.component_name || `t${a.inventory_type ?? '?'}`
+      const bn = b.component_name || `t${b.inventory_type ?? '?'}`
+      if (an !== bn) return an < bn ? -1 : 1
+      return a.id - b.id
+    })
+  }
+  return [...byKey.values()].sort((a, b) => {
+    if (KIND_ORDER[a.kind] !== KIND_ORDER[b.kind]) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
+    return a.name.localeCompare(b.name)
+  })
+}
+
 export default function StorageTab() {
   const [rows, setRows] = useState<StorageRow[]>([])
   const [filter, setFilter] = useState('')
   const [ownerType, setOwnerType] = useState<OwnerType>('')
   const [selected, setSelected] = useState<number | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const t = setTimeout(() => {
@@ -56,6 +127,20 @@ export default function StorageTab() {
     }, 200)
     return () => clearTimeout(t)
   }, [filter, ownerType])
+
+  const groups = useMemo(() => buildGroups(rows), [rows])
+
+  const toggle = (k: string) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(k)) next.delete(k)
+      else next.add(k)
+      return next
+    })
+  // Active search expands every group (so matches are visible immediately).
+  // The group containing the currently-selected row also stays open.
+  const isExpanded = (g: Group) =>
+    expanded.has(g.key) || filter.trim() !== '' || g.rows.some((r) => r.id === selected)
 
   return (
     <div className="split">
@@ -79,19 +164,68 @@ export default function StorageTab() {
         </select>
         {err && <div className="alert">{err}</div>}
         <div className="split-list">
-          {rows.map((row) => (
-            <button
-              key={row.id}
-              className={`split-row ${selected === row.id ? 'active' : ''}`}
-              onClick={() => setSelected(row.id)}
-            >
-              <span className="split-row-name">{labelForRow(row)}</span>
-              <span className="split-row-meta mono" title={metaTooltip(row)}>
-                {metaSummary(row)}
-              </span>
-            </button>
-          ))}
-          {rows.length === 0 && <div className="hint" style={{ padding: 8 }}>no inventories match.</div>}
+          {groups.map((g) => {
+            const single = g.rows.length === 1
+            const open = isExpanded(g)
+            const groupHasSelected = g.rows.some((r) => r.id === selected)
+            // For 1-slot groups, render flat (no expand toggle). Clicking
+            // selects the only row directly.
+            if (single) {
+              const r = g.rows[0]
+              return (
+                <button
+                  key={g.key}
+                  className={`split-row ${selected === r.id ? 'active' : ''}`}
+                  onClick={() => setSelected(r.id)}
+                  title={metaTooltip(r)}
+                >
+                  <span className="split-row-name">
+                    {g.name}
+                    {g.sub && <span style={{ opacity: 0.6 }}> · {g.sub}</span>}
+                    <span style={{ opacity: 0.7 }}> · {r.component_name || typeLabel(r.inventory_type).text}</span>
+                  </span>
+                  <span className="split-row-meta mono">
+                    {r.item_count}/{cap(r.max_item_count)}
+                  </span>
+                </button>
+              )
+            }
+            return (
+              <div key={g.key}>
+                <button
+                  className={`split-row ${groupHasSelected ? 'active' : ''}`}
+                  onClick={() => toggle(g.key)}
+                  style={{ fontWeight: 600 }}
+                >
+                  <span className="split-row-name">
+                    <span style={{ opacity: 0.6, width: 10, display: 'inline-block' }}>
+                      {open ? '▼' : '▶'}
+                    </span>
+                    {g.name}
+                    {g.sub && <span style={{ opacity: 0.6, fontWeight: 400 }}> · {g.sub}</span>}
+                  </span>
+                  <span className="split-row-meta mono">{g.rows.length} slots</span>
+                </button>
+                {open && g.rows.map((r) => (
+                  <button
+                    key={r.id}
+                    className={`split-row ${selected === r.id ? 'active' : ''}`}
+                    onClick={() => setSelected(r.id)}
+                    title={metaTooltip(r)}
+                    style={{ paddingLeft: 28 }}
+                  >
+                    <span className="split-row-name">
+                      {r.component_name || typeLabel(r.inventory_type).text}
+                    </span>
+                    <span className="split-row-meta mono">
+                      {r.item_count}/{cap(r.max_item_count)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )
+          })}
+          {groups.length === 0 && <div className="hint" style={{ padding: 8 }}>no inventories match.</div>}
         </div>
       </aside>
 
@@ -106,6 +240,13 @@ export default function StorageTab() {
       </main>
     </div>
   )
+}
+
+// Render a max-item-count for the sidebar meta cell: '?' / '∞' / N.
+function cap(n: number | null): string {
+  if (n === null) return '?'
+  if (n < 0) return '∞'
+  return String(n)
 }
 
 function labelForRow(row: StorageRow): string {
@@ -171,22 +312,6 @@ function typeLabel(t: number | null): { text: string; confident: boolean } {
   const e = TYPE_LABELS[t]
   if (e) return { text: e, confident: true }
   return { text: `t${t}`, confident: false }
-}
-
-// Compact meta string for the row: '<component>/<type> · <count>/<max>'.
-// component_name is the reverse-engineered UE subobject name
-// (BackpackInventory, PlayerBankInventory, …) for the slot on the actor.
-// inventory_type is the EInventoryType the slot was created with.
-function metaSummary(row: StorageRow): string {
-  const t = typeLabel(row.inventory_type)
-  const max =
-    row.max_item_count === null
-      ? '?'
-      : row.max_item_count < 0
-        ? '∞'
-        : String(row.max_item_count)
-  const slot = row.component_name || t.text
-  return `${slot} · ${row.item_count}/${max}`
 }
 
 function metaTooltip(row: StorageRow): string {
