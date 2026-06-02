@@ -39,6 +39,10 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/gm/catalog", handleGMCatalog)
 	mux.HandleFunc("POST /api/v1/gm/preview", handleGMPreview)
 
+	// Phase 6 — settings
+	mux.HandleFunc("GET /api/v1/settings", handleSettingsList)
+	mux.HandleFunc("POST /api/v1/settings", handleSettingsSave)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)

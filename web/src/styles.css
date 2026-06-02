@@ -929,3 +929,58 @@ body {
   max-height: 50vh;
   overflow: auto;
 }
+
+/* ── Settings ───────────────────────────────────────────────────────── */
+
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.setting-row.dirty {
+  border-color: var(--accent);
+  background: rgba(255, 123, 58, 0.04);
+}
+
+.setting-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.needs-restart {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--warn);
+  background: rgba(251, 191, 36, 0.08);
+  padding: 1px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.02em;
+}
+
+.setting-desc {
+  font-size: 11px;
+  color: var(--text-fade);
+  margin-top: 2px;
+}
+
+.setting-row .input[readonly] {
+  background: var(--surface-1);
+  color: var(--text-fade);
+  cursor: default;
+}
