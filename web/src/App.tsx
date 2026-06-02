@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api, type Status } from './api'
+import OverviewTab from './tabs/OverviewTab'
 
 type TabId =
   | 'overview'
@@ -134,15 +135,15 @@ export default function App() {
         <h1 className="section-title">{tab.label}</h1>
         <p className="section-sub">{tab.description}</p>
 
-        <div className="placeholder">
-          <span className="phase-chip">Phase {tab.phase}</span>
-          <h2>Not built yet</h2>
-          <p>
-            Phase 1 is the scaffold — backend + frontend plumbing. The badges above show that
-            this binary can reach <code>docker</code> and <code>dune-orchestrator</code>. Each
-            tab lands as its phase ships.
-          </p>
-        </div>
+        {active === 'overview' ? (
+          <OverviewTab />
+        ) : (
+          <div className="placeholder">
+            <span className="phase-chip">Phase {tab.phase}</span>
+            <h2>Not built yet</h2>
+            <p>This tab lands in its corresponding phase.</p>
+          </div>
+        )}
       </main>
     </>
   )

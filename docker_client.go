@@ -48,6 +48,64 @@ type ContainerInfo struct {
 	Status  string `json:"status"`  // e.g. "Up 2 hours"
 }
 
+// HostInfo is the trimmed view of GET /info we expose.
+type HostInfo struct {
+	Containers        int    `json:"containers"`
+	ContainersRunning int    `json:"containers_running"`
+	ContainersPaused  int    `json:"containers_paused"`
+	ContainersStopped int    `json:"containers_stopped"`
+	Images            int    `json:"images"`
+	NCPU              int    `json:"ncpu"`
+	MemTotal          int64  `json:"mem_total"`
+	KernelVersion     string `json:"kernel_version"`
+	OperatingSystem   string `json:"operating_system"`
+	DockerVersion     string `json:"docker_version"`
+	Name              string `json:"name"`
+}
+
+// Info hits the docker /info endpoint to learn about the host (memory,
+// cpu count, kernel, etc.) without needing /proc mounts in the container.
+func (d *DockerClient) Info(ctx context.Context) (*HostInfo, error) {
+	req, _ := http.NewRequestWithContext(ctx, "GET", "http://unix/info", nil)
+	resp, err := d.hc.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("docker /info: %s", resp.Status)
+	}
+	var raw struct {
+		Containers        int    `json:"Containers"`
+		ContainersRunning int    `json:"ContainersRunning"`
+		ContainersPaused  int    `json:"ContainersPaused"`
+		ContainersStopped int    `json:"ContainersStopped"`
+		Images            int    `json:"Images"`
+		NCPU              int    `json:"NCPU"`
+		MemTotal          int64  `json:"MemTotal"`
+		KernelVersion     string `json:"KernelVersion"`
+		OperatingSystem   string `json:"OperatingSystem"`
+		ServerVersion     string `json:"ServerVersion"`
+		Name              string `json:"Name"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
+		return nil, err
+	}
+	return &HostInfo{
+		Containers:        raw.Containers,
+		ContainersRunning: raw.ContainersRunning,
+		ContainersPaused:  raw.ContainersPaused,
+		ContainersStopped: raw.ContainersStopped,
+		Images:            raw.Images,
+		NCPU:              raw.NCPU,
+		MemTotal:          raw.MemTotal,
+		KernelVersion:     raw.KernelVersion,
+		OperatingSystem:   raw.OperatingSystem,
+		DockerVersion:     raw.ServerVersion,
+		Name:              raw.Name,
+	}, nil
+}
+
 // ListContainers returns containers in our compose project. If serviceFilter
 // is non-empty, only matching services are returned.
 func (d *DockerClient) ListContainers(ctx context.Context, serviceFilter string) ([]ContainerInfo, error) {
