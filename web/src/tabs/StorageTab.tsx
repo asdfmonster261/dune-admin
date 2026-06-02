@@ -45,7 +45,7 @@ const OWNER_LABELS: Record<OwnerType, string> = {
 // are the inventory slots that owner has.
 type Group = {
   key: string
-  kind: 'player' | 'npc' | 'exchange' | 'item' | 'vehicle' | 'orphan'
+  kind: 'player' | 'npc' | 'exchange' | 'vehicle' | 'dropped' | 'item' | 'orphan'
   name: string
   sub?: string
   rows: StorageRow[]
@@ -66,13 +66,21 @@ type SidebarItem =
   | { kind: 'bucket'; bucket: Bucket }
 
 const KIND_ORDER: Record<Group['kind'], number> = {
-  player: 0, npc: 1, exchange: 2, vehicle: 3, item: 4, orphan: 5,
+  player: 0, npc: 1, exchange: 2, vehicle: 3, dropped: 4, item: 5, orphan: 6,
 }
 
+// EInventoryType integer for PlayerDroppedLoot — what the game stamps on
+// the inventory inside a world-spawned LootContainer actor when a player
+// dies. Carving these out of the NPC bucket into their own group makes
+// the sidebar easier to scan; player-PLACED containers (where the chain
+// resolves to a player owner) still group under that player.
+const PLAYER_DROPPED_LOOT_TYPE = 22
+
 // Kinds where multiple instances of the same actor class are common
-// (CHOAM terminals, NPCs, fleets of vehicles). For these we collapse
-// matching name+kind into a single Bucket so the sidebar stays tidy.
-const COALESCE_KINDS = new Set<Group['kind']>(['npc', 'exchange', 'vehicle'])
+// (CHOAM terminals, NPCs, fleets of vehicles, scattered loot bags). For
+// these we collapse matching name+kind into a single Bucket so the
+// sidebar stays tidy.
+const COALESCE_KINDS = new Set<Group['kind']>(['npc', 'exchange', 'vehicle', 'dropped'])
 
 function buildSidebar(groups: Group[]): SidebarItem[] {
   const out: SidebarItem[] = []
@@ -121,6 +129,15 @@ function buildGroups(rows: StorageRow[]): Group[] {
       kind = 'item'
       name = r.owner_item_template || `Container item #${r.item_id}`
       sub = `item ${r.item_id}`
+    } else if (r.actor_id && r.inventory_type === PLAYER_DROPPED_LOOT_TYPE) {
+      // World-spawned LootContainer for player-dropped items. Coalesces
+      // on the friendly bucket name so multiple instances become a
+      // single "Dropped loot × N" header rather than a list of
+      // identically-named LootContainer rows.
+      key = 'd:player-dropped-loot'
+      kind = 'dropped'
+      name = 'Player dropped loot'
+      sub = `#${r.actor_id}`
     } else if (r.actor_id) {
       key = `n:${r.actor_id}`
       kind = 'npc'
