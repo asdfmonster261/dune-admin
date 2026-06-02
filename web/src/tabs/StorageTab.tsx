@@ -130,17 +130,27 @@ export default function StorageTab() {
 
   const groups = useMemo(() => buildGroups(rows), [rows])
 
-  const toggle = (k: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev)
-      if (next.has(k)) next.delete(k)
-      else next.add(k)
-      return next
-    })
   // Active search expands every group (so matches are visible immediately).
   // The group containing the currently-selected row also stays open.
   const isExpanded = (g: Group) =>
     expanded.has(g.key) || filter.trim() !== '' || g.rows.some((r) => r.id === selected)
+
+  // Clicking a group header toggles its expanded state. If the group
+  // contains the currently-selected row, also clear the selection — that
+  // way one click on the owner name fully backs out of the group rather
+  // than getting stuck in a "force-expanded by selection" state.
+  const onGroupClick = (g: Group) => {
+    const open = isExpanded(g)
+    if (open && g.rows.some((r) => r.id === selected)) {
+      setSelected(null)
+    }
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (open) next.delete(g.key)
+      else next.add(g.key)
+      return next
+    })
+  }
 
   return (
     <div className="split">
@@ -194,7 +204,7 @@ export default function StorageTab() {
               <div key={g.key}>
                 <button
                   className={`split-row ${groupHasSelected ? 'active' : ''}`}
-                  onClick={() => toggle(g.key)}
+                  onClick={() => onGroupClick(g)}
                   style={{ fontWeight: 600 }}
                 >
                   <span className="split-row-name">
