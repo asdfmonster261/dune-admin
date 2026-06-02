@@ -17,8 +17,15 @@ type Currency = { currency_id: number; balance: number }
 type Faction = { faction_id: number; name: string | null; reputation: number; scrips: number }
 type InventoryItem = Record<string, unknown>
 
+type PlayerDetailRow = Player & {
+  server_id?: string
+  player_controller_id?: number
+  player_pawn_id?: number
+  fls_id?: string
+}
+
 type Detail = {
-  player: Player & { server_id?: string; player_controller_id?: number; player_pawn_id?: number; fls_id?: string }
+  player: PlayerDetailRow
   currencies: Currency[]
   factions: Faction[]
   inventory: InventoryItem[]
@@ -152,7 +159,12 @@ function PlayerDetail({ id }: { id: number }) {
               </tbody>
             </table>
           )}
-          <GiveCurrencyForm playerId={d.player.id} onDone={reload} />
+          {d.player.player_controller_id && (
+            <GiveCurrencyForm
+              playerControllerId={d.player.player_controller_id}
+              onDone={reload}
+            />
+          )}
         </div>
 
         <div className="card">
@@ -197,7 +209,13 @@ function PlayerDetail({ id }: { id: number }) {
   )
 }
 
-function GiveCurrencyForm({ playerId, onDone }: { playerId: number; onDone: () => void }) {
+function GiveCurrencyForm({
+  playerControllerId,
+  onDone,
+}: {
+  playerControllerId: number
+  onDone: () => void
+}) {
   const [currencyId, setCurrencyId] = useState('')
   const [balance, setBalance] = useState('')
   const [busy, setBusy] = useState(false)
@@ -209,7 +227,7 @@ function GiveCurrencyForm({ playerId, onDone }: { playerId: number; onDone: () =
     setErr(null)
     try {
       await api.post('/players/give-currency', {
-        player_id: playerId,
+        player_controller_id: playerControllerId,
         currency_id: Number(currencyId),
         balance: Number(balance),
       })

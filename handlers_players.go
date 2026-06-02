@@ -81,7 +81,9 @@ func handleGetPlayer(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	// Core record
+	// Core record. The "id" param is player_state_id (1:1 per character);
+	// most other tables key off account_id or player_controller_id, both
+	// of which we surface from this same row so the UI can render forms.
 	playerRows, _, err := queryAll(ctx, globalDB, `
 		SELECT ps.player_state_id    AS id,
 		       ps.account_id,
@@ -109,42 +111,48 @@ func handleGetPlayer(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	player := playerRows[0]
+	accountID := toInt64(player["account_id"])
+	controllerID := toInt64(player["player_controller_id"])
 
-	// Currencies — virtual currency balances keyed by currency id.
-	currencies, _, err := queryAll(ctx, globalDB,
-		"SELECT currency_id, balance FROM dune.player_virtual_currency_balances WHERE player_id = $1 ORDER BY currency_id",
-		id)
+	// Currencies — keyed by player_controller_id (FK → actors.id).
+	currencies, _, err := queryAll(ctx, globalDB, `
+		SELECT currency_id, balance
+		FROM dune.player_virtual_currency_balances
+		WHERE player_controller_id = $1
+		ORDER BY currency_id
+	`, controllerID)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
 	}
 
-	// Faction reputations
+	// Faction reputations — keyed by actor_id (= player_controller_id).
 	factions, _, err := queryAll(ctx, globalDB, `
-		SELECT pfr.faction_id, f.name, pfr.reputation, pfr.scrips
+		SELECT pfr.faction_id,
+		       f.name,
+		       pfr.reputation_amount AS reputation
 		FROM dune.player_faction_reputation pfr
 		LEFT JOIN dune.factions f ON f.id = pfr.faction_id
 		WHERE pfr.actor_id = $1
 		ORDER BY pfr.faction_id
-	`, id)
+	`, controllerID)
 	if err != nil {
-		// Non-fatal — pfr may legitimately have no rows for this id.
 		factions = []map[string]any{}
 	}
 
-	// Inventories — uses snapetech's admin SRF if available, otherwise plain join.
+	// Inventories — snapetech's admin SRF takes account_id. Fall back to a
+	// plain join if the function isn't installed (different DB versions).
 	inv, _, err := queryAll(ctx, globalDB,
-		"SELECT * FROM dune.admin_get_inventory_details($1)", id)
+		"SELECT * FROM dune.admin_get_inventory_details($1)", accountID)
 	if err != nil {
-		// Fall back to direct query if the admin function isn't installed.
 		inv, _, err = queryAll(ctx, globalDB, `
 			SELECT i.id, i.inventory_id, i.template_id, i.stack_size,
-			       i.position_index, i.quality, i.durability, i.max_durability
+			       i.position_index, i.quality_level
 			FROM dune.items i
 			JOIN dune.inventories inv ON inv.id = i.inventory_id
-			WHERE inv.owner_id = $1
+			WHERE inv.actor_id = $1
 			ORDER BY inv.id, i.position_index
-		`, id)
+		`, controllerID)
 		if err != nil {
 			inv = []map[string]any{}
 		}
@@ -156,6 +164,20 @@ func handleGetPlayer(w http.ResponseWriter, r *http.Request) {
 		"factions":   factions,
 		"inventory":  inv,
 	})
+}
+
+func toInt64(v any) int64 {
+	switch n := v.(type) {
+	case int:
+		return int64(n)
+	case int32:
+		return int64(n)
+	case int64:
+		return n
+	case float64:
+		return int64(n)
+	}
+	return 0
 }
 
 func handleGiveItem(w http.ResponseWriter, r *http.Request) {
@@ -178,15 +200,20 @@ func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 	}
 	err := txOne(r.Context(), globalDB, func(tx pgx.Tx) error {
 		// Find next free position_index in this inventory.
-		var nextPos int
+		var nextPos int64
 		if err := tx.QueryRow(r.Context(),
 			"SELECT COALESCE(MAX(position_index), -1) + 1 FROM dune.items WHERE inventory_id = $1",
 			req.InventoryID).Scan(&nextPos); err != nil {
 			return err
 		}
+		// stats is jsonb NOT NULL with no default; an empty object is the
+		// neutral value the game accepts. acquisition_time + quality_level
+		// have schema defaults, so omitting them is fine.
 		_, err := tx.Exec(r.Context(), `
-			INSERT INTO dune.items (inventory_id, template_id, stack_size, position_index)
-			VALUES ($1, $2, $3, $4)
+			INSERT INTO dune.items
+				(inventory_id, template_id, stack_size, position_index, stats)
+			VALUES
+				($1, $2, $3, $4, '{}'::jsonb)
 		`, req.InventoryID, req.TemplateID, req.StackSize, nextPos)
 		return err
 	})
@@ -203,23 +230,25 @@ func handleGiveCurrency(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req struct {
-		PlayerID   int64 `json:"player_id"`
-		CurrencyID int   `json:"currency_id"`
-		Balance    int64 `json:"balance"`
+		PlayerControllerID int64 `json:"player_controller_id"`
+		CurrencyID         int   `json:"currency_id"`
+		Balance            int64 `json:"balance"`
 	}
 	if err := decode(r, &req); err != nil {
 		jsonErr(w, err, 400)
 		return
 	}
-	if req.PlayerID == 0 {
-		jsonErr(w, fmt.Errorf("player_id required"), 400)
+	if req.PlayerControllerID == 0 {
+		jsonErr(w, fmt.Errorf("player_controller_id required"), 400)
 		return
 	}
 	_, err := globalDB.Exec(r.Context(), `
-		INSERT INTO dune.player_virtual_currency_balances (player_id, currency_id, balance)
+		INSERT INTO dune.player_virtual_currency_balances
+			(player_controller_id, currency_id, balance)
 		VALUES ($1, $2, $3)
-		ON CONFLICT (player_id, currency_id) DO UPDATE SET balance = EXCLUDED.balance
-	`, req.PlayerID, req.CurrencyID, req.Balance)
+		ON CONFLICT (player_controller_id, currency_id)
+			DO UPDATE SET balance = EXCLUDED.balance
+	`, req.PlayerControllerID, req.CurrencyID, req.Balance)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
