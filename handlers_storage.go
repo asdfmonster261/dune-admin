@@ -62,7 +62,7 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
 					len(args), len(args), len(args)))
 		}
 	}
@@ -102,9 +102,9 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
 		       COALESCE(a.class, root_actor.class, vehicle_actor.class)        AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS owner_player_name,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS owner_player_name,
 		       parent_item.template_id                                          AS owner_item_template,
-		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS root_player_name
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
@@ -129,6 +129,19 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       ON par.permission_actor_id = i.actor_id AND par.rank = 1
 		LEFT JOIN dune.actors perm_actor       ON perm_actor.id = par.player_id
 		LEFT JOIN dune.player_state perm_ps    ON perm_ps.account_id = perm_actor.owner_account_id
+		-- Child-placeable chain: inv on a placeable that inherits perms
+		-- from its parent totem. The placeable carries owner_entity_id
+		-- pointing at the totem's fgl entity; actor_fgl_entities maps
+		-- that back to the totem's actor; permission_actor_rank gives
+		-- the player. Catches generators, doors, lights, etc. that don't
+		-- have their own permission_actor_rank entry.
+		LEFT JOIN dune.placeables pl_anchor    ON pl_anchor.id = i.actor_id
+		LEFT JOIN dune.actor_fgl_entities pl_afe
+		       ON pl_afe.entity_id = pl_anchor.owner_entity_id
+		LEFT JOIN dune.permission_actor_rank pl_par
+		       ON pl_par.permission_actor_id = pl_afe.actor_id AND pl_par.rank = 1
+		LEFT JOIN dune.actors pl_owner_actor   ON pl_owner_actor.id = pl_par.player_id
+		LEFT JOIN dune.player_state pl_ps      ON pl_ps.account_id = pl_owner_actor.owner_account_id
 		%s
 		ORDER BY i.id DESC
 		LIMIT $1
@@ -193,9 +206,9 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
 		       COALESCE(a.class, root_actor.class, vehicle_actor.class)              AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS owner_player_name,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS owner_player_name,
 		       parent_item.template_id                                                AS owner_item_template,
-		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name) AS root_player_name
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a        ON a.id = i.actor_id
@@ -215,6 +228,13 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       ON par.permission_actor_id = i.actor_id AND par.rank = 1
 		LEFT JOIN dune.actors perm_actor       ON perm_actor.id = par.player_id
 		LEFT JOIN dune.player_state perm_ps    ON perm_ps.account_id = perm_actor.owner_account_id
+		LEFT JOIN dune.placeables pl_anchor    ON pl_anchor.id = i.actor_id
+		LEFT JOIN dune.actor_fgl_entities pl_afe
+		       ON pl_afe.entity_id = pl_anchor.owner_entity_id
+		LEFT JOIN dune.permission_actor_rank pl_par
+		       ON pl_par.permission_actor_id = pl_afe.actor_id AND pl_par.rank = 1
+		LEFT JOIN dune.actors pl_owner_actor   ON pl_owner_actor.id = pl_par.player_id
+		LEFT JOIN dune.player_state pl_ps      ON pl_ps.account_id = pl_owner_actor.owner_account_id
 		WHERE i.id = $1
 	`, id)
 	if err != nil {
