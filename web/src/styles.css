@@ -1,115 +1,237 @@
+/* Palette mirrors snapetech's admin panel so the new UI visually slots in
+ * where the user expects, while the code stays our own.
+ */
 :root {
   color-scheme: dark;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  --bg: #0a0907;
-  --bg-elev: #14110c;
-  --border: #2a2418;
-  --text: #d7caa6;
-  --text-dim: #80724e;
-  --primary: #f0a830;
-  --ok: #6cc06c;
-  --bad: #d05a4a;
+  --bg: #0f1110;
+  --nav: #141814;
+  --panel: #1a1f1a;
+  --panel2: #131713;
+  --panel3: #20261f;
+  --line: #323b32;
+  --line-hover: #53614d;
+  --text: #edf3ea;
+  --muted: #a3aea4;
+  --accent: #d5a13e;
+  --accent-fg: #16120a;
+  --ok: #7fc27a;
+  --warn: #e1b75f;
+  --danger: #d96f62;
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
+  font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--bg);
   color: var(--text);
 }
 
+/* ── Layout ─────────────────────────────────────────────────────────── */
+
 .layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  min-height: 100%;
 }
 
-header {
-  border-bottom: 1px solid var(--border);
-  padding: 12px 20px;
+header.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 3;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--bg-elev);
+  gap: 16px;
+  padding: 13px 18px;
+  background: #161a16;
+  border-bottom: 1px solid var(--line);
 }
 
-header h1 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  color: var(--primary);
-}
-
-.meta {
+.brand {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.brand .name {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  font-size: 14px;
+}
+
+.brand .subtle {
+  color: var(--muted);
   font-size: 12px;
 }
 
-.badge {
+.shell {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+}
+
+nav.sidenav {
+  position: sticky;
+  top: 58px;
+  height: calc(100vh - 58px);
+  overflow: auto;
+  padding: 14px;
+  background: var(--nav);
+  border-right: 1px solid var(--line);
+}
+
+nav.sidenav h3 {
+  font-size: 11px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+nav.sidenav .tab {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 10px;
+  margin-bottom: 4px;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  font: inherit;
+}
+
+nav.sidenav .tab:hover {
+  border-color: var(--line);
+  color: var(--text);
+}
+
+nav.sidenav .tab.active {
+  background: #252416;
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+nav.sidenav .tab .stage {
+  float: right;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+main.content {
+  padding: 18px 20px;
+  min-width: 0;
+}
+
+/* ── Cards / metrics ─────────────────────────────────────────────────── */
+
+.card,
+.panelBand {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.metricGrid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+.metric {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel2);
+  padding: 12px;
+  min-height: 82px;
+}
+
+.metric .label {
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.metric .value {
+  margin-top: 8px;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* ── Pills / badges ──────────────────────────────────────────────────── */
+
+.pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 2px 8px;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  color: var(--text-dim);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: #101310;
+  color: var(--muted);
+  font-size: 12px;
 }
-
-.badge .dot {
+.pill .dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--bad);
+  background: var(--muted);
 }
-
-.badge.ok .dot {
+.pill.ok {
+  border-color: #315e31;
+  color: var(--ok);
+}
+.pill.ok .dot {
   background: var(--ok);
 }
-
-.ns,
-.version {
-  color: var(--text-dim);
-  font-family: ui-monospace, SFMono-Regular, monospace;
+.pill.bad {
+  border-color: #743932;
+  color: var(--danger);
+}
+.pill.bad .dot {
+  background: var(--danger);
 }
 
-.err {
-  color: var(--bad);
+/* ── Misc ────────────────────────────────────────────────────────────── */
+
+.mono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--muted);
 }
 
-main {
-  flex: 1;
-  padding: 24px;
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .placeholder {
-  max-width: 600px;
-  margin: 40px auto;
-  padding: 24px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+  color: var(--muted);
 }
 
-.placeholder p {
-  margin-top: 0;
-  color: var(--text-dim);
-}
-
-.placeholder ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.placeholder li {
-  padding: 6px 0;
+.placeholder code {
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  border-radius: 4px;
   font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 13px;
+  font-size: 12px;
 }

@@ -1,9 +1,35 @@
 import { useEffect, useState } from 'react'
 import { api, type Status } from './api'
 
+type TabId =
+  | 'overview'
+  | 'players'
+  | 'database'
+  | 'logs'
+  | 'audit'
+  | 'admin'
+  | 'settings'
+  | 'ops'
+  | 'niche'
+
+type Tab = { id: TabId; label: string; phase: number; ready: boolean }
+
+const TABS: Tab[] = [
+  { id: 'overview', label: 'Overview', phase: 2, ready: false },
+  { id: 'players', label: 'Players', phase: 3, ready: false },
+  { id: 'database', label: 'Database', phase: 3, ready: false },
+  { id: 'logs', label: 'Logs', phase: 4, ready: false },
+  { id: 'audit', label: 'Audit', phase: 5, ready: false },
+  { id: 'admin', label: 'Admin Actions', phase: 5, ready: false },
+  { id: 'settings', label: 'Settings', phase: 6, ready: false },
+  { id: 'ops', label: 'Ops', phase: 7, ready: false },
+  { id: 'niche', label: 'Niche', phase: 8, ready: false },
+]
+
 export default function App() {
   const [status, setStatus] = useState<Status | null>(null)
   const [err, setErr] = useState<string | null>(null)
+  const [active, setActive] = useState<TabId>('overview')
 
   useEffect(() => {
     let live = true
@@ -26,43 +52,59 @@ export default function App() {
     }
   }, [])
 
+  const tab = TABS.find((t) => t.id === active)!
+
   return (
     <div className="layout">
-      <header>
-        <h1>dune-admin</h1>
-        <div className="meta">
-          {status && (
-            <>
-              <Badge label="docker" ok={status.docker_connected} />
-              <Badge label="orchestrator" ok={status.orchestrator_connected} />
-              {status.battlegroup_ns && <span className="ns">{status.battlegroup_ns}</span>}
-              <span className="version">{status.version}</span>
-            </>
-          )}
-          {err && <span className="err">{err}</span>}
+      <header className="topbar">
+        <div className="brand">
+          <span className="name">dune-admin</span>
+          {status?.battlegroup_ns && <span className="subtle">{status.battlegroup_ns}</span>}
+        </div>
+        <div className="metaRow">
+          <Pill label="docker" ok={status?.docker_connected} />
+          <Pill label="orchestrator" ok={status?.orchestrator_connected} />
+          {status && <span className="mono">{status.version}</span>}
+          {err && <span className="pill bad">{err}</span>}
         </div>
       </header>
-      <main>
-        <div className="placeholder">
-          <p>Scaffold ready. Tabs land in the upcoming phases.</p>
-          <ul>
-            <li>Phase 2 — Overview</li>
-            <li>Phase 3 — Players, Database</li>
-            <li>Phase 4 — Logs</li>
-            <li>Phase 5 — Audit, Admin Actions</li>
-            <li>Phase 6 — Settings</li>
-            <li>Phase 7 — Ops</li>
-            <li>Phase 8 — Niche (Hagga POIs, Deep Desert, Storage/Blueprints/Bases, exchange)</li>
-          </ul>
-        </div>
-      </main>
+
+      <div className="shell">
+        <nav className="sidenav">
+          <h3>Sections</h3>
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              className={`tab ${t.id === active ? 'active' : ''}`}
+              onClick={() => setActive(t.id)}
+            >
+              {t.label}
+              <span className="stage">P{t.phase}</span>
+            </button>
+          ))}
+        </nav>
+
+        <main className="content">
+          <div className="card">
+            <h3 style={{ marginTop: 0, color: 'var(--text)', textTransform: 'none', letterSpacing: 0 }}>
+              {tab.label}
+            </h3>
+            <p className="placeholder">
+              Lands in <code>Phase {tab.phase}</code>. Phase 1 is the scaffold — the badges above
+              show that the backend can talk to docker and the orchestrator. Other tabs come
+              online as their phases ship.
+            </p>
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
 
-function Badge({ label, ok }: { label: string; ok: boolean }) {
+function Pill({ label, ok }: { label: string; ok: boolean | undefined }) {
+  const cls = ok === undefined ? '' : ok ? 'ok' : 'bad'
   return (
-    <span className={`badge ${ok ? 'ok' : 'bad'}`}>
+    <span className={`pill ${cls}`}>
       <span className="dot" />
       {label}
     </span>
