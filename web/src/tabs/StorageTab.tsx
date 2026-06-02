@@ -119,7 +119,11 @@ function buildGroups(rows: StorageRow[]): Group[] {
       key = `p:${r.owner_player_name}`
       kind = 'player'
       name = r.owner_player_name
-      sub = shortClass(r.owner_actor_class) || undefined
+      // Leave sub undefined for now; we'll backfill it below from
+      // whichever row in the group corresponds to the actual
+      // PlayerCharacter actor (otherwise the first row, sorted DESC
+      // by id, can be a totem / vehicle inv and the subtitle ends up
+      // saying 'TotemSmall').
     } else if (r.exchange_id) {
       key = `e:${r.exchange_id}`
       kind = 'exchange'
@@ -166,10 +170,64 @@ function buildGroups(rows: StorageRow[]): Group[] {
       if (an !== bn) return an < bn ? -1 : 1
       return a.id - b.id
     })
+    // For player groups, set sub to the player-character class. Pick from
+    // a row whose owner_actor_class shortens to 'PlayerCharacter'; fall
+    // back to the first row's class if none match.
+    if (g.kind === 'player') {
+      const playerRow = g.rows.find(
+        (r) => shortClass(r.owner_actor_class) === 'PlayerCharacter',
+      )
+      g.sub = shortClass((playerRow ?? g.rows[0])?.owner_actor_class ?? null) || undefined
+    }
   }
   return [...byKey.values()].sort((a, b) => {
     if (KIND_ORDER[a.kind] !== KIND_ORDER[b.kind]) return KIND_ORDER[a.kind] - KIND_ORDER[b.kind]
     return a.name.localeCompare(b.name)
+  })
+}
+
+// Sub-group rows within a player's group by their actor. Each actor
+// (the player's character, a vehicle they own, a totem they placed)
+// becomes its own sub-section with a small header above its rows.
+// Container items (rows with no actor_id but an item_id) collapse
+// into one 'Container items' sub-section. With ≤1 sub-group the
+// renderer falls back to a flat list.
+type SubGroup = {
+  key: string
+  label: string
+  rows: StorageRow[]
+}
+
+function buildSubGroups(rows: StorageRow[]): SubGroup[] {
+  const byKey = new Map<string, SubGroup>()
+  for (const r of rows) {
+    let key: string, label: string
+    if (r.actor_id) {
+      key = `a:${r.actor_id}`
+      label = shortClass(r.owner_actor_class) || `Actor #${r.actor_id}`
+    } else if (r.item_id) {
+      key = 'i:items'
+      label = 'Container items'
+    } else {
+      key = 'o:other'
+      label = 'Other'
+    }
+    let sg = byKey.get(key)
+    if (!sg) {
+      sg = { key, label, rows: [] }
+      byKey.set(key, sg)
+    }
+    sg.rows.push(r)
+  }
+  return [...byKey.values()].sort((a, b) => {
+    // Player character first, container items + other last, rest alpha.
+    const aPlayer = a.label === 'PlayerCharacter'
+    const bPlayer = b.label === 'PlayerCharacter'
+    if (aPlayer !== bPlayer) return aPlayer ? -1 : 1
+    const aLast = a.label === 'Container items' || a.label === 'Other'
+    const bLast = b.label === 'Container items' || b.label === 'Other'
+    if (aLast !== bLast) return aLast ? 1 : -1
+    return a.label.localeCompare(b.label)
   })
 }
 
@@ -249,6 +307,12 @@ export default function StorageTab() {
     }
     const headerStyle: React.CSSProperties = { fontWeight: 600 }
     if (indent) headerStyle.paddingLeft = indent
+    // Player groups with rows across multiple actors get sub-headers
+    // (PlayerCharacter / LightOrnithopter / TotemSmall etc.) so the
+    // operator can see at a glance which inventories belong to the
+    // character vs to vehicles/totems the player owns.
+    const subGroups = g.kind === 'player' ? buildSubGroups(g.rows) : null
+    const useSubGroups = subGroups && subGroups.length > 1
     return (
       <div key={g.key}>
         <button
@@ -265,25 +329,44 @@ export default function StorageTab() {
           </span>
           <span className="split-row-meta mono">{g.rows.length} slots</span>
         </button>
-        {open && g.rows.map((r) => (
-          <button
-            key={r.id}
-            className={`split-row ${selected === r.id ? 'active' : ''}`}
-            onClick={() => setSelected(r.id)}
-            title={metaTooltip(r)}
-            style={{ paddingLeft: indent + 28 }}
-          >
-            <span className="split-row-name">
-              {r.component_name || r.owner_item_template || typeLabel(r.inventory_type).text}
-            </span>
-            <span className="split-row-meta mono">
-              {r.item_count}/{cap(r.max_item_count)}
-            </span>
-          </button>
-        ))}
+        {open && (useSubGroups
+          ? subGroups!.flatMap((sg) => [
+              <div
+                key={`sg-h:${sg.key}`}
+                style={{
+                  paddingLeft: indent + 28,
+                  paddingTop: 6,
+                  paddingBottom: 2,
+                  fontSize: 11,
+                  fontStyle: 'italic',
+                  opacity: 0.65,
+                }}
+              >
+                {sg.label}
+              </div>,
+              ...sg.rows.map((r) => renderSlotRow(r, indent + 40)),
+            ])
+          : g.rows.map((r) => renderSlotRow(r, indent + 28)))}
       </div>
     )
   }
+
+  const renderSlotRow = (r: StorageRow, leftPad: number) => (
+    <button
+      key={r.id}
+      className={`split-row ${selected === r.id ? 'active' : ''}`}
+      onClick={() => setSelected(r.id)}
+      title={metaTooltip(r)}
+      style={{ paddingLeft: leftPad }}
+    >
+      <span className="split-row-name">
+        {r.component_name || r.owner_item_template || typeLabel(r.inventory_type).text}
+      </span>
+      <span className="split-row-meta mono">
+        {r.item_count}/{cap(r.max_item_count)}
+      </span>
+    </button>
+  )
 
   const renderBucket = (b: Bucket) => {
     const open = isBucketExpanded(b)
