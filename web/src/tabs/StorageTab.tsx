@@ -124,46 +124,50 @@ function labelForRow(row: StorageRow): string {
   return `orphan inv #${row.id}`
 }
 
-// Empirically-derived inventory_type → label mapping. Built from observing
-// what kind of items each type holds for active player characters:
-//
-//   - type 0   "main bag" → mixed items (ore, components, ammo, …)
-//   - type 1   "worn outfit" → equipped clothing + PowerPack (helmet, top,
-//              bottom, boots, gloves are all present)
-//   - type 14  "emote library" → 11 general emotes (Bow, Clap, Sit, …)
-//   - type 15  "equipped tools" → 8-slot loadout of utility items
-//              (LongRifle, MiningTool, healthpack, knife, beacon)
-//   - type 27  "emote radial" → 8-slot quick emote menu (Thumper actions,
-//              ScanHorizon, WatershipperSalute)
-//   - type 29  "contracts" → ContractItem
-//   - type 30  "player bank" → 500 cap, 30 000 volume; the big vault
-//   - type 12, 20, 25, 31, 32, 33 → unknown (all empty in current data)
-//
-// The component_name_hash column gives a different per-component-class
-// identifier that we haven't reversed yet (Funcom uses a custom hash
-// function — none of the standard UE FCrc/FNV/Murmur/CityHash variants
-// produce the observed values from the obvious candidate names). When we
-// finish the binary RE we can swap this to label by component class.
-const TYPE_LABELS: Record<number, { label: string; confidence: 'high' | 'medium' | 'low' }> = {
-  0: { label: 'Backpack', confidence: 'high' },
-  1: { label: 'Worn outfit', confidence: 'high' },
-  12: { label: 'Ability shortcuts?', confidence: 'low' },
-  14: { label: 'Emote library', confidence: 'high' },
-  15: { label: 'Equipped tools', confidence: 'high' },
-  20: { label: 'slot 20', confidence: 'low' },
-  25: { label: 'slot 25', confidence: 'low' },
-  27: { label: 'Emote radial', confidence: 'high' },
-  29: { label: 'Contracts', confidence: 'high' },
-  30: { label: 'Player bank', confidence: 'high' },
-  31: { label: 'slot 31', confidence: 'low' },
-  32: { label: 'slot 32', confidence: 'low' },
-  33: { label: 'slot 33', confidence: 'low' },
+// inventory_type → EInventoryType enum name, reversed from the
+// game-server binary. The enum's 24 named values were extracted from
+// the UEnum reflection metadata table at .data.rel.ro 0x14ec0080;
+// every observed DB type lines up with a name once the table's
+// off-by-one value-storage layout is accounted for. Two SQL comments
+// in the schema files (`inventory_type 0 is backpack`, `inventory_type
+// = 29 -- EInventoryType::ContractsInventory = 29`) anchor the
+// mapping. Content checks confirm the rest:
+//   14 = Spellbook (11 Emote_* items, cap 100)
+//   15 = RadialMenuShortcuts (8 quick tools — knife, mining tool, …)
+//   22 = PlayerDroppedLoot (PlantFiber, ScrapMetal, Stone)
+//   27 = EmoteRadialMenuShortcuts (8 Thumper / Watershipper emotes)
+//   30 = PlayerBank (cap 500)
+const TYPE_LABELS: Record<number, string> = {
+  0: 'Backpack',
+  1: 'Equipment',
+  3: 'PlaceableInventory',
+  4: 'DedicatedStorageInventory',
+  12: 'CraftingIngredientsInventory',
+  14: 'Spellbook',
+  15: 'RadialMenuShortcuts',
+  17: 'VehicleAbilities',
+  18: 'VehicleAbilityShortcuts',
+  19: 'VehicleAmmunition',
+  20: 'P2pTradingInventory',
+  21: 'LootContainer',
+  22: 'PlayerDroppedLoot',
+  23: 'PersonalLootContainer',
+  24: 'WeaponModsInventory',
+  25: 'InfluenceInventory',
+  27: 'EmoteRadialMenuShortcuts',
+  28: 'NpcLootInventory',
+  29: 'ContractsInventory',
+  30: 'PlayerBank',
+  31: 'TransactionalInventory',
+  32: 'DeliveryInventory',
+  33: 'PlayerInboxInventory',
+  255: 'Invalid',
 }
 
 function typeLabel(t: number | null): { text: string; confident: boolean } {
   if (t === null) return { text: '?', confident: false }
   const e = TYPE_LABELS[t]
-  if (e) return { text: e.label, confident: e.confidence === 'high' }
+  if (e) return { text: e, confident: true }
   return { text: `t${t}`, confident: false }
 }
 
