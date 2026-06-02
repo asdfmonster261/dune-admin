@@ -46,8 +46,55 @@ type Group = {
   rows: StorageRow[]
 }
 
+// A class-coalesced bucket of multiple Groups that all share the same
+// kind + display name (e.g. all 13 DuneChoamExchangeTerminal_C actors).
+// Buckets only appear in the sidebar when there are 2+ groups to collapse.
+type Bucket = {
+  key: string
+  name: string
+  kind: Group['kind']
+  groups: Group[]
+}
+
+type SidebarItem =
+  | { kind: 'single'; group: Group }
+  | { kind: 'bucket'; bucket: Bucket }
+
 const KIND_ORDER: Record<Group['kind'], number> = {
   player: 0, npc: 1, exchange: 2, vehicle: 3, item: 4, orphan: 5,
+}
+
+// Kinds where multiple instances of the same actor class are common
+// (CHOAM terminals, NPCs, fleets of vehicles). For these we collapse
+// matching name+kind into a single Bucket so the sidebar stays tidy.
+const COALESCE_KINDS = new Set<Group['kind']>(['npc', 'exchange', 'vehicle'])
+
+function buildSidebar(groups: Group[]): SidebarItem[] {
+  const out: SidebarItem[] = []
+  const slotIdx = new Map<string, number>()
+  for (const g of groups) {
+    if (!COALESCE_KINDS.has(g.kind)) {
+      out.push({ kind: 'single', group: g })
+      continue
+    }
+    const k = `b:${g.kind}:${g.name}`
+    const i = slotIdx.get(k)
+    if (i === undefined) {
+      slotIdx.set(k, out.length)
+      out.push({ kind: 'single', group: g })
+    } else {
+      const existing = out[i]
+      if (existing.kind === 'single') {
+        out[i] = {
+          kind: 'bucket',
+          bucket: { key: k, name: g.name, kind: g.kind, groups: [existing.group, g] },
+        }
+      } else {
+        existing.bucket.groups.push(g)
+      }
+    }
+  }
+  return out
 }
 
 function buildGroups(rows: StorageRow[]): Group[] {
@@ -128,28 +175,115 @@ export default function StorageTab() {
     return () => clearTimeout(t)
   }, [filter, ownerType])
 
-  const groups = useMemo(() => buildGroups(rows), [rows])
+  const sidebar = useMemo(() => buildSidebar(buildGroups(rows)), [rows])
 
-  // Active search expands every group (so matches are visible immediately).
-  // The group containing the currently-selected row also stays open.
-  const isExpanded = (g: Group) =>
-    expanded.has(g.key) || filter.trim() !== '' || g.rows.some((r) => r.id === selected)
+  const containsSelected = (g: Group) => g.rows.some((r) => r.id === selected)
+  const bucketContainsSelected = (b: Bucket) => b.groups.some(containsSelected)
 
-  // Clicking a group header toggles its expanded state. If the group
-  // contains the currently-selected row, also clear the selection — that
-  // way one click on the owner name fully backs out of the group rather
-  // than getting stuck in a "force-expanded by selection" state.
-  const onGroupClick = (g: Group) => {
-    const open = isExpanded(g)
-    if (open && g.rows.some((r) => r.id === selected)) {
-      setSelected(null)
-    }
+  // Active search expands every group + bucket (so matches are visible
+  // immediately). Containers of the selected row also stay open.
+  const isGroupExpanded = (g: Group) =>
+    expanded.has(g.key) || filter.trim() !== '' || containsSelected(g)
+  const isBucketExpanded = (b: Bucket) =>
+    expanded.has(b.key) || filter.trim() !== '' || bucketContainsSelected(b)
+
+  // Clicking a header toggles its expanded state. If we're collapsing and
+  // the selection is inside, clear the selection first — otherwise the
+  // 'force-expanded by selection' rule would override the collapse.
+  const toggleAndMaybeDeselect = (key: string, open: boolean, hasSelected: boolean) => {
+    if (open && hasSelected) setSelected(null)
     setExpanded((prev) => {
       const next = new Set(prev)
-      if (open) next.delete(g.key)
-      else next.add(g.key)
+      if (open) next.delete(key)
+      else next.add(key)
       return next
     })
+  }
+
+  const renderGroup = (g: Group, indent: number) => {
+    const single = g.rows.length === 1
+    const open = isGroupExpanded(g)
+    const hasSel = containsSelected(g)
+    if (single) {
+      const r = g.rows[0]
+      return (
+        <button
+          key={g.key}
+          className={`split-row ${selected === r.id ? 'active' : ''}`}
+          onClick={() => setSelected(r.id)}
+          title={metaTooltip(r)}
+          style={indent ? { paddingLeft: indent } : undefined}
+        >
+          <span className="split-row-name">
+            {g.name}
+            {g.sub && <span style={{ opacity: 0.6 }}> · {g.sub}</span>}
+            <span style={{ opacity: 0.7 }}> · {r.component_name || typeLabel(r.inventory_type).text}</span>
+          </span>
+          <span className="split-row-meta mono">
+            {r.item_count}/{cap(r.max_item_count)}
+          </span>
+        </button>
+      )
+    }
+    const headerStyle: React.CSSProperties = { fontWeight: 600 }
+    if (indent) headerStyle.paddingLeft = indent
+    return (
+      <div key={g.key}>
+        <button
+          className={`split-row ${hasSel ? 'active' : ''}`}
+          onClick={() => toggleAndMaybeDeselect(g.key, open, hasSel)}
+          style={headerStyle}
+        >
+          <span className="split-row-name">
+            <span style={{ opacity: 0.6, width: 10, display: 'inline-block' }}>
+              {open ? '▼' : '▶'}
+            </span>
+            {g.name}
+            {g.sub && <span style={{ opacity: 0.6, fontWeight: 400 }}> · {g.sub}</span>}
+          </span>
+          <span className="split-row-meta mono">{g.rows.length} slots</span>
+        </button>
+        {open && g.rows.map((r) => (
+          <button
+            key={r.id}
+            className={`split-row ${selected === r.id ? 'active' : ''}`}
+            onClick={() => setSelected(r.id)}
+            title={metaTooltip(r)}
+            style={{ paddingLeft: indent + 28 }}
+          >
+            <span className="split-row-name">
+              {r.component_name || typeLabel(r.inventory_type).text}
+            </span>
+            <span className="split-row-meta mono">
+              {r.item_count}/{cap(r.max_item_count)}
+            </span>
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  const renderBucket = (b: Bucket) => {
+    const open = isBucketExpanded(b)
+    const hasSel = bucketContainsSelected(b)
+    return (
+      <div key={b.key}>
+        <button
+          className={`split-row ${hasSel ? 'active' : ''}`}
+          onClick={() => toggleAndMaybeDeselect(b.key, open, hasSel)}
+          style={{ fontWeight: 600 }}
+        >
+          <span className="split-row-name">
+            <span style={{ opacity: 0.6, width: 10, display: 'inline-block' }}>
+              {open ? '▼' : '▶'}
+            </span>
+            {b.name}
+          </span>
+          <span className="split-row-meta mono">× {b.groups.length}</span>
+        </button>
+        {open && b.groups.map((g) => renderGroup(g, 28))}
+      </div>
+    )
   }
 
   return (
@@ -174,68 +308,10 @@ export default function StorageTab() {
         </select>
         {err && <div className="alert">{err}</div>}
         <div className="split-list">
-          {groups.map((g) => {
-            const single = g.rows.length === 1
-            const open = isExpanded(g)
-            const groupHasSelected = g.rows.some((r) => r.id === selected)
-            // For 1-slot groups, render flat (no expand toggle). Clicking
-            // selects the only row directly.
-            if (single) {
-              const r = g.rows[0]
-              return (
-                <button
-                  key={g.key}
-                  className={`split-row ${selected === r.id ? 'active' : ''}`}
-                  onClick={() => setSelected(r.id)}
-                  title={metaTooltip(r)}
-                >
-                  <span className="split-row-name">
-                    {g.name}
-                    {g.sub && <span style={{ opacity: 0.6 }}> · {g.sub}</span>}
-                    <span style={{ opacity: 0.7 }}> · {r.component_name || typeLabel(r.inventory_type).text}</span>
-                  </span>
-                  <span className="split-row-meta mono">
-                    {r.item_count}/{cap(r.max_item_count)}
-                  </span>
-                </button>
-              )
-            }
-            return (
-              <div key={g.key}>
-                <button
-                  className={`split-row ${groupHasSelected ? 'active' : ''}`}
-                  onClick={() => onGroupClick(g)}
-                  style={{ fontWeight: 600 }}
-                >
-                  <span className="split-row-name">
-                    <span style={{ opacity: 0.6, width: 10, display: 'inline-block' }}>
-                      {open ? '▼' : '▶'}
-                    </span>
-                    {g.name}
-                    {g.sub && <span style={{ opacity: 0.6, fontWeight: 400 }}> · {g.sub}</span>}
-                  </span>
-                  <span className="split-row-meta mono">{g.rows.length} slots</span>
-                </button>
-                {open && g.rows.map((r) => (
-                  <button
-                    key={r.id}
-                    className={`split-row ${selected === r.id ? 'active' : ''}`}
-                    onClick={() => setSelected(r.id)}
-                    title={metaTooltip(r)}
-                    style={{ paddingLeft: 28 }}
-                  >
-                    <span className="split-row-name">
-                      {r.component_name || typeLabel(r.inventory_type).text}
-                    </span>
-                    <span className="split-row-meta mono">
-                      {r.item_count}/{cap(r.max_item_count)}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            )
-          })}
-          {groups.length === 0 && <div className="hint" style={{ padding: 8 }}>no inventories match.</div>}
+          {sidebar.map((item) =>
+            item.kind === 'single' ? renderGroup(item.group, 0) : renderBucket(item.bucket),
+          )}
+          {sidebar.length === 0 && <div className="hint" style={{ padding: 8 }}>no inventories match.</div>}
         </div>
       </aside>
 
