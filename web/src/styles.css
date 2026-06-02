@@ -786,3 +786,76 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Logs ────────────────────────────────────────────────────────────── */
+
+.logs-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+}
+
+.log-filter {
+  flex: 1;
+  min-width: 200px;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-dim);
+  cursor: pointer;
+}
+
+.logs-pane {
+  background: #08090b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 10px;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow: auto;
+  height: 65vh;
+  white-space: pre;
+}
+
+.log-line {
+  display: grid;
+  grid-template-columns: 14px 1fr;
+  gap: 6px;
+}
+
+.log-line.stdout {
+  color: var(--text-dim);
+}
+
+.log-line.stderr {
+  color: var(--danger);
+}
+
+.log-line.error {
+  color: var(--warn);
+}
+
+.log-stream {
+  color: var(--text-fade);
+  font-weight: 700;
+  text-align: center;
+}
+
+.log-line.stderr .log-stream {
+  color: var(--danger);
+}
+
+.log-text {
+  word-break: break-all;
+  white-space: pre-wrap;
+}

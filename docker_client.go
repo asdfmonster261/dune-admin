@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"net/url"
@@ -37,6 +39,81 @@ func NewDockerClient(project string) *DockerClient {
 // hold the connection open (logs?follow=true, exec/start, events).
 func (d *DockerClient) streamingClient() *http.Client {
 	return &http.Client{Transport: d.hc.Transport}
+}
+
+// LogLine is one decoded line from the docker multiplexed log stream.
+type LogLine struct {
+	Stream string // "stdout" or "stderr"
+	Text   string
+}
+
+// LogsStream streams logs from a container. Caller iterates the returned
+// channel until it closes. cancel() shuts the underlying HTTP response
+// down (use it from an HTTP handler when the client disconnects).
+func (d *DockerClient) LogsStream(ctx context.Context, container string, follow bool) (<-chan LogLine, func(), error) {
+	q := url.Values{}
+	q.Set("stdout", "true")
+	q.Set("stderr", "true")
+	q.Set("tail", "300")
+	if follow {
+		q.Set("follow", "true")
+	}
+	req, _ := http.NewRequestWithContext(ctx, "GET",
+		fmt.Sprintf("http://unix/containers/%s/logs?%s", container, q.Encode()), nil)
+	resp, err := d.streamingClient().Do(req)
+	if err != nil {
+		return nil, func() {}, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		resp.Body.Close()
+		return nil, func() {}, fmt.Errorf("docker logs: %s", resp.Status)
+	}
+	out := make(chan LogLine, 256)
+	cancel := func() { resp.Body.Close() }
+	go func() {
+		defer close(out)
+		defer resp.Body.Close()
+		readMultiplexedLogs(resp.Body, out)
+	}()
+	return out, cancel, nil
+}
+
+// readMultiplexedLogs parses docker's TTY=false multiplexed framing:
+//
+//	1 byte:  stream type (0=stdin, 1=stdout, 2=stderr)
+//	3 bytes: padding
+//	4 bytes: BE uint32 payload length
+//	N bytes: payload (may contain multiple \n-separated lines)
+//
+// Splits each frame on \n so the websocket gets one message per actual line.
+func readMultiplexedLogs(r io.Reader, out chan<- LogLine) {
+	br := bufio.NewReader(r)
+	header := make([]byte, 8)
+	for {
+		if _, err := io.ReadFull(br, header); err != nil {
+			return
+		}
+		streamType := header[0]
+		length := uint32(header[4])<<24 |
+			uint32(header[5])<<16 |
+			uint32(header[6])<<8 |
+			uint32(header[7])
+		if length == 0 {
+			continue
+		}
+		payload := make([]byte, length)
+		if _, err := io.ReadFull(br, payload); err != nil {
+			return
+		}
+		stream := "stdout"
+		if streamType == 2 {
+			stream = "stderr"
+		}
+		text := strings.TrimRight(string(payload), "\n")
+		for _, line := range strings.Split(text, "\n") {
+			out <- LogLine{Stream: stream, Text: line}
+		}
+	}
 }
 
 // ContainerInfo is the trimmed view of a docker container we expose.

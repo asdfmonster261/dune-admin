@@ -3,6 +3,7 @@ import { api, type Status } from './api'
 import OverviewTab from './tabs/OverviewTab'
 import PlayersTab from './tabs/PlayersTab'
 import DatabaseTab from './tabs/DatabaseTab'
+import LogsTab from './tabs/LogsTab'
 
 type TabId =
   | 'overview'
@@ -140,13 +141,17 @@ export default function App() {
         {active === 'overview' && <OverviewTab />}
         {active === 'players' && <PlayersTab />}
         {active === 'database' && <DatabaseTab />}
-        {active !== 'overview' && active !== 'players' && active !== 'database' && (
-          <div className="placeholder">
-            <span className="phase-chip">Phase {tab.phase}</span>
-            <h2>Not built yet</h2>
-            <p>This tab lands in its corresponding phase.</p>
-          </div>
-        )}
+        {active === 'logs' && <LogsTab />}
+        {active !== 'overview' &&
+          active !== 'players' &&
+          active !== 'database' &&
+          active !== 'logs' && (
+            <div className="placeholder">
+              <span className="phase-chip">Phase {tab.phase}</span>
+              <h2>Not built yet</h2>
+              <p>This tab lands in its corresponding phase.</p>
+            </div>
+          )}
       </main>
     </>
   )
