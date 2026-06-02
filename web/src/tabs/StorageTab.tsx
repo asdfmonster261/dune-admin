@@ -11,6 +11,7 @@ type StorageRow = {
   item_id: number | null
   vehicle_module_id: number | null
   item_count: number
+  owner_actor_class: string | null
   owner_player_name: string | null
   owner_item_template: string | null
 }
@@ -106,12 +107,37 @@ export default function StorageTab() {
 }
 
 function labelForRow(row: StorageRow): string {
-  if (row.owner_player_name) return `${row.owner_player_name} (#${row.id})`
+  if (row.owner_player_name) {
+    const cls = shortClass(row.owner_actor_class)
+    return cls
+      ? `${row.owner_player_name} · ${cls} (#${row.id})`
+      : `${row.owner_player_name} (#${row.id})`
+  }
   if (row.owner_item_template) return `${row.owner_item_template} (#${row.id})`
   if (row.exchange_id) return `exchange #${row.exchange_id} (inv ${row.id})`
   if (row.vehicle_module_id) return `vmodule #${row.vehicle_module_id} (inv ${row.id})`
+  if (row.owner_actor_class) {
+    const cls = shortClass(row.owner_actor_class)
+    return `${cls} #${row.actor_id} (inv ${row.id})`
+  }
   if (row.actor_id) return `actor #${row.actor_id} (inv ${row.id})`
   return `orphan inv #${row.id}`
+}
+
+// Trim Unreal class paths like
+// /Game/Dune/Characters/Player/BP_DunePlayerCharacter.BP_DunePlayerCharacter_C
+// down to a short readable form like 'PlayerCharacter'.
+function shortClass(s: string | null): string {
+  if (!s) return ''
+  let out = s
+  const slash = out.lastIndexOf('/')
+  if (slash >= 0) out = out.slice(slash + 1)
+  const dot = out.indexOf('.')
+  if (dot >= 0) out = out.slice(dot + 1)
+  out = out.replace(/_C$/, '')
+  out = out.replace(/^BP_Dune/, '')
+  out = out.replace(/^BP_/, '')
+  return out
 }
 
 function StorageDetail({ id }: { id: number }) {

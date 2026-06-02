@@ -56,16 +56,14 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if q != "" {
-		// Numeric query → inventory id. Otherwise ILIKE on character name +
-		// parent-container template_id (the two human-readable labels we surface).
 		if id, err := strconv.ParseInt(q, 10, 64); err == nil {
 			args = append(args, id)
 			conds = append(conds, fmt.Sprintf("i.id = $%d", len(args)))
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(ps.character_name ILIKE $%d OR parent_item.template_id ILIKE $%d)",
-					len(args), len(args)))
+				fmt.Sprintf("(ps.character_name ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+					len(args), len(args), len(args)))
 		}
 	}
 
@@ -74,6 +72,11 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		where = "WHERE " + strings.Join(conds, " AND ")
 	}
 
+	// Owner labelling: most inventories anchor to an actor; that actor's
+	// owner_account_id points back at dune.accounts, which is what
+	// player_state joins through. So character_name is available even when
+	// the inventory is on a player's pawn, a vehicle they own, or a
+	// container they placed — none of which equal player_controller_id.
 	sql := fmt.Sprintf(`
 		SELECT i.id,
 		       i.inventory_type,
@@ -84,10 +87,12 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       i.item_id,
 		       i.vehicle_module_id,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
+		       a.class                          AS owner_actor_class,
 		       ps.character_name                AS owner_player_name,
 		       parent_item.template_id          AS owner_item_template
 		FROM dune.inventories i
-		LEFT JOIN dune.player_state ps ON ps.player_controller_id = i.actor_id
+		LEFT JOIN dune.actors a       ON a.id = i.actor_id
+		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
 		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
 		%s
 		ORDER BY i.id DESC
@@ -123,10 +128,12 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.exchange_id,
 		       i.item_id,
 		       i.vehicle_module_id,
+		       a.class                 AS owner_actor_class,
 		       ps.character_name       AS owner_player_name,
 		       parent_item.template_id AS owner_item_template
 		FROM dune.inventories i
-		LEFT JOIN dune.player_state ps ON ps.player_controller_id = i.actor_id
+		LEFT JOIN dune.actors a        ON a.id = i.actor_id
+		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
 		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
 		WHERE i.id = $1
 	`, id)
