@@ -62,7 +62,7 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
 					len(args), len(args), len(args)))
 		}
 	}
@@ -91,18 +91,23 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
-		       COALESCE(a.class, root_actor.class)              AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name) AS owner_player_name,
-		       parent_item.template_id                          AS owner_item_template,
-		       root_ps.character_name                           AS root_player_name
+		       COALESCE(a.class, root_actor.class, vehicle_actor.class)        AS owner_actor_class,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name) AS owner_player_name,
+		       parent_item.template_id                                          AS owner_item_template,
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name)     AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
 		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
+		-- Item-anchored chain: inv → item → parent_inv → parent_actor → player.
 		LEFT JOIN dune.items parent_item       ON parent_item.id = i.item_id
 		LEFT JOIN dune.inventories root_inv    ON root_inv.id = parent_item.inventory_id
 		LEFT JOIN dune.actors root_actor       ON root_actor.id = root_inv.actor_id
 		LEFT JOIN dune.player_state root_ps    ON root_ps.account_id = root_actor.owner_account_id
+		-- Vehicle-module chain: inv → module → vehicle (which IS an actor) → player.
+		LEFT JOIN dune.vehicle_modules vmod    ON vmod.id = i.vehicle_module_id
+		LEFT JOIN dune.actors vehicle_actor    ON vehicle_actor.id = vmod.vehicle_id
+		LEFT JOIN dune.player_state vehicle_ps ON vehicle_ps.account_id = vehicle_actor.owner_account_id
 		%s
 		ORDER BY i.id DESC
 		LIMIT $1
