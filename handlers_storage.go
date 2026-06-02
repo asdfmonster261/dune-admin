@@ -86,11 +86,13 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       i.exchange_id,
 		       i.item_id,
 		       i.vehicle_module_id,
+		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
 		       a.class                          AS owner_actor_class,
 		       ps.character_name                AS owner_player_name,
 		       parent_item.template_id          AS owner_item_template
 		FROM dune.inventories i
+		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
 		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
 		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
@@ -104,7 +106,35 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, err, 500)
 		return
 	}
+	for _, row := range rows {
+		annotateComponentName(row)
+	}
 	jsonOK(w, rows)
+}
+
+// annotateComponentName resolves the component_name_hash field on a row to
+// the human-readable UE subobject name (BackpackInventory, PlayerBankInventory,
+// etc.) and adds it as component_name. Empty when the hash isn't in the
+// known table.
+func annotateComponentName(row map[string]any) {
+	v, ok := row["component_name_hash"]
+	if !ok || v == nil {
+		row["component_name"] = ""
+		return
+	}
+	var h int32
+	switch x := v.(type) {
+	case int32:
+		h = x
+	case int64:
+		h = int32(x)
+	case int:
+		h = int32(x)
+	default:
+		row["component_name"] = ""
+		return
+	}
+	row["component_name"] = resolveComponentName(h)
 }
 
 func handleStorageGet(w http.ResponseWriter, r *http.Request) {
@@ -128,10 +158,12 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.exchange_id,
 		       i.item_id,
 		       i.vehicle_module_id,
+		       ai.component_name_hash,
 		       a.class                 AS owner_actor_class,
 		       ps.character_name       AS owner_player_name,
 		       parent_item.template_id AS owner_item_template
 		FROM dune.inventories i
+		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a        ON a.id = i.actor_id
 		LEFT JOIN dune.player_state ps ON ps.account_id = a.owner_account_id
 		LEFT JOIN dune.items parent_item ON parent_item.id = i.item_id
@@ -145,6 +177,7 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, fmt.Errorf("inventory not found"), 404)
 		return
 	}
+	annotateComponentName(invRows[0])
 
 	items, _, err := queryAll(ctx, globalDB, `
 		SELECT id, template_id, stack_size, position_index, quality_level, acquisition_time

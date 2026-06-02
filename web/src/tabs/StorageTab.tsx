@@ -10,6 +10,8 @@ type StorageRow = {
   exchange_id: number | null
   item_id: number | null
   vehicle_module_id: number | null
+  component_name_hash: number | null
+  component_name: string
   item_count: number
   owner_actor_class: string | null
   owner_player_name: string | null
@@ -171,9 +173,10 @@ function typeLabel(t: number | null): { text: string; confident: boolean } {
   return { text: `t${t}`, confident: false }
 }
 
-// Compact meta string for the row: '<label> · <count>/<max>'.
-// Falls back to 't<type> · <count>/<max>' for unknown / low-confidence
-// types. Unlimited inventories (max_item_count = -1) render as ∞.
+// Compact meta string for the row: '<component>/<type> · <count>/<max>'.
+// component_name is the reverse-engineered UE subobject name
+// (BackpackInventory, PlayerBankInventory, …) for the slot on the actor.
+// inventory_type is the EInventoryType the slot was created with.
 function metaSummary(row: StorageRow): string {
   const t = typeLabel(row.inventory_type)
   const max =
@@ -182,12 +185,15 @@ function metaSummary(row: StorageRow): string {
       : row.max_item_count < 0
         ? '∞'
         : String(row.max_item_count)
-  return `${t.text} · ${row.item_count}/${max}`
+  const slot = row.component_name || t.text
+  return `${slot} · ${row.item_count}/${max}`
 }
 
 function metaTooltip(row: StorageRow): string {
   const parts = [
     `inventory_type=${row.inventory_type ?? '?'}`,
+    `component_name=${row.component_name || '?'}`,
+    `component_name_hash=${row.component_name_hash ?? '?'}`,
     `items=${row.item_count}`,
     `max_item_count=${row.max_item_count ?? '?'}`,
     `max_item_volume=${row.max_item_volume ?? '?'}`,
@@ -241,8 +247,10 @@ function StorageDetail({ id }: { id: number }) {
           <div>
             <div className="player-name">{labelForRow(inv)}</div>
             <div className="player-meta mono">
-              inventory id {inv.id} · type {inv.inventory_type ?? '?'} ·
-              max items {inv.max_item_count ?? '∞'} ·
+              inventory id {inv.id} ·
+              slot {inv.component_name || `hash ${inv.component_name_hash ?? '?'}`} ·
+              type {typeLabel(inv.inventory_type).text} ·
+              max items {inv.max_item_count === null ? '?' : inv.max_item_count < 0 ? '∞' : inv.max_item_count} ·
               max volume {inv.max_item_volume ?? '∞'}
             </div>
           </div>
