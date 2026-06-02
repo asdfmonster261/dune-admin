@@ -102,7 +102,8 @@ export default function BuildingTab() {
           ['owner_player_name', 'Player'],
           ['account_id', 'Account'],
           ['building_count', 'Buildings'],
-          ['placeable_count', 'Placeables'],
+          ['piece_count', 'Pieces'],
+          ['placeable_count', 'Free placeables'],
         ]}
         empty="No live buildings or placeables on the server right now."
       />

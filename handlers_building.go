@@ -133,24 +133,39 @@ func handleBuildingOverview(w http.ResponseWriter, r *http.Request) {
 	}
 	out["building_favorites"] = favorites
 
-	// Live builds rollup — per-player counts of placed buildings + placeables.
-	// A player with zero placed stuff doesn't appear; nothing to show.
+	// Live builds rollup — per-player counts of placed stuff. Ownership
+	// does NOT flow through actors.owner_account_id for buildings or
+	// placeables (always NULL there); it goes through
+	// permission_actor_rank → player controller actor → owner_account_id.
+	// And a building's owner is its TOTEM entity (one per landclaim),
+	// referenced by building_instances.owner_entity_id, which we resolve
+	// back to an actor via actor_fgl_entities.
 	liveBuilds, _, err := queryAll(ctx, globalDB, `
+		WITH player_owned_actors AS (
+		    SELECT pa.owner_account_id    AS account_id,
+		           par.permission_actor_id AS owned_actor_id
+		    FROM dune.permission_actor_rank par
+		    JOIN dune.actors pa ON pa.id = par.player_id
+		    WHERE pa.owner_account_id IS NOT NULL
+		)
 		SELECT ps.character_name AS owner_player_name,
 		       ps.account_id,
-		       (SELECT COUNT(*) FROM dune.buildings b
-		           JOIN dune.actors ba ON ba.id = b.id
-		         WHERE ba.owner_account_id = ps.account_id) AS building_count,
 		       (SELECT COUNT(*) FROM dune.placeables pl
-		           JOIN dune.actors pa ON pa.id = pl.id
-		         WHERE pa.owner_account_id = ps.account_id) AS placeable_count
+		           JOIN player_owned_actors poa ON poa.owned_actor_id = pl.id
+		         WHERE poa.account_id = ps.account_id) AS placeable_count,
+		       (SELECT COUNT(DISTINCT b.id) FROM dune.buildings b
+		           JOIN dune.building_instances bi   ON bi.building_id = b.id
+		           JOIN dune.actor_fgl_entities afe  ON afe.entity_id = bi.owner_entity_id
+		           JOIN player_owned_actors poa      ON poa.owned_actor_id = afe.actor_id
+		         WHERE poa.account_id = ps.account_id) AS building_count,
+		       (SELECT COUNT(*) FROM dune.building_instances bi
+		           JOIN dune.actor_fgl_entities afe ON afe.entity_id = bi.owner_entity_id
+		           JOIN player_owned_actors poa     ON poa.owned_actor_id = afe.actor_id
+		         WHERE poa.account_id = ps.account_id) AS piece_count
 		FROM dune.player_state ps
-		WHERE EXISTS (SELECT 1 FROM dune.buildings b
-		                JOIN dune.actors ba ON ba.id = b.id
-		              WHERE ba.owner_account_id = ps.account_id)
-		   OR EXISTS (SELECT 1 FROM dune.placeables pl
-		                JOIN dune.actors pa ON pa.id = pl.id
-		              WHERE pa.owner_account_id = ps.account_id)
+		WHERE EXISTS (
+		    SELECT 1 FROM player_owned_actors poa WHERE poa.account_id = ps.account_id
+		)
 		ORDER BY ps.character_name
 	`)
 	if err != nil {
