@@ -1,0 +1,22 @@
+# Standalone compose for testing dune-admin against an already-running
+# dune-server stack on the same Docker host. The canonical deployment is
+# in dune-server/docker-compose.yml — this file is for development of
+# dune-admin in isolation.
+
+services:
+  dune-admin:
+    build: .
+    container_name: dune-admin
+    ports:
+      - "6847:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env_file:
+      - .env
+    networks:
+      - dune-server
+
+networks:
+  dune-server:
+    name: dune-server_default
+    external: true

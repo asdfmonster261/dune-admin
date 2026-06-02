@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.local
+dune-admin
+dune-admin-linux
+web/node_modules
+web/dist
+.idea
+.vscode
+.DS_Store
