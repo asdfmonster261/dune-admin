@@ -34,6 +34,11 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/logs/pods", handleLogsPods)
 	mux.HandleFunc("GET /api/v1/logs/stream", handleLogsStream)
 
+	// Phase 5 — audit + GM commands
+	mux.HandleFunc("GET /api/v1/audit", handleAuditList)
+	mux.HandleFunc("GET /api/v1/gm/catalog", handleGMCatalog)
+	mux.HandleFunc("POST /api/v1/gm/preview", handleGMPreview)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)

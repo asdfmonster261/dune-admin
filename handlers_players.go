@@ -198,6 +198,11 @@ func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, fmt.Errorf("inventory_id, template_id, and positive stack_size required"), 400)
 		return
 	}
+	fields := map[string]any{
+		"inventory_id": req.InventoryID,
+		"template_id":  req.TemplateID,
+		"stack_size":   req.StackSize,
+	}
 	err := txOne(r.Context(), globalDB, func(tx pgx.Tx) error {
 		// Find next free position_index in this inventory.
 		var nextPos int64
@@ -218,9 +223,11 @@ func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 		return err
 	})
 	if err != nil {
+		auditErr(r, "players.give-item", fields, err)
 		jsonErr(w, err, 500)
 		return
 	}
+	auditOK(r, "players.give-item", fields)
 	jsonOK(w, map[string]any{"ok": true})
 }
 
@@ -242,6 +249,11 @@ func handleGiveCurrency(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, fmt.Errorf("player_controller_id required"), 400)
 		return
 	}
+	fields := map[string]any{
+		"player_controller_id": req.PlayerControllerID,
+		"currency_id":          req.CurrencyID,
+		"balance":              req.Balance,
+	}
 	_, err := globalDB.Exec(r.Context(), `
 		INSERT INTO dune.player_virtual_currency_balances
 			(player_controller_id, currency_id, balance)
@@ -250,9 +262,11 @@ func handleGiveCurrency(w http.ResponseWriter, r *http.Request) {
 			DO UPDATE SET balance = EXCLUDED.balance
 	`, req.PlayerControllerID, req.CurrencyID, req.Balance)
 	if err != nil {
+		auditErr(r, "players.give-currency", fields, err)
 		jsonErr(w, err, 500)
 		return
 	}
+	auditOK(r, "players.give-currency", fields)
 	jsonOK(w, map[string]any{"ok": true})
 }
 
@@ -270,13 +284,20 @@ func handleSetFactionRep(w http.ResponseWriter, r *http.Request) {
 		jsonErr(w, err, 400)
 		return
 	}
+	fields := map[string]any{
+		"actor_id":   req.ActorID,
+		"faction_id": req.FactionID,
+		"reputation": req.Reputation,
+	}
 	// Use the canonical SRF — guarantees side-effects (tier evals) fire.
 	_, err := globalDB.Exec(r.Context(),
 		"SELECT dune.set_player_faction_reputation($1, $2, $3)",
 		req.ActorID, req.FactionID, req.Reputation)
 	if err != nil {
+		auditErr(r, "players.set-faction-rep", fields, err)
 		jsonErr(w, err, 500)
 		return
 	}
+	auditOK(r, "players.set-faction-rep", fields)
 	jsonOK(w, map[string]any{"ok": true})
 }

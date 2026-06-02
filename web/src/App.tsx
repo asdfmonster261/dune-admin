@@ -4,6 +4,8 @@ import OverviewTab from './tabs/OverviewTab'
 import PlayersTab from './tabs/PlayersTab'
 import DatabaseTab from './tabs/DatabaseTab'
 import LogsTab from './tabs/LogsTab'
+import AuditTab from './tabs/AuditTab'
+import AdminActionsTab from './tabs/AdminActionsTab'
 
 type TabId =
   | 'overview'
@@ -142,16 +144,15 @@ export default function App() {
         {active === 'players' && <PlayersTab />}
         {active === 'database' && <DatabaseTab />}
         {active === 'logs' && <LogsTab />}
-        {active !== 'overview' &&
-          active !== 'players' &&
-          active !== 'database' &&
-          active !== 'logs' && (
-            <div className="placeholder">
-              <span className="phase-chip">Phase {tab.phase}</span>
-              <h2>Not built yet</h2>
-              <p>This tab lands in its corresponding phase.</p>
-            </div>
-          )}
+        {active === 'audit' && <AuditTab />}
+        {active === 'admin' && <AdminActionsTab />}
+        {!['overview', 'players', 'database', 'logs', 'audit', 'admin'].includes(active) && (
+          <div className="placeholder">
+            <span className="phase-chip">Phase {tab.phase}</span>
+            <h2>Not built yet</h2>
+            <p>This tab lands in its corresponding phase.</p>
+          </div>
+        )}
       </main>
     </>
   )

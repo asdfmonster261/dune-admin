@@ -859,3 +859,73 @@ body {
   word-break: break-all;
   white-space: pre-wrap;
 }
+
+/* ── Audit ───────────────────────────────────────────────────────────── */
+
+.grid td.wrap {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.grid td.small {
+  font-size: 11px;
+}
+
+.row-bad {
+  background: rgba(248, 113, 113, 0.04);
+}
+
+.err-text {
+  color: var(--danger);
+}
+
+/* ── Admin Actions ───────────────────────────────────────────────────── */
+
+.warn-card {
+  background: rgba(251, 191, 36, 0.06);
+  border-color: rgba(251, 191, 36, 0.35);
+}
+
+.warn-card .card-title {
+  color: var(--warn);
+}
+
+.field-label {
+  display: block;
+  font-size: 11px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 8px 0 4px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 700px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.input.wide {
+  width: 100%;
+}
+
+.json-preview {
+  background: #08090b;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  margin: 10px 0 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  max-height: 50vh;
+  overflow: auto;
+}
