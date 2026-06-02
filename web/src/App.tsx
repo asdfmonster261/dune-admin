@@ -12,18 +12,65 @@ type TabId =
   | 'ops'
   | 'niche'
 
-type Tab = { id: TabId; label: string; phase: number; ready: boolean }
+type Tab = { id: TabId; label: string; phase: number; description: string }
 
 const TABS: Tab[] = [
-  { id: 'overview', label: 'Overview', phase: 2, ready: false },
-  { id: 'players', label: 'Players', phase: 3, ready: false },
-  { id: 'database', label: 'Database', phase: 3, ready: false },
-  { id: 'logs', label: 'Logs', phase: 4, ready: false },
-  { id: 'audit', label: 'Audit', phase: 5, ready: false },
-  { id: 'admin', label: 'Admin Actions', phase: 5, ready: false },
-  { id: 'settings', label: 'Settings', phase: 6, ready: false },
-  { id: 'ops', label: 'Ops', phase: 7, ready: false },
-  { id: 'niche', label: 'Niche', phase: 8, ready: false },
+  {
+    id: 'overview',
+    label: 'Overview',
+    phase: 2,
+    description: 'System health, docker container state, online players, daily peak tracking.',
+  },
+  {
+    id: 'players',
+    label: 'Players',
+    phase: 3,
+    description:
+      'Browse characters, view inventory, edit currency / faction / XP, teleport, journey unlocks.',
+  },
+  {
+    id: 'database',
+    label: 'Database',
+    phase: 3,
+    description: 'Browse tables, run read-only SQL, inspect schemas.',
+  },
+  {
+    id: 'logs',
+    label: 'Logs',
+    phase: 4,
+    description: 'Live stream container logs over WebSocket. Cheat-detection feed.',
+  },
+  {
+    id: 'audit',
+    label: 'Audit',
+    phase: 5,
+    description: 'Append-only log of every admin action taken through this panel.',
+  },
+  {
+    id: 'admin',
+    label: 'Admin Actions',
+    phase: 5,
+    description: 'GM command catalog with payload preview + execute.',
+  },
+  {
+    id: 'settings',
+    label: 'Settings',
+    phase: 6,
+    description: '.env edits, INI knobs, director transfer + player-online-state tuning.',
+  },
+  {
+    id: 'ops',
+    label: 'Ops',
+    phase: 7,
+    description: 'Schedule announcements and restarts with player handoff.',
+  },
+  {
+    id: 'niche',
+    label: 'Niche',
+    phase: 8,
+    description:
+      'Hagga POI map, Deep Desert observations, server-side storage, blueprints, bases, exchange.',
+  },
 ]
 
 export default function App() {
@@ -55,49 +102,49 @@ export default function App() {
   const tab = TABS.find((t) => t.id === active)!
 
   return (
-    <div className="layout">
+    <>
       <header className="topbar">
         <div className="brand">
-          <span className="name">dune-admin</span>
-          {status?.battlegroup_ns && <span className="subtle">{status.battlegroup_ns}</span>}
+          <span className="brand-mark" />
+          <span className="brand-name">dune-admin</span>
+          {status?.battlegroup_ns && <span className="brand-meta">{status.battlegroup_ns}</span>}
         </div>
-        <div className="metaRow">
+        <div className="topbar-meta">
           <Pill label="docker" ok={status?.docker_connected} />
           <Pill label="orchestrator" ok={status?.orchestrator_connected} />
-          {status && <span className="mono">{status.version}</span>}
+          {status && <span className="version">{status.version}</span>}
           {err && <span className="pill bad">{err}</span>}
         </div>
       </header>
 
-      <div className="shell">
-        <nav className="sidenav">
-          <h3>Sections</h3>
-          {TABS.map((t) => (
-            <button
-              key={t.id}
-              className={`tab ${t.id === active ? 'active' : ''}`}
-              onClick={() => setActive(t.id)}
-            >
-              {t.label}
-              <span className="stage">P{t.phase}</span>
-            </button>
-          ))}
-        </nav>
+      <nav className="tabs">
+        {TABS.map((t) => (
+          <button
+            key={t.id}
+            className={`tab ${t.id === active ? 'active' : ''}`}
+            onClick={() => setActive(t.id)}
+          >
+            {t.label}
+            <span className="tab-stage">P{t.phase}</span>
+          </button>
+        ))}
+      </nav>
 
-        <main className="content">
-          <div className="card">
-            <h3 style={{ marginTop: 0, color: 'var(--text)', textTransform: 'none', letterSpacing: 0 }}>
-              {tab.label}
-            </h3>
-            <p className="placeholder">
-              Lands in <code>Phase {tab.phase}</code>. Phase 1 is the scaffold — the badges above
-              show that the backend can talk to docker and the orchestrator. Other tabs come
-              online as their phases ship.
-            </p>
-          </div>
-        </main>
-      </div>
-    </div>
+      <main className="content">
+        <h1 className="section-title">{tab.label}</h1>
+        <p className="section-sub">{tab.description}</p>
+
+        <div className="placeholder">
+          <span className="phase-chip">Phase {tab.phase}</span>
+          <h2>Not built yet</h2>
+          <p>
+            Phase 1 is the scaffold — backend + frontend plumbing. The badges above show that
+            this binary can reach <code>docker</code> and <code>dune-orchestrator</code>. Each
+            tab lands as its phase ships.
+          </p>
+        </div>
+      </main>
+    </>
   )
 }
 

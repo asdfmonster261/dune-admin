@@ -1,23 +1,40 @@
-/* Palette mirrors snapetech's admin panel so the new UI visually slots in
- * where the user expects, while the code stays our own.
+/* dune-admin
+ * Cool grey base + a single vivid orange accent (spice). Layered surfaces
+ * for elevation rather than borders everywhere. Top tab navigation.
  */
 :root {
   color-scheme: dark;
 
-  --bg: #0f1110;
-  --nav: #141814;
-  --panel: #1a1f1a;
-  --panel2: #131713;
-  --panel3: #20261f;
-  --line: #323b32;
-  --line-hover: #53614d;
-  --text: #edf3ea;
-  --muted: #a3aea4;
-  --accent: #d5a13e;
-  --accent-fg: #16120a;
-  --ok: #7fc27a;
-  --warn: #e1b75f;
-  --danger: #d96f62;
+  /* Neutral surface scale — true greys with a slight cool tint so the
+   * orange accent feels distinctly warm by contrast. */
+  --bg: #0c0d10;
+  --surface-1: #14161b;
+  --surface-2: #1b1e24;
+  --surface-3: #232730;
+
+  /* Subtle borders. Most separation comes from surface deltas, not lines. */
+  --line: #262a32;
+  --line-strong: #353a44;
+
+  /* Text */
+  --text: #e8eaed;
+  --text-dim: #9aa0aa;
+  --text-fade: #6b7280;
+
+  /* Accent: spice orange — used for active state, primary actions, brand. */
+  --accent: #ff7b3a;
+  --accent-soft: rgba(255, 123, 58, 0.12);
+  --accent-fg: #0c0d10;
+
+  /* Status — desaturated, low chroma so they don't fight the accent. */
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --danger: #f87171;
+
+  /* Misc */
+  --radius: 6px;
+  --radius-lg: 10px;
+  --mono: ui-monospace, SFMono-Regular, "JetBrains Mono", Menlo, monospace;
 }
 
 * {
@@ -32,206 +49,248 @@ body,
 
 body {
   margin: 0;
-  font: 14px/1.45 system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font: 13.5px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--accent-soft);
   color: var(--text);
 }
 
-/* ── Layout ─────────────────────────────────────────────────────────── */
+/* ── Top bar ─────────────────────────────────────────────────────────── */
 
-.layout {
-  display: grid;
-  grid-template-rows: auto 1fr;
-  min-height: 100%;
-}
-
-header.topbar {
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 10px 20px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line);
   position: sticky;
   top: 0;
-  z-index: 3;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  padding: 13px 18px;
-  background: #161a16;
-  border-bottom: 1px solid var(--line);
+  z-index: 10;
 }
 
 .brand {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.brand .name {
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--accent);
-  font-size: 14px;
-}
-
-.brand .subtle {
-  color: var(--muted);
-  font-size: 12px;
-}
-
-.shell {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-}
-
-nav.sidenav {
-  position: sticky;
-  top: 58px;
-  height: calc(100vh - 58px);
-  overflow: auto;
-  padding: 14px;
-  background: var(--nav);
-  border-right: 1px solid var(--line);
-}
-
-nav.sidenav h3 {
-  font-size: 11px;
-  margin: 0 0 8px;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-nav.sidenav .tab {
-  display: block;
-  width: 100%;
-  text-align: left;
-  padding: 8px 10px;
-  margin-bottom: 4px;
-  background: transparent;
-  color: var(--muted);
-  border: 1px solid transparent;
-  border-radius: 6px;
-  cursor: pointer;
-  font: inherit;
-}
-
-nav.sidenav .tab:hover {
-  border-color: var(--line);
-  color: var(--text);
-}
-
-nav.sidenav .tab.active {
-  background: #252416;
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-nav.sidenav .tab .stage {
-  float: right;
-  font-size: 11px;
-  color: var(--muted);
-}
-
-main.content {
-  padding: 18px 20px;
-  min-width: 0;
-}
-
-/* ── Cards / metrics ─────────────────────────────────────────────────── */
-
-.card,
-.panelBand {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel);
-  padding: 14px;
-  margin-bottom: 14px;
-}
-
-.metricGrid {
-  display: grid;
+  align-items: center;
   gap: 12px;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
 
-.metric {
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: var(--panel2);
-  padding: 12px;
-  min-height: 82px;
+.brand-mark {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background:
+    linear-gradient(135deg, var(--accent) 0%, #ff5b1a 100%);
+  position: relative;
+  display: inline-block;
 }
 
-.metric .label {
-  color: var(--muted);
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.metric .value {
-  margin-top: 8px;
-  font-size: 22px;
-  font-weight: 600;
+.brand-name {
   color: var(--text);
+  font-size: 14px;
+  letter-spacing: -0.01em;
 }
 
-/* ── Pills / badges ──────────────────────────────────────────────────── */
+.brand-meta {
+  color: var(--text-fade);
+  font-family: var(--mono);
+  font-size: 11px;
+  padding-left: 12px;
+  border-left: 1px solid var(--line);
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+/* ── Pills (connection state) ────────────────────────────────────────── */
 
 .pill {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  border: 1px solid var(--line);
+  padding: 3px 9px;
   border-radius: 999px;
-  padding: 4px 10px;
-  background: #101310;
-  color: var(--muted);
-  font-size: 12px;
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-family: var(--mono);
 }
+
 .pill .dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
-  background: var(--muted);
+  background: var(--text-fade);
 }
+
 .pill.ok {
-  border-color: #315e31;
   color: var(--ok);
 }
 .pill.ok .dot {
   background: var(--ok);
 }
+
 .pill.bad {
-  border-color: #743932;
   color: var(--danger);
 }
 .pill.bad .dot {
   background: var(--danger);
 }
 
-/* ── Misc ────────────────────────────────────────────────────────────── */
-
-.mono {
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 12px;
-  color: var(--muted);
+.version {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-fade);
 }
 
-.metaRow {
+/* ── Tabs (top, horizontal) ──────────────────────────────────────────── */
+
+.tabs {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 2px;
+  padding: 0 20px;
+  background: var(--surface-1);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 48px;
+  z-index: 9;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
+
+.tab {
+  position: relative;
+  padding: 10px 14px;
+  background: transparent;
+  border: 0;
+  color: var(--text-dim);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab:hover {
+  color: var(--text);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.tab-stage {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--text-fade);
+  background: var(--surface-2);
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.tab.active .tab-stage {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+/* ── Main content ────────────────────────────────────────────────────── */
+
+.content {
+  padding: 24px 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+.section-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+  margin: 0 0 20px;
+}
+
+.card {
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-dim);
+  margin: 0 0 12px;
+}
+
+/* ── Placeholder styling (Phase 1) ───────────────────────────────────── */
 
 .placeholder {
-  color: var(--muted);
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  text-align: center;
+  color: var(--text-dim);
+}
+
+.placeholder .phase-chip {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+  margin-bottom: 12px;
+}
+
+.placeholder h2 {
+  margin: 0 0 8px;
+  font-size: 16px;
+  color: var(--text);
+  font-weight: 500;
+}
+
+.placeholder p {
+  margin: 0 auto;
+  max-width: 480px;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
 .placeholder code {
-  background: var(--panel2);
+  background: var(--surface-2);
   border: 1px solid var(--line);
-  padding: 1px 6px;
   border-radius: 4px;
-  font-family: ui-monospace, SFMono-Regular, monospace;
+  padding: 1px 6px;
+  font-family: var(--mono);
   font-size: 12px;
 }
