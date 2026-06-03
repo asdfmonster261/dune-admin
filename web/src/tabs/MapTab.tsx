@@ -276,9 +276,10 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       // Only copy when the click landed inside the map texture bounds.
       if (tx >= 0 && tx <= proj.texture_size && ty >= 0 && ty <= proj.texture_size) {
         const txt = `${Math.round(wx)} ${Math.round(wy)}`
-        navigator.clipboard?.writeText(txt).catch(() => {})
-        setCoordToast(txt)
-        window.setTimeout(() => setCoordToast(null), 1800)
+        copyToClipboard(txt).then((ok) => {
+          setCoordToast(ok ? txt : 'copy failed (need HTTPS)')
+          window.setTimeout(() => setCoordToast(null), 1800)
+        })
       }
     }
   }
@@ -835,6 +836,41 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n))
+}
+
+// Copy text to the OS clipboard. Tries the modern async Clipboard API
+// first (only available in secure contexts — HTTPS or localhost), then
+// falls back to the legacy execCommand('copy') via a hidden textarea
+// so the LAN HTTP deployment can still copy world coords. Returns true
+// when one of the two paths succeeded.
+async function copyToClipboard(text: string): Promise<boolean> {
+  // Secure-context path. window.isSecureContext is true on HTTPS and
+  // on http://localhost; everywhere else navigator.clipboard.writeText
+  // rejects with NotAllowedError.
+  if (typeof window !== 'undefined' && window.isSecureContext && navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text)
+      return true
+    } catch {
+      // fall through to legacy
+    }
+  }
+  // Legacy path. Off-screen textarea so the user doesn't see a flash.
+  try {
+    const ta = document.createElement('textarea')
+    ta.value = text
+    ta.setAttribute('readonly', '')
+    ta.style.position = 'fixed'
+    ta.style.opacity = '0'
+    ta.style.pointerEvents = 'none'
+    document.body.appendChild(ta)
+    ta.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(ta)
+    return ok
+  } catch {
+    return false
+  }
 }
 
 // fitToViewport zooms the map so the full 8192² texture exactly fits the
