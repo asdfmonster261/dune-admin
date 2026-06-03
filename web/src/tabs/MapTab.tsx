@@ -179,6 +179,18 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return () => clearInterval(id)
   }, [])
 
+  // Auto-fit on first mount, once both the viewport ref and the map
+  // bundle are ready. `data` brings the texture_size; viewport gives us
+  // the dimensions to fit into. Gated by a ref so user-initiated pan /
+  // zoom isn't undone by a re-render that happens to land in this effect.
+  const fittedOnceRef = useRef(false)
+  useEffect(() => {
+    if (fittedOnceRef.current) return
+    if (!viewportEl || !data) return
+    fitToViewport(viewportEl, data.projection.texture_size, setScale, setPan)
+    fittedOnceRef.current = true
+  }, [viewportEl, data])
+
   // Load static POIs once at mount.
   useEffect(() => {
     let cancelled = false
