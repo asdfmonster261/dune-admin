@@ -38,6 +38,12 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 	// Pull every player whose PlayerCharacter pawn is currently on the Hagga
 	// Basin partition. We surface online_status as well so the UI can dim
 	// offline characters — useful when chasing "where did so-and-so log out".
+	// `dune.actor_state.state` flips off `Default` whenever the actor is
+	// physically not in the world — VehicleBackup / BaseBackup / Travel /
+	// AbortedAuthorityTransfer / VehicleRecovery. The row stays in
+	// `dune.actors` (with stale coords) until the backup is restored.
+	// Filtering to `Default` (or no state row) is how we tell "actually
+	// present right now" from "stored somewhere."
 	players, _, err := queryAll(ctx, globalDB, `
 		SELECT a.id                                  AS actor_id,
 		       a.partition_id,
@@ -52,8 +58,10 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		FROM dune.actors a
 		JOIN dune.player_state ps
 		  ON ps.player_pawn_id = a.id
+		LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
 		WHERE a.class = '/Game/Dune/Characters/Player/BP_DunePlayerCharacter.BP_DunePlayerCharacter_C'
 		  AND a.map  = 'HaggaBasin'
+		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name
 	`)
 	if err != nil {
@@ -102,8 +110,10 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		       ON owner_actor.id = par.player_id
 		LEFT JOIN dune.player_state ps
 		       ON ps.account_id = owner_actor.owner_account_id
+		LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
 		WHERE a.class = '/Game/Dune/Systems/Building/Pieces/BP_TotemSmall.BP_TotemSmall_C'
 		  AND a.map = 'HaggaBasin'
+		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name NULLS LAST, a.id
 	`)
 	if err != nil {
@@ -135,8 +145,10 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		       ON owner_actor.id = par.player_id
 		LEFT JOIN dune.player_state ps
 		       ON ps.account_id = owner_actor.owner_account_id
+		LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
 		WHERE a.map = 'HaggaBasin'
 		  AND a.class LIKE '/Game/Dune/Systems/Vehicles/%'
+		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name NULLS LAST, a.id
 	`)
 	if err != nil {
