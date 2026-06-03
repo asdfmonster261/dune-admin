@@ -1293,3 +1293,31 @@ body {
   color: var(--text-fade);
 }
 
+
+.map-storm-schedule {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 10px 4px;
+  margin-top: 2px;
+  border-top: 1px solid var(--surface-border);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.map-storm-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.map-storm-label {
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-fade);
+}
+
+.map-storm-value {
+  color: var(--text);
+  font-size: 11px;
+}

@@ -72,18 +72,39 @@ type Vehicle = {
   owner_account_id: number | null
 }
 
+type Storm = {
+  spawn_time: string
+  start_x: number
+  start_y: number
+  end_x: number
+  end_y: number
+  lifetime_seconds: number
+  map: string
+}
+
+type StormSnapshot = {
+  active: Storm[]
+  next_scheduled_at: string | null
+  blackout_start: string | null
+  blackout_end: string | null
+  coriolis_cycle_start: string | null
+  coriolis_cycle_end: string | null
+  coriolis_world_seed: number | null
+}
+
 type MapBundle = {
   players: Player[]
   deaths: Death[]
   buildings: Building[]
   vehicles: Vehicle[]
+  storms: StormSnapshot
   projection: Projection
 }
 
 // Layer toggle ids for the live overlay rows. Stored separately from
 // the POI hidden-set so "hide all" on the POI side doesn't sweep them
 // away (and vice versa).
-type LayerId = 'players' | 'deaths' | 'buildings' | 'vehicles'
+type LayerId = 'players' | 'deaths' | 'buildings' | 'vehicles' | 'storms'
 
 type IconType = { id: string; label: string; count: number }
 type Group = { id: string; label: string; icons: IconType[] }
@@ -103,6 +124,10 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Pan + zoom state (CSS transform on the map layer)
   const [scale, setScale] = useState(0.15)
   const [pan, setPan] = useState({ x: 0, y: 0 })
+  // Wall-clock tick for smooth storm wall interpolation between 3s polls.
+  // 1s cadence is plenty — a 5-min sweep across the map moves ~27 px/s
+  // at the default 0.15 zoom, well within human-eye resolution.
+  const [now, setNow] = useState(() => Date.now())
   const dragRef = useRef<{ x: number; y: number } | null>(null)
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
 
@@ -127,6 +152,12 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       cancelled = true
       clearInterval(id)
     }
+  }, [])
+
+  // 1 s wall-clock tick so the storm wall slides smoothly between polls.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(id)
   }, [])
 
   // Load static POIs once at mount.
@@ -268,6 +299,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     [
                       { id: 'players', label: 'Players', count: data.players.length, dot: '#22c55e' },
                       { id: 'vehicles', label: 'Vehicles', count: data.vehicles.length, dot: '#06b6d4' },
+                      { id: 'storms', label: 'Sandstorms', count: data.storms?.active.length ?? 0, dot: '#f59e0b' },
                       { id: 'deaths', label: 'Recent deaths', count: data.deaths.length, dot: '#ef4444' },
                       { id: 'buildings', label: 'Land claims', count: data.buildings.length, dot: '#8b5cf6' },
                     ] as { id: LayerId; label: string; count: number; dot: string }[]
@@ -294,6 +326,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     )
                   })}
                 </ul>
+                <StormSchedule storms={data.storms} now={now} />
               </section>
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
@@ -387,10 +420,11 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
             >
               {/* Layer paint order, bottom → top:
                     1. POI icons (static, lowest priority)
-                    2. Land-claim totems (purple diamond)
-                    3. Vehicles (cyan triangle)
-                    4. Recent death markers (red X)
-                    5. Live players (always on top so you can find them) */}
+                    2. Sandstorm path + active wall (amber sweep)
+                    3. Land-claim totems (purple diamond)
+                    4. Vehicles (cyan triangle)
+                    5. Recent death markers (red X)
+                    6. Live players (always on top so you can find them) */}
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
@@ -408,6 +442,74 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                   </image>
                 )
               })}
+              {!hiddenLayers.has('storms') &&
+                data.storms?.active.map((s, i) => {
+                  const startPx = project(s.start_x, s.start_y)
+                  const endPx = project(s.end_x, s.end_y)
+                  if (!startPx || !endPx) return null
+                  const spawnMs = Date.parse(s.spawn_time)
+                  // Clamp progress so a storm whose lifetime just ticked
+                  // past stays at the end position until the next poll
+                  // drops it from the active list.
+                  const t = clamp(
+                    (now - spawnMs) / (s.lifetime_seconds * 1000),
+                    0,
+                    1,
+                  )
+                  const curX = startPx.x + (endPx.x - startPx.x) * t
+                  const curY = startPx.y + (endPx.y - startPx.y) * t
+                  // Perpendicular wall extending either side of the sweep
+                  // line — half-length scales with the sweep length so
+                  // long sweeps get a long wall, short ones stay tight.
+                  const dx = endPx.x - startPx.x
+                  const dy = endPx.y - startPx.y
+                  const len = Math.hypot(dx, dy) || 1
+                  const nx = -dy / len
+                  const ny = dx / len
+                  const half = len * 0.35
+                  const wallX1 = curX + nx * half
+                  const wallY1 = curY + ny * half
+                  const wallX2 = curX - nx * half
+                  const wallY2 = curY - ny * half
+                  return (
+                    <g key={`storm-${i}`} style={{ pointerEvents: 'none' }}>
+                      {/* Faint full sweep path so the trajectory is
+                          legible even after the wall slides past you. */}
+                      <line
+                        x1={startPx.x}
+                        y1={startPx.y}
+                        x2={endPx.x}
+                        y2={endPx.y}
+                        stroke="#f59e0b"
+                        strokeWidth={4 / scale}
+                        opacity={0.25}
+                        strokeDasharray={`${10 / scale} ${6 / scale}`}
+                      />
+                      {/* Active wall: bright perpendicular bar at the
+                          interpolated current position. */}
+                      <line
+                        x1={wallX1}
+                        y1={wallY1}
+                        x2={wallX2}
+                        y2={wallY2}
+                        stroke="#f59e0b"
+                        strokeWidth={14 / scale}
+                        strokeLinecap="round"
+                        opacity={0.85}
+                      />
+                      {/* Direction indicator at the current center so the
+                          viewer can tell which way the wall is heading. */}
+                      <circle
+                        cx={curX}
+                        cy={curY}
+                        r={6 / scale}
+                        fill="#fff"
+                        stroke="#92400e"
+                        strokeWidth={1 / scale}
+                      />
+                    </g>
+                  )
+                })}
               {!hiddenLayers.has('buildings') &&
                 data.buildings.map((b) => {
                   const pos = project(b.world_x, b.world_y)
@@ -551,6 +653,56 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n))
+}
+
+// Compact schedule widget under the Live data layer toggles. Shows the
+// next sandstorm countdown, the active blackout window if any, and the
+// current Coriolis cycle end. All values come from the game-server log
+// tailer in storm_tailer.go.
+function StormSchedule({ storms, now }: { storms: StormSnapshot; now: number }) {
+  if (!storms) return null
+  const next = storms.next_scheduled_at ? Date.parse(storms.next_scheduled_at) : null
+  const cycleEnd = storms.coriolis_cycle_end ? Date.parse(storms.coriolis_cycle_end) : null
+  const blackoutStart = storms.blackout_start ? Date.parse(storms.blackout_start) : null
+  const blackoutEnd = storms.blackout_end ? Date.parse(storms.blackout_end) : null
+  const inBlackout =
+    blackoutStart != null && blackoutEnd != null && now >= blackoutStart && now < blackoutEnd
+
+  return (
+    <div className="map-storm-schedule">
+      {next != null && (
+        <div className="map-storm-line">
+          <span className="map-storm-label">next storm</span>
+          <span className="map-storm-value mono">{formatCountdown(next - now)}</span>
+        </div>
+      )}
+      {inBlackout && (
+        <div className="map-storm-line">
+          <span className="map-storm-label">blackout ends</span>
+          <span className="map-storm-value mono">{formatCountdown(blackoutEnd! - now)}</span>
+        </div>
+      )}
+      {cycleEnd != null && (
+        <div className="map-storm-line">
+          <span className="map-storm-label">coriolis</span>
+          <span className="map-storm-value mono">{formatCountdown(cycleEnd - now)}</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function formatCountdown(ms: number): string {
+  if (ms < 0) return '—'
+  const total = Math.floor(ms / 1000)
+  const d = Math.floor(total / 86400)
+  const h = Math.floor((total % 86400) / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = total % 60
+  if (d > 0) return `${d}d ${h}h`
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
 }
 
 // Vehicle classes ship as e.g. `BP_LightOrnithopter_Choam` — trim the

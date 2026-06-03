@@ -161,6 +161,11 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		"deaths":    deaths,
 		"buildings": buildings,
 		"vehicles":  vehicles,
+		// Storm state comes from the docker-log tailer (storm_tailer.go),
+		// not the DB — the game-server emits start/end coords + lifetime
+		// per spawn at VeryVerbose. The frontend interpolates the current
+		// wall position from spawn_time + lifetime.
+		"storms": GetStormSnapshot(),
 		// Affine mapping constants the frontend uses to project (world_x,
 		// world_y) onto the 8192² Hagga texture. Initial guess: Hagga is
 		// roughly 24 km × 24 km centered on (0,0); we'll calibrate against

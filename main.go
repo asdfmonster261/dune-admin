@@ -100,6 +100,10 @@ func main() {
 	// run_at has arrived.
 	startOpsWorker(rootCtx)
 
+	// Phase 10 follow-up: tail the survival container's docker logs and
+	// keep a live snapshot of Hagga sandstorm spawn lines for the Map tab.
+	startStormTailer(rootCtx)
+
 	mux := http.NewServeMux()
 	registerRoutes(mux)
 

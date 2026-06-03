@@ -85,10 +85,18 @@ type LogLine struct {
 // channel until it closes. cancel() shuts the underlying HTTP response
 // down (use it from an HTTP handler when the client disconnects).
 func (d *DockerClient) LogsStream(ctx context.Context, container string, follow bool) (<-chan LogLine, func(), error) {
+	return d.LogsStreamWithTail(ctx, container, follow, "300")
+}
+
+// LogsStreamWithTail is the variant taking a custom `tail` value (docker's
+// number-of-lines-from-the-end of the buffer to replay before following).
+// The storm tailer wants a much larger window so it can pick up the
+// startup-only LogCoriolis cycle lines after a dune-admin restart.
+func (d *DockerClient) LogsStreamWithTail(ctx context.Context, container string, follow bool, tail string) (<-chan LogLine, func(), error) {
 	q := url.Values{}
 	q.Set("stdout", "true")
 	q.Set("stderr", "true")
-	q.Set("tail", "300")
+	q.Set("tail", tail)
 	if follow {
 		q.Set("follow", "true")
 	}
