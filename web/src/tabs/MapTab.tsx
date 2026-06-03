@@ -416,7 +416,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
             }}
           >
             <img
-              src="/maps/hagga.png"
+              src="/maps/hagga.webp"
               width={tex}
               height={tex}
               draggable={false}
