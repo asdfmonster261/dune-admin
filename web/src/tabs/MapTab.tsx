@@ -655,7 +655,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           {pois?.pois.length ?? 0} POIs visible
           {allHidden && ' (all categories hidden)'}
         </span>
-        <span className="hint">scroll to zoom · drag to pan · ½⅔ click a row to toggle</span>
+        <span className="hint">scroll to zoom · drag to pan · click a row to toggle</span>
       </div>
     </div>
   )
