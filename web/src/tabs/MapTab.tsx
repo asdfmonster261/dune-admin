@@ -396,6 +396,16 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           onMouseUp={onMouseUp}
           onMouseLeave={onMouseUp}
         >
+          <div className="map-controls">
+            <button
+              type="button"
+              className="map-control-btn"
+              onClick={() => fitToViewport(viewportEl, tex, setScale, setPan)}
+              title="Fit map to viewport"
+            >
+              Fit
+            </button>
+          </div>
           <div
             className="map-layer"
             style={{
@@ -653,6 +663,25 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n))
+}
+
+// fitToViewport zooms the map so the full 8192² texture exactly fits the
+// available viewport, then centres it. Used by the "Fit" button and on
+// initial viewport mount so the first paint isn't off-screen if the
+// browser window is smaller than the default 0.15× scale assumes.
+function fitToViewport(
+  viewport: HTMLDivElement | null,
+  tex: number,
+  setScale: (s: number) => void,
+  setPan: (p: { x: number; y: number }) => void,
+) {
+  if (!viewport) return
+  const w = viewport.clientWidth
+  const h = viewport.clientHeight
+  if (w === 0 || h === 0) return
+  const s = Math.min(w / tex, h / tex)
+  setScale(s)
+  setPan({ x: (w - tex * s) / 2, y: (h - tex * s) / 2 })
 }
 
 // Compact schedule widget under the Live data layer toggles. Shows the
