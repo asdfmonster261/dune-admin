@@ -62,7 +62,7 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		} else {
 			args = append(args, "%"+q+"%")
 			conds = append(conds,
-				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
+				fmt.Sprintf("(COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name, ri_pl_ps.character_name) ILIKE $%d OR parent_item.template_id ILIKE $%d OR a.class ILIKE $%d)",
 					len(args), len(args), len(args)))
 		}
 	}
@@ -102,9 +102,9 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       ai.component_name_hash,
 		       (SELECT COUNT(*) FROM dune.items WHERE inventory_id = i.id) AS item_count,
 		       COALESCE(a.class, root_actor.class, vehicle_actor.class)        AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS owner_player_name,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name, ri_pl_ps.character_name) AS owner_player_name,
 		       parent_item.template_id                                          AS owner_item_template,
-		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS root_player_name
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name, ri_pl_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a       ON a.id = i.actor_id
@@ -142,6 +142,18 @@ func handleStorageList(w http.ResponseWriter, r *http.Request) {
 		       ON pl_par.permission_actor_id = pl_afe.actor_id AND pl_par.rank = 1
 		LEFT JOIN dune.actors pl_owner_actor   ON pl_owner_actor.id = pl_par.player_id
 		LEFT JOIN dune.player_state pl_ps      ON pl_ps.account_id = pl_owner_actor.owner_account_id
+		-- Item-anchored placeable chain: same idea, but for sub-inventories
+		-- nested in items stored INSIDE a placeable (e.g. a binoculars
+		-- inventory inside a SpiceSilo). Here i.actor_id is NULL; we walk
+		-- the item chain to root_inv.actor_id (the silo) and then jump to
+		-- its owning totem.
+		LEFT JOIN dune.placeables ri_pl_anchor ON ri_pl_anchor.id = root_inv.actor_id
+		LEFT JOIN dune.actor_fgl_entities ri_pl_afe
+		       ON ri_pl_afe.entity_id = ri_pl_anchor.owner_entity_id
+		LEFT JOIN dune.permission_actor_rank ri_pl_par
+		       ON ri_pl_par.permission_actor_id = ri_pl_afe.actor_id AND ri_pl_par.rank = 1
+		LEFT JOIN dune.actors ri_pl_owner_actor ON ri_pl_owner_actor.id = ri_pl_par.player_id
+		LEFT JOIN dune.player_state ri_pl_ps    ON ri_pl_ps.account_id = ri_pl_owner_actor.owner_account_id
 		%s
 		ORDER BY i.id DESC
 		LIMIT $1
@@ -206,9 +218,9 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       i.vehicle_module_id,
 		       ai.component_name_hash,
 		       COALESCE(a.class, root_actor.class, vehicle_actor.class)              AS owner_actor_class,
-		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS owner_player_name,
+		       COALESCE(ps.character_name, root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name, ri_pl_ps.character_name) AS owner_player_name,
 		       parent_item.template_id                                                AS owner_item_template,
-		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name) AS root_player_name
+		       COALESCE(root_ps.character_name, vehicle_ps.character_name, perm_ps.character_name, pl_ps.character_name, ri_pl_ps.character_name) AS root_player_name
 		FROM dune.inventories i
 		LEFT JOIN dune.actor_inventories ai ON ai.inventory_id = i.id
 		LEFT JOIN dune.actors a        ON a.id = i.actor_id
@@ -235,6 +247,18 @@ func handleStorageGet(w http.ResponseWriter, r *http.Request) {
 		       ON pl_par.permission_actor_id = pl_afe.actor_id AND pl_par.rank = 1
 		LEFT JOIN dune.actors pl_owner_actor   ON pl_owner_actor.id = pl_par.player_id
 		LEFT JOIN dune.player_state pl_ps      ON pl_ps.account_id = pl_owner_actor.owner_account_id
+		-- Item-anchored placeable chain: same idea, but for sub-inventories
+		-- nested in items stored INSIDE a placeable (e.g. a binoculars
+		-- inventory inside a SpiceSilo). Here i.actor_id is NULL; we walk
+		-- the item chain to root_inv.actor_id (the silo) and then jump to
+		-- its owning totem.
+		LEFT JOIN dune.placeables ri_pl_anchor ON ri_pl_anchor.id = root_inv.actor_id
+		LEFT JOIN dune.actor_fgl_entities ri_pl_afe
+		       ON ri_pl_afe.entity_id = ri_pl_anchor.owner_entity_id
+		LEFT JOIN dune.permission_actor_rank ri_pl_par
+		       ON ri_pl_par.permission_actor_id = ri_pl_afe.actor_id AND ri_pl_par.rank = 1
+		LEFT JOIN dune.actors ri_pl_owner_actor ON ri_pl_owner_actor.id = ri_pl_par.player_id
+		LEFT JOIN dune.player_state ri_pl_ps    ON ri_pl_ps.account_id = ri_pl_owner_actor.owner_account_id
 		WHERE i.id = $1
 	`, id)
 	if err != nil {
