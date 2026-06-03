@@ -59,6 +59,9 @@ func registerRoutes(mux *http.ServeMux) {
 	// Phase 9 — building (vehicle backups, base backups, blueprints, …)
 	mux.HandleFunc("GET /api/v1/building", handleBuildingOverview)
 
+	// Phase 10 — map (live player positions on Hagga Basin)
+	mux.HandleFunc("GET /api/v1/map/players", handleMapPlayers)
+
 	// Embedded SPA — catch-all. Must be registered last (or have no overlap
 	// with /api/v1/* which is fine since these patterns don't collide).
 	mux.HandleFunc("/", serveWeb)

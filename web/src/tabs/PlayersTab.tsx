@@ -31,11 +31,30 @@ type Detail = {
   inventory: InventoryItem[]
 }
 
-export default function PlayersTab() {
+type PlayersTabProps = {
+  // Cross-tab navigation: when MapTab punches through to a player by
+  // clicking their dot, App sets this to the player_state_id we should
+  // open on mount. After we consume it we call onConsumed so it doesn't
+  // re-trigger if the operator just navigates between tabs later.
+  initialSelectedId?: number | null
+  onConsumed?: () => void
+}
+
+export default function PlayersTab({ initialSelectedId, onConsumed }: PlayersTabProps = {}) {
   const [list, setList] = useState<Player[]>([])
   const [filter, setFilter] = useState('')
   const [selected, setSelected] = useState<number | null>(null)
   const [err, setErr] = useState<string | null>(null)
+
+  // Consume the cross-tab hint on mount. Runs once; if the operator
+  // later picks a different player here, the hint stays null.
+  useEffect(() => {
+    if (initialSelectedId != null) {
+      setSelected(initialSelectedId)
+      onConsumed?.()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   // Initial + on-search load
   useEffect(() => {

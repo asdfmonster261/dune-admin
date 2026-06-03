@@ -1067,3 +1067,229 @@ body {
   font-family: var(--mono);
   font-size: 11px;
 }
+
+/* ── Map tab ─────────────────────────────────────────────────────────── */
+
+.map-wrap {
+  display: flex;
+  flex-direction: column;
+  /* The header + section title above us total ~190 px; pick a value
+   * that's slightly generous so the map never forces page scroll. */
+  height: calc(100vh - 200px);
+  min-height: 480px;
+  gap: 6px;
+}
+
+.map-body {
+  flex: 1;
+  display: flex;
+  gap: 10px;
+  min-height: 0;
+}
+
+.map-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 8px 4px 8px 8px;
+  overflow: hidden;
+}
+
+.map-sidebar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 4px;
+  border-bottom: 1px solid var(--line);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.map-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  cursor: pointer;
+}
+
+.map-link:hover {
+  text-decoration: underline;
+}
+
+.map-icon-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 4px 0 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.map-group {
+  margin-bottom: 4px;
+}
+
+.map-group-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 6px 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-dim);
+  cursor: pointer;
+  user-select: none;
+  border-top: 1px solid var(--line);
+}
+
+.map-group:first-of-type .map-group-header {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.map-group-header:hover {
+  color: var(--text);
+}
+
+.map-group.is-off .map-group-header,
+.map-group.is-off .map-icon-row {
+  opacity: 0.45;
+}
+
+.map-group-label {
+  flex: 1;
+}
+
+.map-group-count {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-fade);
+}
+
+.map-group-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.map-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 6px 3px 16px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  user-select: none;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.map-icon-row:hover {
+  background: var(--surface-2);
+}
+
+.map-icon-row.is-off {
+  opacity: 0.35;
+}
+
+.map-icon-row.is-off .map-icon-label {
+  text-decoration: line-through;
+}
+
+.map-icon-row img {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+/* Coloured dot for the Live data layer rows (players/deaths/claims)
+   since they don't have a real icon image. */
+.map-layer-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+  /* Match the visual centre of an 18 px icon row. */
+  margin: 0 4px;
+}
+
+.map-icon-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.map-icon-count {
+  color: var(--text-fade);
+  font-variant-numeric: tabular-nums;
+  font-size: 11px;
+}
+
+.map-viewport {
+  flex: 1;
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
+  /* Stop wheel events from chaining to the document if our native
+   * handler ever misses one. Belt-and-suspenders with the explicit
+   * preventDefault() in MapTab.tsx. */
+  overscroll-behavior: contain;
+  /* contain:strict keeps the map's transformed children from
+   * affecting the page's scroll/layout dimensions. */
+  contain: strict;
+  background: var(--surface-1);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+}
+
+.map-viewport:active {
+  cursor: grabbing;
+}
+
+.map-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.map-layer img {
+  display: block;
+  pointer-events: none;
+  /* The 8192² base is huge; let the browser scale it smoothly when we're
+   * zoomed out and crispy when zoomed in. */
+  image-rendering: -webkit-optimize-contrast;
+}
+
+.map-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.map-legend {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.map-legend .hint {
+  color: var(--text-fade);
+}
+

@@ -109,6 +109,16 @@ export default function App() {
   const [status, setStatus] = useState<Status | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [active, setActive] = useState<TabId>('overview')
+  // Cross-tab navigation: when MapTab is clicked through to a player,
+  // App stashes the target player_state_id here and switches tabs.
+  // PlayersTab consumes it on mount (and clears it via onConsumed) so
+  // re-entering the Players tab later doesn't keep re-selecting the
+  // same character.
+  const [pendingPlayerId, setPendingPlayerId] = useState<number | null>(null)
+  const navigateToPlayer = (playerStateId: number) => {
+    setPendingPlayerId(playerStateId)
+    setActive('players')
+  }
 
   useEffect(() => {
     let live = true
@@ -167,7 +177,12 @@ export default function App() {
         <p className="section-sub">{tab.description}</p>
 
         {active === 'overview' && <OverviewTab />}
-        {active === 'players' && <PlayersTab />}
+        {active === 'players' && (
+          <PlayersTab
+            initialSelectedId={pendingPlayerId}
+            onConsumed={() => setPendingPlayerId(null)}
+          />
+        )}
         {active === 'database' && <DatabaseTab />}
         {active === 'logs' && <LogsTab />}
         {active === 'audit' && <AuditTab />}
@@ -176,7 +191,7 @@ export default function App() {
         {active === 'ops' && <OpsTab />}
         {active === 'storage' && <StorageTab />}
         {active === 'building' && <BuildingTab />}
-        {active === 'map' && <MapTab />}
+        {active === 'map' && <MapTab onPlayerClick={navigateToPlayer} />}
         {active === 'exchange' && <ExchangeTab />}
       </main>
     </>
