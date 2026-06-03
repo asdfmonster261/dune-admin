@@ -179,17 +179,19 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return () => clearInterval(id)
   }, [])
 
-  // Auto-fit on first mount, once both the viewport ref and the map
-  // bundle are ready. `data` brings the texture_size; viewport gives us
-  // the dimensions to fit into. Gated by a ref so user-initiated pan /
-  // zoom isn't undone by a re-render that happens to land in this effect.
+  // Auto-fit on first mount, once viewport + map bundle + POIs are all
+  // ready. The POIs gate matters because the sidebar is conditional on
+  // `pois`; without it the viewport measures full-width, fits, then the
+  // sidebar pops in and shoves the map to the right edge of the now-
+  // smaller container. Gated by a ref so user-initiated pan / zoom isn't
+  // undone by a later re-render.
   const fittedOnceRef = useRef(false)
   useEffect(() => {
     if (fittedOnceRef.current) return
-    if (!viewportEl || !data) return
+    if (!viewportEl || !data || !pois) return
     fitToViewport(viewportEl, data.projection.texture_size, setScale, setPan)
     fittedOnceRef.current = true
-  }, [viewportEl, data])
+  }, [viewportEl, data, pois])
 
   // Load static POIs once at mount.
   useEffect(() => {
