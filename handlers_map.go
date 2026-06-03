@@ -156,11 +156,40 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Respawn locations — only the actor-backed groups (Vehicle, BaseTotem,
+	// RespawnBeacon) have positions we can resolve. PlayerStart and
+	// CheckpointSafe carry a `locator_name` that points at static world
+	// markers baked into the level; their `locator_transform` is NULL and
+	// we'd need pak extraction to surface them. Skip those for v1.
+	// Group rows by actor so a tradepost used by N players renders as one
+	// marker with N owners in the tooltip.
+	respawns, _, err := queryAll(ctx, globalDB, `
+		SELECT prl.locator_actor_id                AS actor_id,
+		       MIN(prl.group)                      AS group_type,
+		       ((a.transform).location).x          AS world_x,
+		       ((a.transform).location).y          AS world_y,
+		       array_agg(ps.character_name ORDER BY ps.character_name) FILTER (WHERE ps.character_name IS NOT NULL) AS owners
+		FROM dune.player_respawn_locations prl
+		JOIN dune.actors a ON a.id = prl.locator_actor_id
+		LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
+		LEFT JOIN dune.player_state ps ON ps.account_id = prl.account_id
+		WHERE prl.map = 'HaggaBasin'
+		  AND prl.locator_actor_id IS NOT NULL
+		  AND (ast.state IS NULL OR ast.state = 'Default')
+		GROUP BY prl.locator_actor_id, ((a.transform).location).x, ((a.transform).location).y
+		ORDER BY prl.locator_actor_id
+	`)
+	if err != nil {
+		jsonErr(w, err, 500)
+		return
+	}
+
 	jsonOK(w, map[string]any{
 		"players":   players,
 		"deaths":    deaths,
 		"buildings": buildings,
 		"vehicles":  vehicles,
+		"respawns":  respawns,
 		// Storm state comes from the docker-log tailer (storm_tailer.go),
 		// not the DB — the game-server emits start/end coords + lifetime
 		// per spawn at VeryVerbose. The frontend interpolates the current

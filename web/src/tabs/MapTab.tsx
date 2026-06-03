@@ -92,11 +92,20 @@ type StormSnapshot = {
   coriolis_world_seed: number | null
 }
 
+type Respawn = {
+  actor_id: number
+  group_type: string
+  world_x: number
+  world_y: number
+  owners: string[] | null
+}
+
 type MapBundle = {
   players: Player[]
   deaths: Death[]
   buildings: Building[]
   vehicles: Vehicle[]
+  respawns: Respawn[]
   storms: StormSnapshot
   projection: Projection
 }
@@ -104,7 +113,7 @@ type MapBundle = {
 // Layer toggle ids for the live overlay rows. Stored separately from
 // the POI hidden-set so "hide all" on the POI side doesn't sweep them
 // away (and vice versa).
-type LayerId = 'players' | 'deaths' | 'buildings' | 'vehicles' | 'storms'
+type LayerId = 'players' | 'deaths' | 'buildings' | 'vehicles' | 'storms' | 'respawns'
 
 type IconType = { id: string; label: string; count: number }
 type Group = { id: string; label: string; icons: IconType[] }
@@ -117,8 +126,18 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Set of icon ids whose POIs should be HIDDEN. Empty = all visible.
   const [hidden, setHidden] = useState<Set<string>>(new Set())
   // Player / death / building layers — separate from POI icons so the
-  // existing "hide all POIs" action doesn't sweep them away.
-  const [hiddenLayers, setHiddenLayers] = useState<Set<LayerId>>(new Set())
+  // existing "hide all POIs" action doesn't sweep them away. Respawns
+  // start hidden because they overlap with totems/vehicles/beacons
+  // visually and only matter when an operator is auditing spawn coverage.
+  const [hiddenLayers, setHiddenLayers] = useState<Set<LayerId>>(
+    () => new Set(['respawns'] as LayerId[]),
+  )
+  // Search filters. POI search highlights matches and dims non-matches;
+  // player search recenters the map onto the selected character.
+  const [poiSearch, setPoiSearch] = useState('')
+  const [playerSearch, setPlayerSearch] = useState('')
+  // Click-to-copy world coords toast — null when no recent copy.
+  const [coordToast, setCoordToast] = useState<string | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   // Pan + zoom state (CSS transform on the map layer)
@@ -217,15 +236,69 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return () => viewportEl.removeEventListener('wheel', handler)
   }, [viewportEl])
 
+  // Track the mouse-down origin so we can tell drags from clicks: any
+  // movement >4 px between down and up disqualifies the gesture from
+  // being treated as a coord-copy click.
+  const downRef = useRef<{ x: number; y: number; t: number } | null>(null)
   const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     dragRef.current = { x: e.clientX - pan.x, y: e.clientY - pan.y }
+    downRef.current = { x: e.clientX, y: e.clientY, t: Date.now() }
   }
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!dragRef.current) return
     setPan({ x: e.clientX - dragRef.current.x, y: e.clientY - dragRef.current.y })
   }
-  const onMouseUp = () => {
+  const onMouseUp = (e?: React.MouseEvent<HTMLDivElement>) => {
+    const wasClick =
+      e && downRef.current &&
+      Math.abs(e.clientX - downRef.current.x) < 4 &&
+      Math.abs(e.clientY - downRef.current.y) < 4 &&
+      Date.now() - downRef.current.t < 400
     dragRef.current = null
+    downRef.current = null
+    // Click-to-copy world coords. Only fires for genuine clicks (no
+    // drag), and we inverse-project the cursor through the same affine
+    // mapping the SVG uses going the other direction.
+    if (wasClick && e && viewportEl && data) {
+      const rect = viewportEl.getBoundingClientRect()
+      const cx = e.clientX - rect.left
+      const cy = e.clientY - rect.top
+      const tx = (cx - pan.x) / scale
+      const ty = (cy - pan.y) / scale
+      const proj = data.projection
+      const wx =
+        (tx / proj.texture_size) * (proj.world_x_max - proj.world_x_min) +
+        proj.world_x_min
+      const tyUE = proj.flip_y ? proj.texture_size - ty : ty
+      const wy =
+        (tyUE / proj.texture_size) * (proj.world_y_max - proj.world_y_min) +
+        proj.world_y_min
+      // Only copy when the click landed inside the map texture bounds.
+      if (tx >= 0 && tx <= proj.texture_size && ty >= 0 && ty <= proj.texture_size) {
+        const txt = `${Math.round(wx)} ${Math.round(wy)}`
+        navigator.clipboard?.writeText(txt).catch(() => {})
+        setCoordToast(txt)
+        window.setTimeout(() => setCoordToast(null), 1800)
+      }
+    }
+  }
+
+  // Recenter the map so the given world point lands at the centre of
+  // the viewport, keeping the current zoom. Used by player-jump.
+  const jumpTo = (worldX: number, worldY: number) => {
+    if (!viewportEl || !data) return
+    const proj = data.projection
+    const tx =
+      ((worldX - proj.world_x_min) / (proj.world_x_max - proj.world_x_min)) *
+      proj.texture_size
+    let ty =
+      ((worldY - proj.world_y_min) / (proj.world_y_max - proj.world_y_min)) *
+      proj.texture_size
+    if (proj.flip_y) ty = proj.texture_size - ty
+    setPan({
+      x: viewportEl.clientWidth / 2 - tx * scale,
+      y: viewportEl.clientHeight / 2 - ty * scale,
+    })
   }
 
   // POI icons sized so they're roughly constant on screen — 16 px display
@@ -235,10 +308,31 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
 
   // Pre-bucket visible POIs once per render so the SVG mapping stays
   // simple and we don't recompute the hidden-set check inside the JSX.
+  // POI search highlights matches and dims non-matches but doesn't
+  // remove anything — operators want to see the whole map context.
+  const poiSearchNorm = poiSearch.trim().toLowerCase()
   const visiblePois = useMemo(() => {
     if (!pois) return []
     return pois.pois.filter((p) => !hidden.has(p.icon))
   }, [pois, hidden])
+  const poiMatches = useMemo(() => {
+    if (!poiSearchNorm) return null
+    const m = new Set<number>()
+    visiblePois.forEach((p, i) => {
+      if (p.name.toLowerCase().includes(poiSearchNorm)) m.add(i)
+    })
+    return m
+  }, [visiblePois, poiSearchNorm])
+
+  // Filtered player list for the player-search/jump widget. Empty query
+  // shows nothing (otherwise the dropdown is huge); 1+ chars shows matches.
+  const playerSearchNorm = playerSearch.trim().toLowerCase()
+  const playerMatches = useMemo(() => {
+    if (!data || !playerSearchNorm) return []
+    return data.players.filter((p) =>
+      p.character_name?.toLowerCase().includes(playerSearchNorm),
+    )
+  }, [data, playerSearchNorm])
 
   // Flat list of icon ids so the global counter / show-all / hide-all
   // can operate without walking the group tree each time. MUST live
@@ -287,6 +381,43 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 hide all
               </button>
             </div>
+            <input
+              type="search"
+              className="map-search"
+              placeholder="search POIs…"
+              value={poiSearch}
+              onChange={(e) => setPoiSearch(e.target.value)}
+            />
+            <div className="map-jump-wrap">
+              <input
+                type="search"
+                className="map-search"
+                placeholder="jump to player…"
+                value={playerSearch}
+                onChange={(e) => setPlayerSearch(e.target.value)}
+              />
+              {playerSearchNorm && playerMatches.length > 0 && (
+                <ul className="map-jump-list">
+                  {playerMatches.slice(0, 8).map((p) => (
+                    <li key={p.actor_id}>
+                      <button
+                        type="button"
+                        className="map-jump-item"
+                        onClick={() => {
+                          jumpTo(p.world_x, p.world_y)
+                          setPlayerSearch('')
+                        }}
+                      >
+                        {p.character_name}
+                        <span className="hint">
+                          {p.online_status?.toLowerCase() === 'online' ? '·online' : ''}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <div className="map-icon-list">
               {/* Live layers — kept above POIs since they're admin-
                   oriented and tend to be looked at first. */}
@@ -302,6 +433,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                       { id: 'storms', label: 'Sandstorms', count: data.storms?.active.length ?? 0, dot: '#f59e0b' },
                       { id: 'deaths', label: 'Recent deaths', count: data.deaths.length, dot: '#ef4444' },
                       { id: 'buildings', label: 'Land claims', count: data.buildings.length, dot: '#8b5cf6' },
+                      { id: 'respawns', label: 'Respawn points', count: data.respawns?.length ?? 0, dot: '#10b981' },
                     ] as { id: LayerId; label: string; count: number; dot: string }[]
                   ).map((it) => {
                     const off = hiddenLayers.has(it.id)
@@ -406,6 +538,9 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               Fit
             </button>
           </div>
+          {coordToast && (
+            <div className="map-coord-toast">copied {coordToast}</div>
+          )}
           <div
             className="map-layer"
             style={{
@@ -438,18 +573,32 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
-                const size = POI_PX / scale
+                const matched = poiMatches?.has(i) ?? false
+                const dimmed = poiMatches != null && !matched
+                const size = (POI_PX * (matched ? 1.6 : 1)) / scale
                 return (
-                  <image
-                    key={`poi-${i}`}
-                    href={`/maps/icons/${poi.icon}.webp`}
-                    x={pos.x - size / 2}
-                    y={pos.y - size / 2}
-                    width={size}
-                    height={size}
-                  >
-                    <title>{poi.name}</title>
-                  </image>
+                  <g key={`poi-${i}`} opacity={dimmed ? 0.18 : 1}>
+                    {matched && (
+                      <circle
+                        cx={pos.x}
+                        cy={pos.y}
+                        r={size * 0.75}
+                        fill="none"
+                        stroke="#fbbf24"
+                        strokeWidth={3 / scale}
+                        opacity={0.9}
+                      />
+                    )}
+                    <image
+                      href={`/maps/icons/${poi.icon}.webp`}
+                      x={pos.x - size / 2}
+                      y={pos.y - size / 2}
+                      width={size}
+                      height={size}
+                    >
+                      <title>{poi.name}</title>
+                    </image>
+                  </g>
                 )
               })}
               {!hiddenLayers.has('storms') &&
@@ -517,6 +666,29 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                         stroke="#92400e"
                         strokeWidth={1 / scale}
                       />
+                    </g>
+                  )
+                })}
+              {!hiddenLayers.has('respawns') &&
+                data.respawns?.map((r) => {
+                  const pos = project(r.world_x, r.world_y)
+                  if (!pos) return null
+                  const radius = 5 / scale
+                  return (
+                    <g key={`rs-${r.actor_id}`} transform={`translate(${pos.x}, ${pos.y})`}>
+                      <circle
+                        r={radius}
+                        fill="none"
+                        stroke="#10b981"
+                        strokeWidth={2 / scale}
+                        opacity={0.9}
+                      />
+                      <circle r={radius * 0.35} fill="#10b981" opacity={0.9}>
+                        <title>
+                          {r.group_type}
+                          {r.owners?.length ? ` — ${r.owners.join(', ')}` : ''}
+                        </title>
+                      </circle>
                     </g>
                   )
                 })}
