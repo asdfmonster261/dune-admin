@@ -787,44 +787,65 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               {/* DD resource node families. Each family is opt-in
                   because the bundle is large (~30k nodes per layout)
                   and the densest families (plants, scrap) only carry
-                  signal when you're hunting one specifically. */}
-              {mode === 'dd' && resourceBundleUrl && (
-                <section className="map-group">
-                  <header className="map-group-header" style={{ cursor: 'default' }}>
-                    <span className="map-group-label">Resource nodes</span>
-                    <span className="map-group-count">
-                      {resources ? visibleResourceNodes.length : ''}
-                    </span>
-                  </header>
-                  <ul className="map-group-rows">
-                    {(resources?.families ?? RES_FAMILY_PLACEHOLDERS).map((fa) => {
-                      const off = !visibleResFamilies.has(fa.id)
-                      return (
-                        <li
-                          key={fa.id}
-                          className={`map-icon-row ${off ? 'is-off' : ''}`}
-                          onClick={() =>
-                            setVisibleResFamilies((prev) => {
-                              const next = new Set(prev)
-                              if (next.has(fa.id)) next.delete(fa.id)
-                              else next.add(fa.id)
-                              return next
-                            })
-                          }
-                          title={off ? 'show' : 'hide'}
-                        >
-                          <span
-                            className="map-layer-dot"
-                            style={{ background: fa.color }}
-                          />
-                          <span className="map-icon-label">{fa.label}</span>
-                          <span className="map-icon-count">{fa.count}</span>
-                        </li>
-                      )
-                    })}
-                  </ul>
-                </section>
-              )}
+                  signal when you're hunting one specifically. Clicking
+                  the group header flips all families at once, mirroring
+                  the POI groups. */}
+              {mode === 'dd' && resourceBundleUrl && (() => {
+                const fams = resources?.families ?? RES_FAMILY_PLACEHOLDERS
+                const allOn = fams.length > 0 &&
+                  fams.every((fa) => visibleResFamilies.has(fa.id))
+                const someOn = fams.some((fa) => visibleResFamilies.has(fa.id))
+                const groupOff = !someOn
+                return (
+                  <section className={`map-group ${groupOff ? 'is-off' : ''}`}>
+                    <header
+                      className="map-group-header"
+                      onClick={() =>
+                        setVisibleResFamilies((prev) => {
+                          const next = new Set(prev)
+                          if (allOn) fams.forEach((fa) => next.delete(fa.id))
+                          else fams.forEach((fa) => next.add(fa.id))
+                          return next
+                        })
+                      }
+                      title={allOn ? 'hide all families' : 'show all families'}
+                    >
+                      <span className="map-group-label">Resource nodes</span>
+                      <span className="map-group-count">
+                        {resources ? visibleResourceNodes.length : ''}
+                      </span>
+                    </header>
+                    <ul className="map-group-rows">
+                      {fams.map((fa) => {
+                        const off = !visibleResFamilies.has(fa.id)
+                        return (
+                          <li
+                            key={fa.id}
+                            className={`map-icon-row ${off ? 'is-off' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setVisibleResFamilies((prev) => {
+                                const next = new Set(prev)
+                                if (next.has(fa.id)) next.delete(fa.id)
+                                else next.add(fa.id)
+                                return next
+                              })
+                            }}
+                            title={off ? 'show' : 'hide'}
+                          >
+                            <span
+                              className="map-layer-dot"
+                              style={{ background: fa.color }}
+                            />
+                            <span className="map-icon-label">{fa.label}</span>
+                            <span className="map-icon-count">{fa.count}</span>
+                          </li>
+                        )
+                      })}
+                    </ul>
+                  </section>
+                )
+              })()}
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
                 const allOff = groupVisible.length === 0
