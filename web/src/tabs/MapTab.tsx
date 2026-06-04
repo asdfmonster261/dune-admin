@@ -146,11 +146,15 @@ const DD_PROJECTION: Projection = {
   flip_y: true,
 }
 
-// 9×9 sector grid (A1..I9) covers the playable centre of the DD map.
-// Outside this band is a sand border the storm doesn't reach. Bounds
-// taken from BP_WorldMap_Areas_DeepDesert_1 (extract_pois.py).
-const DD_GRID_MIN = -1_080_000
-const DD_GRID_MAX = 1_080_000
+// 9×9 sector grid (A1..I9) spans the entire DD texture, matching
+// gaming.tools' grid which uses the full gameBounds rather than the
+// in-game ±1.08M playable grid. Using gameBounds here keeps every POI
+// inside a labelled sector instead of letting sand-border markers spill
+// outside the grid lines.
+const DD_GRID_X_MIN = DD_PROJECTION.world_x_min
+const DD_GRID_X_MAX = DD_PROJECTION.world_x_max
+const DD_GRID_Y_MIN = DD_PROJECTION.world_y_min
+const DD_GRID_Y_MAX = DD_PROJECTION.world_y_max
 
 export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Hagga | DD toggle. Pan/zoom/filter UX is shared; what changes is the
@@ -994,14 +998,16 @@ function DdSectorGrid({
 }) {
   const lines: React.ReactNode[] = []
   const labels: React.ReactNode[] = []
-  const step = (DD_GRID_MAX - DD_GRID_MIN) / 9
+  const stepX = (DD_GRID_X_MAX - DD_GRID_X_MIN) / 9
+  const stepY = (DD_GRID_Y_MAX - DD_GRID_Y_MIN) / 9
   // 10 line positions enclose 9 cells.
   for (let i = 0; i <= 9; i++) {
-    const v = DD_GRID_MIN + i * step
-    const xLineTop = project(v, DD_GRID_MAX)
-    const xLineBot = project(v, DD_GRID_MIN)
-    const yLineLeft = project(DD_GRID_MIN, v)
-    const yLineRight = project(DD_GRID_MAX, v)
+    const vx = DD_GRID_X_MIN + i * stepX
+    const vy = DD_GRID_Y_MIN + i * stepY
+    const xLineTop = project(vx, DD_GRID_Y_MAX)
+    const xLineBot = project(vx, DD_GRID_Y_MIN)
+    const yLineLeft = project(DD_GRID_X_MIN, vy)
+    const yLineRight = project(DD_GRID_X_MAX, vy)
     if (xLineTop && xLineBot) {
       lines.push(
         <line
@@ -1038,10 +1044,10 @@ function DdSectorGrid({
   // row letter increments with row.
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
-      const wx = DD_GRID_MIN + (col + 0.5) * step
+      const wx = DD_GRID_X_MIN + (col + 0.5) * stepX
       // Iterate row 0 at the SOUTH (lowest world y) so the letter sequence
       // reads A → I going north on screen once flip_y kicks in.
-      const wy = DD_GRID_MIN + (row + 0.5) * step
+      const wy = DD_GRID_Y_MIN + (row + 0.5) * stepY
       const pos = project(wx, wy)
       if (!pos) continue
       labels.push(
