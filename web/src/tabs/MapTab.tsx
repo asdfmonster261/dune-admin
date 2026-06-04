@@ -215,12 +215,19 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   const dragRef = useRef<{ x: number; y: number } | null>(null)
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
 
-  // Poll players every 3 s.
+  // Poll players every 3 s. The URL flips when mode flips: Hagga is the
+  // default; DD passes the partition name so the backend swaps the actor
+  // filters and projection. The effect's mode dep guarantees an immediate
+  // re-fetch on toggle so we never linger more than one round-trip on the
+  // previous map's data.
   useEffect(() => {
     let cancelled = false
+    const path = mode === 'dd'
+      ? '/map/players?map=DeepDesert_1'
+      : '/map/players'
     const tick = () => {
       api
-        .get<MapBundle>('/map/players')
+        .get<MapBundle>(path)
         .then((d) => {
           if (cancelled) return
           setData(d)
@@ -236,7 +243,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       cancelled = true
       clearInterval(id)
     }
-  }, [])
+  }, [mode])
 
   // 1 s wall-clock tick so the storm wall slides smoothly between polls.
   useEffect(() => {
@@ -890,7 +897,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {mode === 'hagga' && !hiddenLayers.has('respawns') &&
+              {!hiddenLayers.has('respawns') &&
                 data.respawns?.map((r) => {
                   const pos = project(r.world_x, r.world_y)
                   if (!pos) return null
@@ -913,7 +920,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {mode === 'hagga' && !hiddenLayers.has('buildings') &&
+              {!hiddenLayers.has('buildings') &&
                 data.buildings.map((b) => {
                   const pos = project(b.world_x, b.world_y)
                   if (!pos) return null
@@ -937,7 +944,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {mode === 'hagga' && !hiddenLayers.has('vehicles') &&
+              {!hiddenLayers.has('vehicles') &&
                 data.vehicles.map((v) => {
                   const pos = project(v.world_x, v.world_y)
                   if (!pos) return null
@@ -961,7 +968,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {mode === 'hagga' && !hiddenLayers.has('deaths') &&
+              {!hiddenLayers.has('deaths') &&
                 data.deaths.map((d) => {
                   const pos = project(d.world_x, d.world_y)
                   if (!pos) return null
@@ -981,7 +988,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {mode === 'hagga' && !hiddenLayers.has('players') &&
+              {!hiddenLayers.has('players') &&
                 data.players.map((p) => {
                   const pos = project(p.world_x, p.world_y)
                   if (!pos) return null
@@ -1044,7 +1051,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       </div>
       <div className="map-legend">
         <span>
-          {mode === 'hagga' && `${data.players.length} players · `}
+          {`${data.players.length} players · `}
           {mode === 'dd' && `Layout ${(ddSeed ?? 0) + 1} · `}
           {visiblePois.length} of {pois?.pois.length ?? 0} POIs visible
           {allHidden && ' (all categories hidden)'}
