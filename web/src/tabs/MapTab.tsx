@@ -661,7 +661,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // POI icons sized so they're roughly constant on screen — 16 px display
   // by default. Scaled with the SVG transform via the same /scale trick
   // we use for the player dots.
-  const POI_PX = 16
+  const POI_PX = 22
 
   // Pre-bucket visible POIs once per render so the SVG mapping stays
   // simple and we don't recompute the hidden-set check inside the JSX.
@@ -1083,6 +1083,12 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           {coordToast && (
             <div className="map-coord-toast">copied {coordToast}</div>
           )}
+          {/* Two transformed layers with the same pan/scale so the
+              base map texture and the SVG markers stay aligned. The
+              canvas resource overlay sits between them in DOM order so
+              its dots paint over the base map but under the SVG —
+              meaning POI icons / players / totems / etc. stay legible
+              on top of the resource diamonds. */}
           <div
             className="map-layer"
             style={{
@@ -1099,6 +1105,29 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               draggable={false}
               alt={baseImageAlt}
             />
+          </div>
+          {/* Canvas sits between the base layer and the SVG overlay so
+              POI icons / players / totems / etc. paint above the
+              resource diamonds. */}
+          <canvas
+            ref={resourceCanvasRef}
+            className="map-resource-canvas"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            className="map-layer"
+            style={{
+              width: tex,
+              height: tex,
+              transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})`,
+              transformOrigin: '0 0',
+            }}
+          >
             <svg
               width={tex}
               height={tex}
@@ -1231,7 +1260,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                       <circle
                         cx={curX}
                         cy={curY}
-                        r={6 / scale}
+                        r={8 / scale}
                         fill="#fff"
                         stroke="#92400e"
                         strokeWidth={1 / scale}
@@ -1243,7 +1272,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 data.respawns?.map((r) => {
                   const pos = project(r.world_x, r.world_y)
                   if (!pos) return null
-                  const radius = 5 / scale
+                  const radius = 7 / scale
                   return (
                     <g key={`rs-${r.actor_id}`} transform={`translate(${pos.x}, ${pos.y})`}>
                       <circle
@@ -1266,7 +1295,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 data.buildings.map((b) => {
                   const pos = project(b.world_x, b.world_y)
                   if (!pos) return null
-                  const r = 6 / scale
+                  const r = 9 / scale
                   // Purple diamond per totem; rotate 45° via a polygon.
                   return (
                     <g key={`b-${b.actor_id}`} transform={`translate(${pos.x}, ${pos.y})`}>
@@ -1290,7 +1319,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 data.vehicles.map((v) => {
                   const pos = project(v.world_x, v.world_y)
                   if (!pos) return null
-                  const r = 6 / scale
+                  const r = 9 / scale
                   // Cyan upward-pointing triangle so vehicles read
                   // distinct from totems (diamond) and POIs (icons).
                   return (
@@ -1314,7 +1343,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 data.deaths.map((d) => {
                   const pos = project(d.world_x, d.world_y)
                   if (!pos) return null
-                  const r = 7 / scale
+                  const r = 10 / scale
                   // Two-stroke red X. paint-order=stroke gives the black
                   // halo without a separate shape.
                   return (
@@ -1367,16 +1396,16 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                       }
                     >
                       <circle
-                        r={8 / scale}
+                        r={11 / scale}
                         fill={online ? '#22c55e' : '#94a3b8'}
                         stroke="#000"
                         strokeWidth={1.5 / scale}
                         opacity={online ? 0.95 : 0.55}
                       />
                       <text
-                        y={-(12 / scale)}
+                        y={-(14 / scale)}
                         textAnchor="middle"
-                        fontSize={12 / scale}
+                        fontSize={14 / scale}
                         fill="#fff"
                         stroke="#000"
                         strokeWidth={2 / scale}
@@ -1389,21 +1418,6 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 })}
             </svg>
           </div>
-          {/* Canvas sits outside .map-layer so its content is rendered
-              in viewport pixel space — the SVG overlay above is in
-              texture space and gets CSS-scaled by the layer's
-              transform. pointer-events: none keeps drag/click on the
-              base layer. */}
-          <canvas
-            ref={resourceCanvasRef}
-            className="map-resource-canvas"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              pointerEvents: 'none',
-            }}
-          />
         </div>
       </div>
       <div className="map-legend">
