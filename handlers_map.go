@@ -28,11 +28,12 @@ import (
 //   GET /api/v1/map/players              -> HaggaBasin (default)
 //   GET /api/v1/map/players?map=DeepDesert_1 -> DD partition
 //
-// Map-name asymmetry: `dune.actors.map` uses the partition name
-// ("DeepDesert_1"), while `dune.player_state.death_location.map` and
-// `dune.player_respawn_locations.map` use the bare map name
-// ("DeepDesert"). For Hagga both are "HaggaBasin", so the suffix-stripping
-// is a no-op there.
+// Map naming: every `*.map` column in postgres uses the bare map name
+// ("HaggaBasin", "DeepDesert", "Arrakeen", "HarkoVillage") — partition
+// index lives in a separate `partition_id` column. The query param
+// accepts either form ("DeepDesert" or "DeepDesert_1") because callers
+// often have the partition name handy; we strip a trailing _<digits> so
+// it normalises to the bare name before filtering.
 //
 // DD caveat: actors are ephemeral — rows in `dune.actors` only exist
 // while the DD partition is loaded. With the DD container down, all four
@@ -46,19 +47,17 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx := r.Context()
 
-	// Partition name keys dune.actors; map name (sans numeric suffix)
-	// keys death_location + player_respawn_locations. Strip a trailing
-	// "_<digits>" so "DeepDesert_1" -> "DeepDesert" while "HaggaBasin"
-	// passes through.
-	partitionName := r.URL.Query().Get("map")
-	if partitionName == "" {
-		partitionName = "HaggaBasin"
+	// Strip a trailing "_<digits>" so callers can pass "DeepDesert_1"
+	// (the partition name) and get the bare "DeepDesert" used by every
+	// *.map column. "HaggaBasin" has no suffix and passes through.
+	mapName := r.URL.Query().Get("map")
+	if mapName == "" {
+		mapName = "HaggaBasin"
 	}
-	mapName := partitionName
-	if i := strings.LastIndex(partitionName, "_"); i > 0 {
-		suffix := partitionName[i+1:]
+	if i := strings.LastIndex(mapName, "_"); i > 0 {
+		suffix := mapName[i+1:]
 		if len(suffix) > 0 && suffix[0] >= '0' && suffix[0] <= '9' {
-			mapName = partitionName[:i]
+			mapName = mapName[:i]
 		}
 	}
 
@@ -90,7 +89,7 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		  AND a.map  = $1
 		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name
-	`, partitionName)
+	`, mapName)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
@@ -142,7 +141,7 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		  AND a.map = $1
 		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name NULLS LAST, a.id
-	`, partitionName)
+	`, mapName)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
@@ -177,7 +176,7 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		  AND a.class LIKE '/Game/Dune/Systems/Vehicles/%'
 		  AND (ast.state IS NULL OR ast.state = 'Default')
 		ORDER BY ps.character_name NULLS LAST, a.id
-	`, partitionName)
+	`, mapName)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
@@ -236,7 +235,7 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		// base textures have +Y going down. The DD frontend keeps its
 		// own DD_PROJECTION constant for the static POI overlay; we send
 		// the matching one here so the response stays self-describing.
-		"projection": mapProjection(partitionName),
+		"projection": mapProjection(mapName),
 	})
 }
 
