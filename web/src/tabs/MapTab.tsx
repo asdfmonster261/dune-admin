@@ -133,17 +133,26 @@ type MapMode = 'hagga' | 'dd'
 
 // Fixed projection for Deep Desert. The 12 layouts share the same world
 // frame and texture size — only POI placements + terrain change per
-// seed. Bounds and flip come from gaming.tools' own map config (their
+// seed. Bounds come from gaming.tools' own map config (their
 // `deepdesert_1` entry in chunks/w9533npS.js): asymmetric extents with
-// the playable grid offset roughly 50k cm toward -x/-y of centre, and
-// a vertical flip so world +y projects to texture y=0.
+// the playable grid offset roughly 50k cm toward -x/-y of centre.
+//
+// flip_y stays false here even though gaming.tools sets
+// transformType:"flipVertical" — their flip lives downstream of a
+// Mercator projection, which (after both transforms) lands world y_max
+// at the SOUTH (bottom) of the screen. We don't run the Mercator step,
+// so a plain affine without a flip reproduces the same orientation:
+// high world y goes to high texture y. The empirical check is the
+// shield wall + the named "Wreck of the *" markers at y≈+1,000,000;
+// both must land at the bottom of the texture and they do without a
+// flip but not with one.
 const DD_PROJECTION: Projection = {
   world_x_min: -1_270_000,
   world_x_max: 1_168_400,
   world_y_min: -1_270_000,
   world_y_max: 1_168_400,
   texture_size: 8192,
-  flip_y: true,
+  flip_y: false,
 }
 
 // 9×9 sector grid (A1..I9) spans the entire DD texture, matching
@@ -1040,13 +1049,12 @@ function DdSectorGrid({
   // Cell labels at the centre of each cell. In-game convention: rows
   // are letters A..I going south→north (A = southernmost), columns are
   // numbers 1..9 going west→east. So bottom-left cell is "A1", top-right
-  // is "I9". `row` indexes the iteration north→south by world Y, so the
-  // row letter increments with row.
+  // is "I9". `row` iterates from row 0 at the lowest world y (which lands
+  // at the TOP of the screen with no flip — north — so the row letter
+  // counts DOWN: row 0 → "I", row 8 → "A").
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       const wx = DD_GRID_X_MIN + (col + 0.5) * stepX
-      // Iterate row 0 at the SOUTH (lowest world y) so the letter sequence
-      // reads A → I going north on screen once flip_y kicks in.
       const wy = DD_GRID_Y_MIN + (row + 0.5) * stepY
       const pos = project(wx, wy)
       if (!pos) continue
@@ -1062,7 +1070,7 @@ function DdSectorGrid({
           dominantBaseline="central"
           style={{ pointerEvents: 'none' }}
         >
-          {String.fromCharCode(0x41 + row)}
+          {String.fromCharCode(0x41 + (8 - row))}
           {col + 1}
         </text>,
       )
