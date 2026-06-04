@@ -247,6 +247,10 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   const [now, setNow] = useState(() => Date.now())
   const dragRef = useRef<{ x: number; y: number } | null>(null)
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null)
+  // Canvas overlay for the DD resource layer (~30k dots) — SVG circles
+  // can't keep up with drag at that scale.
+  const resourceCanvasRef = useRef<HTMLCanvasElement | null>(null)
+  const [viewportSize, setViewportSize] = useState({ w: 0, h: 0 })
 
   // Poll players every 3 s. The URL flips when mode flips: Hagga is the
   // default; DD passes the partition name so the backend swaps the actor
@@ -283,6 +287,19 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     const id = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(id)
   }, [])
+
+  // Track the viewport pixel size so the resource canvas can resize.
+  useEffect(() => {
+    if (!viewportEl) return
+    const update = () => {
+      const r = viewportEl.getBoundingClientRect()
+      setViewportSize({ w: r.width, h: r.height })
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(viewportEl)
+    return () => ro.disconnect()
+  }, [viewportEl])
 
   // Effective DD seed: manual override wins, otherwise track the cycle.
   // Falls back to null (no resolved seed) so DD asset URLs can refuse to
@@ -425,6 +442,53 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     if (resources) for (const f of resources.families) m.set(f.id, f.color)
     return m
   }, [resources])
+
+  // Canvas-based resource layer draw. SVG was fine at the POI volume
+  // (~3k circles) but blows up at ~30k. Canvas runs in viewport pixel
+  // space outside the CSS-transformed map layer, so we project each
+  // node through (world -> texture -> viewport-pixel) ourselves and
+  // redraw the whole layer per pan/zoom tick.
+  useEffect(() => {
+    const cnv = resourceCanvasRef.current
+    if (!cnv || !projection) return
+    const dpr = window.devicePixelRatio || 1
+    const { w, h } = viewportSize
+    if (w === 0 || h === 0) return
+    if (cnv.width !== w * dpr) cnv.width = w * dpr
+    if (cnv.height !== h * dpr) cnv.height = h * dpr
+    cnv.style.width = `${w}px`
+    cnv.style.height = `${h}px`
+    const ctx = cnv.getContext('2d')
+    if (!ctx) return
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+    ctx.clearRect(0, 0, w, h)
+    if (mode !== 'dd' || visibleResourceNodes.length === 0) return
+
+    const tex = projection.texture_size
+    const wxMin = projection.world_x_min
+    const wxRange = projection.world_x_max - projection.world_x_min
+    const wyMin = projection.world_y_min
+    const wyRange = projection.world_y_max - projection.world_y_min
+    const flipY = projection.flip_y
+    // 3 px square at any zoom (resource dots stay constant on-screen).
+    const r = 3
+    const half = r / 2
+    let curStyle: string | null = null
+    for (const n of visibleResourceNodes) {
+      const tx = ((n.x - wxMin) / wxRange) * tex
+      let ty = ((n.y - wyMin) / wyRange) * tex
+      if (flipY) ty = tex - ty
+      const sx = tx * scale + pan.x
+      const sy = ty * scale + pan.y
+      if (sx < -r || sy < -r || sx > w + r || sy > h + r) continue
+      const color = resFamilyColor.get(n.f) ?? '#fff'
+      if (color !== curStyle) {
+        ctx.fillStyle = color
+        curStyle = color
+      }
+      ctx.fillRect(sx - half, sy - half, r, r)
+    }
+  }, [visibleResourceNodes, scale, pan, viewportSize, projection, mode, resFamilyColor])
 
   // Project world coords to texture pixel coords. Shared between players
   // and POIs — both come from the same UE5 world frame.
@@ -981,26 +1045,9 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     />
                   )
                 })}
-              {/* DD resource nodes — drawn under POIs so caves/totems
-                  stay legible on top. Bundle is lazy-loaded; the
-                  visible-families set is what triggers the fetch. */}
-              {mode === 'dd' && visibleResourceNodes.map((n, i) => {
-                const pos = project(n.x, n.y)
-                if (!pos) return null
-                const color = resFamilyColor.get(n.f) ?? '#fff'
-                return (
-                  <circle
-                    key={`res-${i}`}
-                    cx={pos.x}
-                    cy={pos.y}
-                    r={3 / scale}
-                    fill={color}
-                    stroke="#000"
-                    strokeWidth={0.4 / scale}
-                    opacity={0.85}
-                  />
-                )
-              })}
+              {/* DD resource nodes render on a separate <canvas> overlay
+                  outside this SVG (see the resourceCanvas effect) — SVG
+                  circles can't keep up with drag at ~30k volume. */}
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
@@ -1250,6 +1297,21 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 })}
             </svg>
           </div>
+          {/* Canvas sits outside .map-layer so its content is rendered
+              in viewport pixel space — the SVG overlay above is in
+              texture space and gets CSS-scaled by the layer's
+              transform. pointer-events: none keeps drag/click on the
+              base layer. */}
+          <canvas
+            ref={resourceCanvasRef}
+            className="map-resource-canvas"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              pointerEvents: 'none',
+            }}
+          />
         </div>
       </div>
       <div className="map-legend">
@@ -1257,6 +1319,8 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           {`${data.players.length} players · `}
           {mode === 'dd' && `Layout ${(ddSeed ?? 0) + 1} · `}
           {visiblePois.length} of {pois?.pois.length ?? 0} POIs visible
+          {mode === 'dd' && visibleResFamilies.size > 0 &&
+            ` · ${visibleResourceNodes.length} resources visible`}
           {allHidden && ' (all categories hidden)'}
         </span>
         <span className="hint">scroll to zoom · drag to pan · click a row to toggle</span>
