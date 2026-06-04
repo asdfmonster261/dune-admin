@@ -405,29 +405,78 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     }
   }, [projection, viewportEl, pan, scale])
 
-  // Resource nodes to actually render: filter the loaded bundle by the
-  // visible-types set AND the viewport AABB. The double filter keeps
-  // the SVG element count bounded by what's on screen rather than the
-  // bundle size (30k+ for DD).
-  const visibleResourceNodes = useMemo(() => {
-    if (!resources || !visibleWorldBounds) return [] as ResourceNode[]
-    if (visibleResTypes.size === 0) return [] as ResourceNode[]
-    const { xMin, xMax, yMin, yMax } = visibleWorldBounds
-    const out: ResourceNode[] = []
-    for (const n of resources.nodes) {
-      if (!visibleResTypes.has(n.t)) continue
-      if (n.x < xMin || n.x > xMax || n.y < yMin || n.y > yMax) continue
-      out.push(n)
-    }
-    return out
-  }, [resources, visibleResTypes, visibleWorldBounds])
-
-  // Map family-id to color for the renderer. Tiny but called per-dot.
+  // Map family-id to color for the renderer. Tiny but called per-cluster.
   const resFamilyColor = useMemo(() => {
     const m = new Map<string, string>()
     if (resources) for (const f of resources.families) m.set(f.id, f.color)
     return m
   }, [resources])
+
+  // Cluster the visible-type resource nodes into world-coordinate cells.
+  // Cell size is the clusterRadius (60 viewport px) translated back into
+  // world units at the current scale, so cell boundaries are anchored in
+  // world space — panning never changes which cell a node falls into, so
+  // clusters don't morph during drag. Cells reform only when scale flips
+  // (zoom changes the world units per pixel), which matches gaming.tools'
+  // supercluster behaviour of break-apart-on-zoom-in.
+  //
+  // Buckets are computed across the WHOLE filtered set (not just nodes
+  // inside the viewport AABB) so a cluster at the edge of the screen
+  // shows its full member count + centroid, not a partial set that
+  // would jump as you pan into it.
+  type ResCluster = { wx: number; wy: number; count: number; color: string }
+  const resourceClusters = useMemo(() => {
+    if (!resources || !projection || visibleResTypes.size === 0) {
+      return [] as ResCluster[]
+    }
+    const CLUSTER_RADIUS_PX = 60
+    const wxRange = projection.world_x_max - projection.world_x_min
+    const wyRange = projection.world_y_max - projection.world_y_min
+    const cellW = (CLUSTER_RADIUS_PX / scale) * (wxRange / projection.texture_size)
+    const cellH = (CLUSTER_RADIUS_PX / scale) * (wyRange / projection.texture_size)
+    const buckets = new Map<string, ResCluster & { sumX: number; sumY: number }>()
+    for (const n of resources.nodes) {
+      if (!visibleResTypes.has(n.t)) continue
+      const cx = Math.floor(n.x / cellW)
+      const cy = Math.floor(n.y / cellH)
+      const key = `${n.t}|${cx},${cy}`
+      const b = buckets.get(key)
+      if (b) {
+        b.sumX += n.x
+        b.sumY += n.y
+        b.count++
+      } else {
+        buckets.set(key, {
+          sumX: n.x,
+          sumY: n.y,
+          count: 1,
+          color: resFamilyColor.get(n.f) ?? '#fff',
+          wx: 0,
+          wy: 0,
+        })
+      }
+    }
+    const out: ResCluster[] = []
+    for (const b of buckets.values()) {
+      b.wx = b.sumX / b.count
+      b.wy = b.sumY / b.count
+      out.push(b)
+    }
+    return out
+  }, [resources, projection, visibleResTypes, scale, resFamilyColor])
+
+  // Count of nodes currently being drawn (for the legend). Sum of all
+  // cluster point_counts intersected with the viewport AABB.
+  const visibleResourceCount = useMemo(() => {
+    if (!visibleWorldBounds) return 0
+    const { xMin, xMax, yMin, yMax } = visibleWorldBounds
+    let n = 0
+    for (const c of resourceClusters) {
+      if (c.wx < xMin || c.wx > xMax || c.wy < yMin || c.wy > yMax) continue
+      n += c.count
+    }
+    return n
+  }, [resourceClusters, visibleWorldBounds])
 
   // Canvas-based resource layer draw. SVG was fine at the POI volume
   // (~3k circles) but blows up at ~30k. Canvas runs in viewport pixel
@@ -448,7 +497,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     if (!ctx) return
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     ctx.clearRect(0, 0, w, h)
-    if (mode !== 'dd' || visibleResourceNodes.length === 0) return
+    if (mode !== 'dd' || resourceClusters.length === 0) return
 
     const tex = projection.texture_size
     const wxMin = projection.world_x_min
@@ -456,100 +505,48 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     const wyMin = projection.world_y_min
     const wyRange = projection.world_y_max - projection.world_y_min
     const flipY = projection.flip_y
-    // Match gaming.tools' MapLibre clustering: bucket nodes within a
-    // 60 px viewport-pixel radius of each other PER TYPE (so Stravidium
-    // never merges with Bauxite), then render each bucket as one
-    // diamond sized by point_count via the same linear interpolation
-    // they use: count=1 -> 0.8× base; count>=140 -> 2.0× base. A
-    // cluster of one point looks like a single marker at 0.8× base —
-    // that's how gaming.tools' individual markers are drawn too, so we
-    // get cluster-and-individual behaviour from the same code path
-    // without a clusterMaxZoom branch.
-    const CLUSTER_RADIUS_PX = 60
+    // gaming.tools' size formula: count=1 -> 0.8× base; count>=140 -> 2.0×.
+    // BASE_HALF is the on-screen half-width at the base scale.
     const BASE_HALF = 10
     const SCALE_AT_1 = 0.8
     const SCALE_AT_140 = 2.0
 
-    // Per-type per-cell aggregation: key = "<typeId>|<cx>,<cy>".
-    type Bucket = { sx: number; sy: number; count: number; color: string }
-    const buckets = new Map<string, Bucket>()
-    for (const n of visibleResourceNodes) {
-      const tx = ((n.x - wxMin) / wxRange) * tex
-      let ty = ((n.y - wyMin) / wyRange) * tex
-      if (flipY) ty = tex - ty
-      const sx = tx * scale + pan.x
-      const sy = ty * scale + pan.y
-      if (sx < -BASE_HALF * SCALE_AT_140 ||
-          sy < -BASE_HALF * SCALE_AT_140 ||
-          sx > w + BASE_HALF * SCALE_AT_140 ||
-          sy > h + BASE_HALF * SCALE_AT_140) continue
-      const cx = Math.floor(sx / CLUSTER_RADIUS_PX)
-      const cy = Math.floor(sy / CLUSTER_RADIUS_PX)
-      const key = `${n.t}|${cx},${cy}`
-      const b = buckets.get(key)
-      if (b) {
-        b.sx += sx
-        b.sy += sy
-        b.count++
-      } else {
-        buckets.set(key, {
-          sx,
-          sy,
-          count: 1,
-          color: resFamilyColor.get(n.f) ?? '#fff',
-        })
-      }
-    }
-
-    // Group buckets by color so we can issue one fill / stroke per
-    // family color instead of per cluster. Text gets a separate pass
-    // because canvas can't batch text inside a path.
-    const byColor = new Map<string, Bucket[]>()
-    for (const b of buckets.values()) {
-      const arr = byColor.get(b.color)
-      if (arr) arr.push(b)
-      else byColor.set(b.color, [b])
+    // Group clusters by color so we issue one fill + stroke per family
+    // color rather than per cluster — bounded by family count regardless
+    // of how many clusters are on screen.
+    const byColor = new Map<string, ResCluster[]>()
+    for (const c of resourceClusters) {
+      const arr = byColor.get(c.color)
+      if (arr) arr.push(c)
+      else byColor.set(c.color, [c])
     }
 
     ctx.lineWidth = 0.75
     ctx.strokeStyle = 'rgba(0,0,0,0.65)'
     for (const [color, list] of byColor) {
       ctx.beginPath()
-      for (const b of list) {
-        const cx = b.sx / b.count
-        const cy = b.sy / b.count
-        const t = Math.min(1, Math.max(0, (b.count - 1) / 139))
+      for (const c of list) {
+        const tx = ((c.wx - wxMin) / wxRange) * tex
+        let ty = ((c.wy - wyMin) / wyRange) * tex
+        if (flipY) ty = tex - ty
+        const sx = tx * scale + pan.x
+        const sy = ty * scale + pan.y
+        const t = Math.min(1, Math.max(0, (c.count - 1) / 139))
         const sizeMul = SCALE_AT_1 + (SCALE_AT_140 - SCALE_AT_1) * t
         const half = BASE_HALF * sizeMul
-        ctx.moveTo(cx, cy - half)
-        ctx.lineTo(cx + half, cy)
-        ctx.lineTo(cx, cy + half)
-        ctx.lineTo(cx - half, cy)
+        if (sx + half < 0 || sy + half < 0 ||
+            sx - half > w || sy - half > h) continue
+        ctx.moveTo(sx, sy - half)
+        ctx.lineTo(sx + half, sy)
+        ctx.lineTo(sx, sy + half)
+        ctx.lineTo(sx - half, sy)
         ctx.closePath()
       }
       ctx.fillStyle = color
       ctx.fill()
       ctx.stroke()
     }
-
-    // Cluster point counts. Skipped for singletons to keep individual
-    // markers clean. Centered, small white-on-black for legibility on
-    // any family colour.
-    ctx.textAlign = 'center'
-    ctx.textBaseline = 'middle'
-    ctx.lineWidth = 3
-    ctx.strokeStyle = 'rgba(0,0,0,0.9)'
-    ctx.fillStyle = '#fff'
-    ctx.font = '600 11px system-ui, sans-serif'
-    for (const b of buckets.values()) {
-      if (b.count < 2) continue
-      const cx = b.sx / b.count
-      const cy = b.sy / b.count
-      const label = String(b.count)
-      ctx.strokeText(label, cx, cy)
-      ctx.fillText(label, cx, cy)
-    }
-  }, [visibleResourceNodes, scale, pan, viewportSize, projection, mode, resFamilyColor])
+  }, [resourceClusters, scale, pan, viewportSize, projection, mode])
 
   // Project world coords to texture pixel coords. Shared between players
   // and POIs — both come from the same UE5 world frame.
@@ -1415,7 +1412,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           {mode === 'dd' && `Layout ${(ddSeed ?? 0) + 1} · `}
           {visiblePois.length} of {pois?.pois.length ?? 0} POIs visible
           {mode === 'dd' && visibleResTypes.size > 0 &&
-            ` · ${visibleResourceNodes.length} resources visible`}
+            ` · ${visibleResourceCount} resources visible`}
           {allHidden && ' (all categories hidden)'}
         </span>
         <span className="hint">scroll to zoom · drag to pan · click a row to toggle</span>
