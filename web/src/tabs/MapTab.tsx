@@ -132,14 +132,16 @@ type PoiBundle = { groups: Group[]; pois: Poi[] }
 type MapMode = 'hagga' | 'dd'
 
 // Fixed projection for Deep Desert. The 12 layouts share the same world
-// frame and texture size — only POI placements + terrain change per seed.
-// Bounds are taken from the same gaming.tools tile pyramid we stitched
-// the WebPs from (32×32 tiles × 256 px at z=5 = 8192).
+// frame and texture size — only POI placements + terrain change per
+// seed. Bounds and flip come from gaming.tools' own map config (their
+// `deepdesert_1` entry in chunks/w9533npS.js): asymmetric extents with
+// the playable grid offset roughly 50k cm toward -x/-y of centre, and
+// a vertical flip so world +y projects to texture y=0.
 const DD_PROJECTION: Projection = {
-  world_x_min: -1_219_395,
-  world_x_max: 1_219_395,
-  world_y_min: -1_219_395,
-  world_y_max: 1_219_395,
+  world_x_min: -1_270_000,
+  world_x_max: 1_168_400,
+  world_y_min: -1_270_000,
+  world_y_max: 1_168_400,
   texture_size: 8192,
   flip_y: true,
 }
@@ -1029,12 +1031,17 @@ function DdSectorGrid({
       )
     }
   }
-  // Cell labels at the centre of each cell — A1 top-left, I9 bottom-right.
-  // Y flip on the projection means rows count from the highest world Y.
+  // Cell labels at the centre of each cell. In-game convention: rows
+  // are letters A..I going south→north (A = southernmost), columns are
+  // numbers 1..9 going west→east. So bottom-left cell is "A1", top-right
+  // is "I9". `row` indexes the iteration north→south by world Y, so the
+  // row letter increments with row.
   for (let row = 0; row < 9; row++) {
     for (let col = 0; col < 9; col++) {
       const wx = DD_GRID_MIN + (col + 0.5) * step
-      const wy = DD_GRID_MAX - (row + 0.5) * step
+      // Iterate row 0 at the SOUTH (lowest world y) so the letter sequence
+      // reads A → I going north on screen once flip_y kicks in.
+      const wy = DD_GRID_MIN + (row + 0.5) * step
       const pos = project(wx, wy)
       if (!pos) continue
       labels.push(
@@ -1049,8 +1056,8 @@ function DdSectorGrid({
           dominantBaseline="central"
           style={{ pointerEvents: 'none' }}
         >
-          {String.fromCharCode(0x41 + col)}
-          {row + 1}
+          {String.fromCharCode(0x41 + row)}
+          {col + 1}
         </text>,
       )
     }
