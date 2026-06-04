@@ -131,6 +131,15 @@ type PoiBundle = { groups: Group[]; pois: Poi[] }
 
 type MapMode = 'hagga' | 'dd'
 
+// DD resource heatmap layers. Per-layout files at
+// /maps/dd_layout_NN_heat_<id>.png cover the 1024² density field
+// stretched to the same gameBounds as the base layout.
+type DdHeatId = 'T6ResourceA' | 'T6ResourceB'
+const DD_HEAT_LAYERS: { id: DdHeatId; label: string; color: string }[] = [
+  { id: 'T6ResourceA', label: 'Titanium',   color: '#dca53c' },
+  { id: 'T6ResourceB', label: 'Stravidium', color: '#aadc82' },
+]
+
 // Fixed projection for Deep Desert. The 12 layouts share the same world
 // frame and texture size — only POI placements + terrain change per
 // seed. Bounds come from gaming.tools' own map config (their
@@ -173,6 +182,9 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Manual DD layout override. null = follow the current Coriolis cycle's
   // seed from the storm tailer.
   const [ddSeedManual, setDdSeedManual] = useState<number | null>(null)
+  // Which DD resource heatmaps are visible. Default off — the overlay
+  // covers a lot of the map so we don't surprise operators with it.
+  const [ddHeatOn, setDdHeatOn] = useState<Set<DdHeatId>>(() => new Set())
 
   const [data, setData] = useState<MapBundle | null>(null)
   const [pois, setPois] = useState<PoiBundle | null>(null)
@@ -611,6 +623,39 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 <StormSchedule storms={data.storms} now={now} />
               </section>
               )}
+              {mode === 'dd' && (
+                <section className="map-group">
+                  <header className="map-group-header" style={{ cursor: 'default' }}>
+                    <span className="map-group-label">Resource heatmap</span>
+                  </header>
+                  <ul className="map-group-rows">
+                    {DD_HEAT_LAYERS.map((h) => {
+                      const off = !ddHeatOn.has(h.id)
+                      return (
+                        <li
+                          key={h.id}
+                          className={`map-icon-row ${off ? 'is-off' : ''}`}
+                          onClick={() =>
+                            setDdHeatOn((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(h.id)) next.delete(h.id)
+                              else next.add(h.id)
+                              return next
+                            })
+                          }
+                          title={off ? 'show' : 'hide'}
+                        >
+                          <span
+                            className="map-layer-dot"
+                            style={{ background: h.color }}
+                          />
+                          <span className="map-icon-label">{h.label}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )}
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
                 const allOff = groupVisible.length === 0
@@ -726,6 +771,26 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               {mode === 'dd' && (
                 <DdSectorGrid project={project} scale={scale} />
               )}
+              {/* DD resource heatmaps — one image per visible resource,
+                  stretched to the full texture so the 1024² density map
+                  lines up with gameBounds. Painted before POIs so icons
+                  + labels stay legible on top. */}
+              {mode === 'dd' &&
+                DD_HEAT_LAYERS.filter((h) => ddHeatOn.has(h.id)).map((h) => {
+                  const layoutNum = (ddSeed ?? 0) + 1
+                  const src = `/maps/dd_layout_${String(layoutNum).padStart(2, '0')}_heat_${h.id}.png`
+                  return (
+                    <image
+                      key={`heat-${h.id}`}
+                      href={src}
+                      x={0}
+                      y={0}
+                      width={tex}
+                      height={tex}
+                      style={{ pointerEvents: 'none' }}
+                    />
+                  )
+                })}
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
