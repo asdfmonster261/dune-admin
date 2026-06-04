@@ -456,23 +456,98 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     const wyMin = projection.world_y_min
     const wyRange = projection.world_y_max - projection.world_y_min
     const flipY = projection.flip_y
-    // 3 px square at any zoom (resource dots stay constant on-screen).
-    const r = 3
-    const half = r / 2
-    let curStyle: string | null = null
+    // Match gaming.tools' MapLibre clustering: bucket nodes within a
+    // 60 px viewport-pixel radius of each other PER TYPE (so Stravidium
+    // never merges with Bauxite), then render each bucket as one
+    // diamond sized by point_count via the same linear interpolation
+    // they use: count=1 -> 0.8× base; count>=140 -> 2.0× base. A
+    // cluster of one point looks like a single marker at 0.8× base —
+    // that's how gaming.tools' individual markers are drawn too, so we
+    // get cluster-and-individual behaviour from the same code path
+    // without a clusterMaxZoom branch.
+    const CLUSTER_RADIUS_PX = 60
+    const BASE_HALF = 10
+    const SCALE_AT_1 = 0.8
+    const SCALE_AT_140 = 2.0
+
+    // Per-type per-cell aggregation: key = "<typeId>|<cx>,<cy>".
+    type Bucket = { sx: number; sy: number; count: number; color: string }
+    const buckets = new Map<string, Bucket>()
     for (const n of visibleResourceNodes) {
       const tx = ((n.x - wxMin) / wxRange) * tex
       let ty = ((n.y - wyMin) / wyRange) * tex
       if (flipY) ty = tex - ty
       const sx = tx * scale + pan.x
       const sy = ty * scale + pan.y
-      if (sx < -r || sy < -r || sx > w + r || sy > h + r) continue
-      const color = resFamilyColor.get(n.f) ?? '#fff'
-      if (color !== curStyle) {
-        ctx.fillStyle = color
-        curStyle = color
+      if (sx < -BASE_HALF * SCALE_AT_140 ||
+          sy < -BASE_HALF * SCALE_AT_140 ||
+          sx > w + BASE_HALF * SCALE_AT_140 ||
+          sy > h + BASE_HALF * SCALE_AT_140) continue
+      const cx = Math.floor(sx / CLUSTER_RADIUS_PX)
+      const cy = Math.floor(sy / CLUSTER_RADIUS_PX)
+      const key = `${n.t}|${cx},${cy}`
+      const b = buckets.get(key)
+      if (b) {
+        b.sx += sx
+        b.sy += sy
+        b.count++
+      } else {
+        buckets.set(key, {
+          sx,
+          sy,
+          count: 1,
+          color: resFamilyColor.get(n.f) ?? '#fff',
+        })
       }
-      ctx.fillRect(sx - half, sy - half, r, r)
+    }
+
+    // Group buckets by color so we can issue one fill / stroke per
+    // family color instead of per cluster. Text gets a separate pass
+    // because canvas can't batch text inside a path.
+    const byColor = new Map<string, Bucket[]>()
+    for (const b of buckets.values()) {
+      const arr = byColor.get(b.color)
+      if (arr) arr.push(b)
+      else byColor.set(b.color, [b])
+    }
+
+    ctx.lineWidth = 0.75
+    ctx.strokeStyle = 'rgba(0,0,0,0.65)'
+    for (const [color, list] of byColor) {
+      ctx.beginPath()
+      for (const b of list) {
+        const cx = b.sx / b.count
+        const cy = b.sy / b.count
+        const t = Math.min(1, Math.max(0, (b.count - 1) / 139))
+        const sizeMul = SCALE_AT_1 + (SCALE_AT_140 - SCALE_AT_1) * t
+        const half = BASE_HALF * sizeMul
+        ctx.moveTo(cx, cy - half)
+        ctx.lineTo(cx + half, cy)
+        ctx.lineTo(cx, cy + half)
+        ctx.lineTo(cx - half, cy)
+        ctx.closePath()
+      }
+      ctx.fillStyle = color
+      ctx.fill()
+      ctx.stroke()
+    }
+
+    // Cluster point counts. Skipped for singletons to keep individual
+    // markers clean. Centered, small white-on-black for legibility on
+    // any family colour.
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'middle'
+    ctx.lineWidth = 3
+    ctx.strokeStyle = 'rgba(0,0,0,0.9)'
+    ctx.fillStyle = '#fff'
+    ctx.font = '600 11px system-ui, sans-serif'
+    for (const b of buckets.values()) {
+      if (b.count < 2) continue
+      const cx = b.sx / b.count
+      const cy = b.sy / b.count
+      const label = String(b.count)
+      ctx.strokeText(label, cx, cy)
+      ctx.fillText(label, cx, cy)
     }
   }, [visibleResourceNodes, scale, pan, viewportSize, projection, mode, resFamilyColor])
 
@@ -638,8 +713,17 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       : `/maps/dd_layout_${String((ddSeed ?? 0) + 1).padStart(2, '0')}.webp`
   const baseImageAlt = mode === 'hagga' ? 'Hagga Basin' : `Deep Desert Layout ${(ddSeed ?? 0) + 1}`
   const allHidden = allIconIds.length > 0 && hidden.size === allIconIds.length
-  const showAll = () => setHidden(new Set())
-  const hideAll = () => setHidden(new Set(allIconIds))
+  const showAll = () => {
+    setHidden(new Set())
+    if (resources) {
+      const allTypes = resources.families.flatMap((f) => f.types.map((t) => t.id))
+      setVisibleResTypes(new Set(allTypes))
+    }
+  }
+  const hideAll = () => {
+    setHidden(new Set(allIconIds))
+    setVisibleResTypes(new Set())
+  }
 
   // Toggle every icon in a group at once. If any in the group is
   // currently visible, hide them all; otherwise show them all.
