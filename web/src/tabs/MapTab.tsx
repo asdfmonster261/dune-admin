@@ -129,6 +129,18 @@ type Group = { id: string; label: string; icons: IconType[] }
 type Poi = { x: number; y: number; name: string; icon: string }
 type PoiBundle = { groups: Group[]; pois: Poi[] }
 
+// DD resource bundles (gaming.tools' spawner dumps, ~30k entries per
+// layout). Lazy-loaded — see resourceBundleUrl + the conditional fetch.
+type ResourceFamily = {
+  id: string
+  label: string
+  color: string
+  count: number
+  types: { id: string; count: number }[]
+}
+type ResourceNode = { x: number; y: number; f: string; t: string }
+type ResourceBundle = { families: ResourceFamily[]; nodes: ResourceNode[] }
+
 type MapMode = 'hagga' | 'dd'
 
 // DD resource heatmap layers. Per-layout files at
@@ -138,6 +150,19 @@ type DdHeatId = 'T6ResourceA' | 'T6ResourceB'
 const DD_HEAT_LAYERS: { id: DdHeatId; label: string; color: string }[] = [
   { id: 'T6ResourceA', label: 'Titanium',   color: '#dca53c' },
   { id: 'T6ResourceB', label: 'Stravidium', color: '#aadc82' },
+]
+
+// Placeholder family list shown before the resource bundle has loaded.
+// The IDs / colors / labels must match bake_dd_resources.py's
+// FAMILY_RULES so toggling a placeholder triggers the fetch and the
+// freshly-loaded families inherit the same id space without a remount.
+const RES_FAMILY_PLACEHOLDERS: ResourceFamily[] = [
+  { id: 't6',    label: 'T6 Resources', color: '#dca53c', count: 0, types: [] },
+  { id: 'spice', label: 'Spice Fields', color: '#f59e0b', count: 0, types: [] },
+  { id: 'flour', label: 'Flour Sand',   color: '#e7d27a', count: 0, types: [] },
+  { id: 'plant', label: 'Plants',       color: '#84a06b', count: 0, types: [] },
+  { id: 'scrap', label: 'Scrap',        color: '#94a3b8', count: 0, types: [] },
+  { id: 'ore',   label: 'Ores',         color: '#b87333', count: 0, types: [] },
 ]
 
 // Fixed projection for Deep Desert. The 12 layouts share the same world
@@ -185,6 +210,14 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Which DD resource heatmaps are visible. Default off — the overlay
   // covers a lot of the map so we don't surprise operators with it.
   const [ddHeatOn, setDdHeatOn] = useState<Set<DdHeatId>>(() => new Set())
+
+  // DD resource node bundle (lazy). State + the set of currently-VISIBLE
+  // families (opt-in — at 30k entries per layout, default-on would torch
+  // the SVG). The bundle URL keys on layout the same way as POIs/heatmap.
+  const [resources, setResources] = useState<ResourceBundle | null>(null)
+  const [visibleResFamilies, setVisibleResFamilies] = useState<Set<string>>(
+    () => new Set(),
+  )
 
   const [data, setData] = useState<MapBundle | null>(null)
   const [pois, setPois] = useState<PoiBundle | null>(null)
@@ -286,6 +319,32 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     }
   }, [poiBundleUrl])
 
+  // DD resource bundle URL. Same NN/seed convention as POIs + heatmaps.
+  const resourceBundleUrl = useMemo(() => {
+    if (mode !== 'dd' || ddSeed === null) return null
+    const layoutNum = ddSeed + 1
+    return `/maps/dd_layout_${String(layoutNum).padStart(2, '0')}_resources.json`
+  }, [mode, ddSeed])
+
+  // Lazy-load the resource bundle the first time any family is toggled
+  // on. We drop the bundle when the URL changes (mode flip or layout
+  // change) so the next family-toggle re-fetches the right layout's data
+  // without blocking the rest of the map on a ~2 MB transfer.
+  useEffect(() => {
+    setResources(null)
+  }, [resourceBundleUrl])
+  useEffect(() => {
+    if (!resourceBundleUrl) return
+    if (visibleResFamilies.size === 0) return
+    if (resources) return
+    let cancelled = false
+    fetch(resourceBundleUrl)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
+      .then((b: ResourceBundle) => { if (!cancelled) setResources(b) })
+      .catch(() => {})
+    return () => { cancelled = true }
+  }, [resourceBundleUrl, visibleResFamilies, resources])
+
   // Active projection. Hagga uses the backend-supplied affine; DD uses
   // the fixed constants we baked into the WebP tile pyramid.
   const projection = useMemo<Projection | null>(() => {
@@ -304,6 +363,68 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     fitToViewport(viewportEl, projection.texture_size, setScale, setPan)
     fittedModeRef.current = mode
   }, [viewportEl, projection, pois, mode])
+
+  // Visible world bounds (cm). The viewport shows a texture-pixel
+  // window whose top-left in texture space is (-pan / scale) and whose
+  // size is (viewportSize / scale). Translating that back through the
+  // projection gives a world-coord AABB used to cull dense layers (DD
+  // resource nodes — 30k+ entries per layout) down to whatever sits
+  // under the user's eye. We add a small margin so dots don't pop in
+  // at the edge of a pan.
+  const visibleWorldBounds = useMemo(() => {
+    if (!projection || !viewportEl) return null
+    const r = viewportEl.getBoundingClientRect()
+    const xMinTex = -pan.x / scale
+    const yMinTex = -pan.y / scale
+    const xMaxTex = xMinTex + r.width / scale
+    const yMaxTex = yMinTex + r.height / scale
+    const texToWorldX = (tx: number) =>
+      projection.world_x_min +
+      (tx / projection.texture_size) *
+        (projection.world_x_max - projection.world_x_min)
+    const texToWorldY = (ty: number) => {
+      const tyEff = projection.flip_y ? projection.texture_size - ty : ty
+      return (
+        projection.world_y_min +
+        (tyEff / projection.texture_size) *
+          (projection.world_y_max - projection.world_y_min)
+      )
+    }
+    const xs = [texToWorldX(xMinTex), texToWorldX(xMaxTex)]
+    const ys = [texToWorldY(yMinTex), texToWorldY(yMaxTex)]
+    const marginX = (Math.max(...xs) - Math.min(...xs)) * 0.05
+    const marginY = (Math.max(...ys) - Math.min(...ys)) * 0.05
+    return {
+      xMin: Math.min(...xs) - marginX,
+      xMax: Math.max(...xs) + marginX,
+      yMin: Math.min(...ys) - marginY,
+      yMax: Math.max(...ys) + marginY,
+    }
+  }, [projection, viewportEl, pan, scale])
+
+  // Resource nodes to actually render: filter the loaded bundle by the
+  // visible-families set AND the viewport AABB. The double filter keeps
+  // the SVG element count bounded by what's on screen rather than the
+  // bundle size (30k+ for DD).
+  const visibleResourceNodes = useMemo(() => {
+    if (!resources || !visibleWorldBounds) return [] as ResourceNode[]
+    if (visibleResFamilies.size === 0) return [] as ResourceNode[]
+    const { xMin, xMax, yMin, yMax } = visibleWorldBounds
+    const out: ResourceNode[] = []
+    for (const n of resources.nodes) {
+      if (!visibleResFamilies.has(n.f)) continue
+      if (n.x < xMin || n.x > xMax || n.y < yMin || n.y > yMax) continue
+      out.push(n)
+    }
+    return out
+  }, [resources, visibleResFamilies, visibleWorldBounds])
+
+  // Map family-id to color for the renderer. Tiny but called per-dot.
+  const resFamilyColor = useMemo(() => {
+    const m = new Map<string, string>()
+    if (resources) for (const f of resources.families) m.set(f.id, f.color)
+    return m
+  }, [resources])
 
   // Project world coords to texture pixel coords. Shared between players
   // and POIs — both come from the same UE5 world frame.
@@ -663,6 +784,47 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                   </ul>
                 </section>
               )}
+              {/* DD resource node families. Each family is opt-in
+                  because the bundle is large (~30k nodes per layout)
+                  and the densest families (plants, scrap) only carry
+                  signal when you're hunting one specifically. */}
+              {mode === 'dd' && resourceBundleUrl && (
+                <section className="map-group">
+                  <header className="map-group-header" style={{ cursor: 'default' }}>
+                    <span className="map-group-label">Resource nodes</span>
+                    <span className="map-group-count">
+                      {resources ? visibleResourceNodes.length : ''}
+                    </span>
+                  </header>
+                  <ul className="map-group-rows">
+                    {(resources?.families ?? RES_FAMILY_PLACEHOLDERS).map((fa) => {
+                      const off = !visibleResFamilies.has(fa.id)
+                      return (
+                        <li
+                          key={fa.id}
+                          className={`map-icon-row ${off ? 'is-off' : ''}`}
+                          onClick={() =>
+                            setVisibleResFamilies((prev) => {
+                              const next = new Set(prev)
+                              if (next.has(fa.id)) next.delete(fa.id)
+                              else next.add(fa.id)
+                              return next
+                            })
+                          }
+                          title={off ? 'show' : 'hide'}
+                        >
+                          <span
+                            className="map-layer-dot"
+                            style={{ background: fa.color }}
+                          />
+                          <span className="map-icon-label">{fa.label}</span>
+                          <span className="map-icon-count">{fa.count}</span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              )}
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
                 const allOff = groupVisible.length === 0
@@ -798,6 +960,26 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     />
                   )
                 })}
+              {/* DD resource nodes — drawn under POIs so caves/totems
+                  stay legible on top. Bundle is lazy-loaded; the
+                  visible-families set is what triggers the fetch. */}
+              {mode === 'dd' && visibleResourceNodes.map((n, i) => {
+                const pos = project(n.x, n.y)
+                if (!pos) return null
+                const color = resFamilyColor.get(n.f) ?? '#fff'
+                return (
+                  <circle
+                    key={`res-${i}`}
+                    cx={pos.x}
+                    cy={pos.y}
+                    r={3 / scale}
+                    fill={color}
+                    stroke="#000"
+                    strokeWidth={0.4 / scale}
+                    opacity={0.85}
+                  />
+                )
+              })}
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
