@@ -152,19 +152,6 @@ const DD_HEAT_LAYERS: { id: DdHeatId; label: string; color: string }[] = [
   { id: 'T6ResourceB', label: 'Stravidium', color: '#aadc82' },
 ]
 
-// Placeholder family list shown before the resource bundle has loaded.
-// The IDs / colors / labels must match bake_dd_resources.py's
-// FAMILY_RULES so toggling a placeholder triggers the fetch and the
-// freshly-loaded families inherit the same id space without a remount.
-const RES_FAMILY_PLACEHOLDERS: ResourceFamily[] = [
-  { id: 't6',    label: 'T6 Resources', color: '#dca53c', count: 0, types: [] },
-  { id: 'spice', label: 'Spice Fields', color: '#f59e0b', count: 0, types: [] },
-  { id: 'flour', label: 'Flour Sand',   color: '#e7d27a', count: 0, types: [] },
-  { id: 'plant', label: 'Plants',       color: '#84a06b', count: 0, types: [] },
-  { id: 'scrap', label: 'Scrap',        color: '#94a3b8', count: 0, types: [] },
-  { id: 'ore',   label: 'Ores',         color: '#b87333', count: 0, types: [] },
-]
-
 // Fixed projection for Deep Desert. The 12 layouts share the same world
 // frame and texture size — only POI placements + terrain change per
 // seed. Bounds come from gaming.tools' own map config (their
@@ -211,11 +198,13 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // covers a lot of the map so we don't surprise operators with it.
   const [ddHeatOn, setDdHeatOn] = useState<Set<DdHeatId>>(() => new Set())
 
-  // DD resource node bundle (lazy). State + the set of currently-VISIBLE
-  // families (opt-in — at 30k entries per layout, default-on would torch
-  // the SVG). The bundle URL keys on layout the same way as POIs/heatmap.
+  // DD resource node bundle (lazy). Visibility is tracked per TYPE
+  // (subspawner class — e.g. SpiceField Small vs SpiceField Medium)
+  // rather than per family so the sidebar matches gaming.tools' filter
+  // granularity. Family header click flips every type in the family;
+  // a single row click flips just that type.
   const [resources, setResources] = useState<ResourceBundle | null>(null)
-  const [visibleResFamilies, setVisibleResFamilies] = useState<Set<string>>(
+  const [visibleResTypes, setVisibleResTypes] = useState<Set<string>>(
     () => new Set(),
   )
 
@@ -343,24 +332,21 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return `/maps/dd_layout_${String(layoutNum).padStart(2, '0')}_resources.json`
   }, [mode, ddSeed])
 
-  // Lazy-load the resource bundle the first time any family is toggled
-  // on. We drop the bundle when the URL changes (mode flip or layout
-  // change) so the next family-toggle re-fetches the right layout's data
-  // without blocking the rest of the map on a ~2 MB transfer.
+  // Fetch the resource bundle whenever the URL changes (mode flip or
+  // layout change). Always fetched on DD mode entry — the bundle is
+  // ~1.7 MB which the browser caches per-layout, and pre-fetching means
+  // the sidebar can show real per-type filter rows immediately instead
+  // of a placeholder dance. Hagga doesn't get a fetch (URL is null).
   useEffect(() => {
     setResources(null)
-  }, [resourceBundleUrl])
-  useEffect(() => {
     if (!resourceBundleUrl) return
-    if (visibleResFamilies.size === 0) return
-    if (resources) return
     let cancelled = false
     fetch(resourceBundleUrl)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
       .then((b: ResourceBundle) => { if (!cancelled) setResources(b) })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [resourceBundleUrl, visibleResFamilies, resources])
+  }, [resourceBundleUrl])
 
   // Active projection. Hagga uses the backend-supplied affine; DD uses
   // the fixed constants we baked into the WebP tile pyramid.
@@ -420,21 +406,21 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   }, [projection, viewportEl, pan, scale])
 
   // Resource nodes to actually render: filter the loaded bundle by the
-  // visible-families set AND the viewport AABB. The double filter keeps
+  // visible-types set AND the viewport AABB. The double filter keeps
   // the SVG element count bounded by what's on screen rather than the
   // bundle size (30k+ for DD).
   const visibleResourceNodes = useMemo(() => {
     if (!resources || !visibleWorldBounds) return [] as ResourceNode[]
-    if (visibleResFamilies.size === 0) return [] as ResourceNode[]
+    if (visibleResTypes.size === 0) return [] as ResourceNode[]
     const { xMin, xMax, yMin, yMax } = visibleWorldBounds
     const out: ResourceNode[] = []
     for (const n of resources.nodes) {
-      if (!visibleResFamilies.has(n.f)) continue
+      if (!visibleResTypes.has(n.t)) continue
       if (n.x < xMin || n.x > xMax || n.y < yMin || n.y > yMax) continue
       out.push(n)
     }
     return out
-  }, [resources, visibleResFamilies, visibleWorldBounds])
+  }, [resources, visibleResTypes, visibleWorldBounds])
 
   // Map family-id to color for the renderer. Tiny but called per-dot.
   const resFamilyColor = useMemo(() => {
@@ -848,68 +834,93 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                   </ul>
                 </section>
               )}
-              {/* DD resource node families. Each family is opt-in
-                  because the bundle is large (~30k nodes per layout)
-                  and the densest families (plants, scrap) only carry
-                  signal when you're hunting one specifically. Clicking
-                  the group header flips all families at once, mirroring
-                  the POI groups. */}
-              {mode === 'dd' && resourceBundleUrl && (() => {
-                const fams = resources?.families ?? RES_FAMILY_PLACEHOLDERS
-                const allOn = fams.length > 0 &&
-                  fams.every((fa) => visibleResFamilies.has(fa.id))
-                const someOn = fams.some((fa) => visibleResFamilies.has(fa.id))
-                const groupOff = !someOn
-                return (
-                  <section className={`map-group ${groupOff ? 'is-off' : ''}`}>
-                    <header
-                      className="map-group-header"
-                      onClick={() =>
-                        setVisibleResFamilies((prev) => {
-                          const next = new Set(prev)
-                          if (allOn) fams.forEach((fa) => next.delete(fa.id))
-                          else fams.forEach((fa) => next.add(fa.id))
-                          return next
-                        })
-                      }
-                      title={allOn ? 'hide all families' : 'show all families'}
-                    >
-                      <span className="map-group-label">Resource nodes</span>
-                      <span className="map-group-count">
-                        {resources ? visibleResourceNodes.length : ''}
-                      </span>
-                    </header>
-                    <ul className="map-group-rows">
-                      {fams.map((fa) => {
-                        const off = !visibleResFamilies.has(fa.id)
-                        return (
-                          <li
-                            key={fa.id}
-                            className={`map-icon-row ${off ? 'is-off' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setVisibleResFamilies((prev) => {
-                                const next = new Set(prev)
-                                if (next.has(fa.id)) next.delete(fa.id)
-                                else next.add(fa.id)
-                                return next
-                              })
-                            }}
-                            title={off ? 'show' : 'hide'}
-                          >
-                            <span
-                              className="map-layer-dot"
-                              style={{ background: fa.color }}
-                            />
-                            <span className="map-icon-label">{fa.label}</span>
-                            <span className="map-icon-count">{fa.count}</span>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  </section>
-                )
-              })()}
+              {/* DD resource node families with per-subtype filters
+                  (e.g. SpiceField Small vs Medium) matching gaming.tools'
+                  filter granularity. Family is opt-in because the bundle
+                  is large (~30k nodes per layout). Family header click
+                  flips every type in that family at once. Until the
+                  bundle has loaded we show family rows as placeholders
+                  so the first click can trigger the fetch. */}
+              {mode === 'dd' && resourceBundleUrl && resources && (
+                <>
+                  {resources.families.map((fa) => {
+                    const typeIds = fa.types.map((t) => t.id)
+                    const onCount = typeIds.filter((id) =>
+                      visibleResTypes.has(id),
+                    ).length
+                    const allOn = onCount === typeIds.length && typeIds.length > 0
+                    const someOn = onCount > 0
+                    return (
+                      <section
+                        key={fa.id}
+                        className={`map-group ${!someOn ? 'is-off' : ''}`}
+                      >
+                        <header
+                          className="map-group-header"
+                          onClick={() =>
+                            setVisibleResTypes((prev) => {
+                              const next = new Set(prev)
+                              if (allOn) typeIds.forEach((id) => next.delete(id))
+                              else typeIds.forEach((id) => next.add(id))
+                              return next
+                            })
+                          }
+                          title={allOn ? 'hide all' : 'show all'}
+                        >
+                          <span
+                            className="map-layer-dot"
+                            style={{ background: fa.color }}
+                          />
+                          <span className="map-group-label">{fa.label}</span>
+                          <span className="map-group-count">
+                            {someOn && !allOn ? '· ' : ''}
+                            {fa.count}
+                          </span>
+                        </header>
+                        <ul className="map-group-rows">
+                          {fa.types.map((t) => {
+                            const off = !visibleResTypes.has(t.id)
+                            return (
+                              <li
+                                key={t.id}
+                                className={`map-icon-row ${off ? 'is-off' : ''}`}
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setVisibleResTypes((prev) => {
+                                    const next = new Set(prev)
+                                    if (next.has(t.id)) next.delete(t.id)
+                                    else next.add(t.id)
+                                    return next
+                                  })
+                                }}
+                                title={off ? 'show' : 'hide'}
+                              >
+                                <span
+                                  className="map-layer-dot"
+                                  style={{ background: fa.color }}
+                                />
+                                <span className="map-icon-label">{t.id}</span>
+                                <span className="map-icon-count">{t.count}</span>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </section>
+                    )
+                  })}
+                </>
+              )}
+              {mode === 'dd' && resourceBundleUrl && !resources && (
+                <section className="map-group is-off">
+                  <header
+                    className="map-group-header"
+                    style={{ cursor: 'default' }}
+                  >
+                    <span className="map-group-label">Resource nodes</span>
+                    <span className="map-group-count">loading…</span>
+                  </header>
+                </section>
+              )}
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
                 const allOff = groupVisible.length === 0
@@ -1319,7 +1330,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
           {`${data.players.length} players · `}
           {mode === 'dd' && `Layout ${(ddSeed ?? 0) + 1} · `}
           {visiblePois.length} of {pois?.pois.length ?? 0} POIs visible
-          {mode === 'dd' && visibleResFamilies.size > 0 &&
+          {mode === 'dd' && visibleResTypes.size > 0 &&
             ` · ${visibleResourceNodes.length} resources visible`}
           {allHidden && ' (all categories hidden)'}
         </span>
