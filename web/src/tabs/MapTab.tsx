@@ -1,18 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../api'
 
-// Phase 10 — Map tab (Hagga Basin).
+// Phase 10 — Map tab (Hagga Basin + Deep Desert).
 //
 // Base image is the stitched 8192² gaming.tools texture, served from
-// /maps/hagga.png by the embedded SPA. Live player positions come from
-// /api/v1/map/players and project onto the texture via the affine
-// constants the backend ships in the same payload.
+// /maps/hagga.webp or /maps/dd_layout_NN.webp by the embedded SPA. Live
+// player positions come from /api/v1/map/players and project onto the
+// Hagga texture via the affine constants the backend ships in the same
+// payload. DD uses fixed world bounds (±1,219,395 cm) and doesn't
+// surface live data — the underlying gameplay world is the same engine
+// instance as Hagga, so live overlays would project onto the wrong
+// texture if shown while in DD mode.
 //
-// POI data is also gaming.tools — 3,425 deduped placements baked into
-// /maps/hagga_pois.json at build time, with icons mirrored to
-// /maps/icons/<iconId>.webp so the page never depends on their CDN
-// being up. Sidebar mimics gaming.tools' filter UX: one row per icon
-// type with the count + a checkbox-style toggle.
+// POI data is gaming.tools — Hagga's 3,425 deduped placements baked
+// into /maps/hagga_pois.json, plus 12 per-layout DD bundles at
+// /maps/dd_layout_NN_pois.json. Icons mirrored to /maps/icons/<iconId>
+// .webp so the page never depends on their CDN being up. Sidebar mimics
+// gaming.tools' filter UX: one row per icon type with the count + a
+// checkbox-style toggle.
+//
+// DD layout selection: auto-tracks current week via the
+// `coriolis_world_seed` field from storm_tailer.go; can be manually
+// overridden via the layout dropdown to inspect any of the 12 layouts.
 
 type Player = {
   actor_id: number
@@ -120,7 +129,36 @@ type Group = { id: string; label: string; icons: IconType[] }
 type Poi = { x: number; y: number; name: string; icon: string }
 type PoiBundle = { groups: Group[]; pois: Poi[] }
 
+type MapMode = 'hagga' | 'dd'
+
+// Fixed projection for Deep Desert. The 12 layouts share the same world
+// frame and texture size — only POI placements + terrain change per seed.
+// Bounds are taken from the same gaming.tools tile pyramid we stitched
+// the WebPs from (32×32 tiles × 256 px at z=5 = 8192).
+const DD_PROJECTION: Projection = {
+  world_x_min: -1_219_395,
+  world_x_max: 1_219_395,
+  world_y_min: -1_219_395,
+  world_y_max: 1_219_395,
+  texture_size: 8192,
+  flip_y: true,
+}
+
+// 9×9 sector grid (A1..I9) covers the playable centre of the DD map.
+// Outside this band is a sand border the storm doesn't reach. Bounds
+// taken from BP_WorldMap_Areas_DeepDesert_1 (extract_pois.py).
+const DD_GRID_MIN = -1_080_000
+const DD_GRID_MAX = 1_080_000
+
 export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
+  // Hagga | DD toggle. Pan/zoom/filter UX is shared; what changes is the
+  // base texture, POI bundle, projection bounds, and whether live data
+  // overlays paint at all.
+  const [mode, setMode] = useState<MapMode>('hagga')
+  // Manual DD layout override. null = follow the current Coriolis cycle's
+  // seed from the storm tailer.
+  const [ddSeedManual, setDdSeedManual] = useState<number | null>(null)
+
   const [data, setData] = useState<MapBundle | null>(null)
   const [pois, setPois] = useState<PoiBundle | null>(null)
   // Set of icon ids whose POIs should be HIDDEN. Empty = all visible.
@@ -179,24 +217,31 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return () => clearInterval(id)
   }, [])
 
-  // Auto-fit on first mount, once viewport + map bundle + POIs are all
-  // ready. The POIs gate matters because the sidebar is conditional on
-  // `pois`; without it the viewport measures full-width, fits, then the
-  // sidebar pops in and shoves the map to the right edge of the now-
-  // smaller container. Gated by a ref so user-initiated pan / zoom isn't
-  // undone by a later re-render.
-  const fittedOnceRef = useRef(false)
-  useEffect(() => {
-    if (fittedOnceRef.current) return
-    if (!viewportEl || !data || !pois) return
-    fitToViewport(viewportEl, data.projection.texture_size, setScale, setPan)
-    fittedOnceRef.current = true
-  }, [viewportEl, data, pois])
+  // Effective DD seed: manual override wins, otherwise track the cycle.
+  // Falls back to null (no resolved seed) so DD asset URLs can refuse to
+  // render until the storm tailer reports the current Coriolis seed.
+  const ddSeed = useMemo<number | null>(() => {
+    if (mode !== 'dd') return null
+    if (ddSeedManual !== null) return ddSeedManual
+    return data?.storms?.coriolis_world_seed ?? null
+  }, [mode, ddSeedManual, data])
 
-  // Load static POIs once at mount.
+  // POI bundle URL — re-fetched whenever mode or DD seed flips. Hagga
+  // uses the single bundle; DD picks the seed-keyed file (1-indexed
+  // filenames, 0-indexed seed, hence +1).
+  const poiBundleUrl = useMemo(() => {
+    if (mode === 'hagga') return '/maps/hagga_pois.json'
+    const layoutNum = (ddSeed ?? 0) + 1
+    return `/maps/dd_layout_${String(layoutNum).padStart(2, '0')}_pois.json`
+  }, [mode, ddSeed])
+
+  // (Re)load static POIs whenever the bundle URL changes. Clearing the
+  // current pois on URL change prevents a flash of stale icons under the
+  // new base texture.
   useEffect(() => {
     let cancelled = false
-    fetch('/maps/hagga_pois.json')
+    setPois(null)
+    fetch(poiBundleUrl)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(r.statusText))))
       .then((p: PoiBundle) => {
         if (!cancelled) setPois(p)
@@ -205,24 +250,44 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     return () => {
       cancelled = true
     }
-  }, [])
+  }, [poiBundleUrl])
+
+  // Active projection. Hagga uses the backend-supplied affine; DD uses
+  // the fixed constants we baked into the WebP tile pyramid.
+  const projection = useMemo<Projection | null>(() => {
+    if (mode === 'dd') return DD_PROJECTION
+    return data?.projection ?? null
+  }, [mode, data])
+
+  // Refit when the active map mode changes — Hagga and DD use different
+  // base textures so the pan/zoom that worked for one is wrong for the
+  // other. The ref tracks "fitted for this mode" rather than "fitted
+  // ever" so manual pan/zoom inside a mode is still respected.
+  const fittedModeRef = useRef<MapMode | null>(null)
+  useEffect(() => {
+    if (fittedModeRef.current === mode) return
+    if (!viewportEl || !projection || !pois) return
+    fitToViewport(viewportEl, projection.texture_size, setScale, setPan)
+    fittedModeRef.current = mode
+  }, [viewportEl, projection, pois, mode])
 
   // Project world coords to texture pixel coords. Shared between players
   // and POIs — both come from the same UE5 world frame.
   const project = useMemo(() => {
     return (wx: number, wy: number) => {
-      if (!data) return null
-      const proj = data.projection
+      if (!projection) return null
       const tx =
-        ((wx - proj.world_x_min) / (proj.world_x_max - proj.world_x_min)) *
-        proj.texture_size
+        ((wx - projection.world_x_min) /
+          (projection.world_x_max - projection.world_x_min)) *
+        projection.texture_size
       let ty =
-        ((wy - proj.world_y_min) / (proj.world_y_max - proj.world_y_min)) *
-        proj.texture_size
-      if (proj.flip_y) ty = proj.texture_size - ty
+        ((wy - projection.world_y_min) /
+          (projection.world_y_max - projection.world_y_min)) *
+        projection.texture_size
+      if (projection.flip_y) ty = projection.texture_size - ty
       return { x: tx, y: ty }
     }
-  }, [data])
+  }, [projection])
 
   // Wheel zoom anchored at cursor. Attached via useEffect with
   // { passive: false } because React's synthetic onWheel is passive
@@ -273,13 +338,13 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
     // Click-to-copy world coords. Only fires for genuine clicks (no
     // drag), and we inverse-project the cursor through the same affine
     // mapping the SVG uses going the other direction.
-    if (wasClick && e && viewportEl && data) {
+    if (wasClick && e && viewportEl && projection) {
       const rect = viewportEl.getBoundingClientRect()
       const cx = e.clientX - rect.left
       const cy = e.clientY - rect.top
       const tx = (cx - pan.x) / scale
       const ty = (cy - pan.y) / scale
-      const proj = data.projection
+      const proj = projection
       const wx =
         (tx / proj.texture_size) * (proj.world_x_max - proj.world_x_min) +
         proj.world_x_min
@@ -301,8 +366,8 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   // Recenter the map so the given world point lands at the centre of
   // the viewport, keeping the current zoom. Used by player-jump.
   const jumpTo = (worldX: number, worldY: number) => {
-    if (!viewportEl || !data) return
-    const proj = data.projection
+    if (!viewportEl || !projection) return
+    const proj = projection
     const tx =
       ((worldX - proj.world_x_min) / (proj.world_x_max - proj.world_x_min)) *
       proj.texture_size
@@ -359,9 +424,14 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
   )
 
   if (err) return <div className="alert">{err}</div>
-  if (!data) return <div className="placeholder">loading…</div>
+  if (!data || !projection) return <div className="placeholder">loading…</div>
 
-  const tex = data.projection.texture_size
+  const tex = projection.texture_size
+  const baseImageSrc =
+    mode === 'hagga'
+      ? '/maps/hagga.webp'
+      : `/maps/dd_layout_${String((ddSeed ?? 0) + 1).padStart(2, '0')}.webp`
+  const baseImageAlt = mode === 'hagga' ? 'Hagga Basin' : `Deep Desert Layout ${(ddSeed ?? 0) + 1}`
   const allHidden = allIconIds.length > 0 && hidden.size === allIconIds.length
   const showAll = () => setHidden(new Set())
   const hideAll = () => setHidden(new Set(allIconIds))
@@ -387,6 +457,50 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
             click an individual row to toggle just that one. */}
         {pois && (
           <aside className="map-sidebar">
+            {/* Hagga / Deep Desert mode toggle. Tab-bar styling reuses
+                the existing .map-link buttons with an explicit
+                `is-active` modifier the host CSS bolds. */}
+            <div className="map-mode-tabs">
+              <button
+                type="button"
+                className={`map-link ${mode === 'hagga' ? 'is-active' : ''}`}
+                onClick={() => setMode('hagga')}
+              >
+                Hagga
+              </button>
+              <span className="hint">·</span>
+              <button
+                type="button"
+                className={`map-link ${mode === 'dd' ? 'is-active' : ''}`}
+                onClick={() => setMode('dd')}
+              >
+                Deep Desert
+              </button>
+            </div>
+            {mode === 'dd' && (
+              <div className="map-layout-picker">
+                <label className="hint">Layout</label>
+                <select
+                  className="map-search"
+                  value={ddSeedManual ?? ''}
+                  onChange={(e) =>
+                    setDdSeedManual(e.target.value === '' ? null : Number(e.target.value))
+                  }
+                >
+                  <option value="">
+                    Current week
+                    {data?.storms?.coriolis_world_seed != null
+                      ? ` (Layout ${(data.storms.coriolis_world_seed) + 1})`
+                      : ''}
+                  </option>
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i} value={i}>
+                      Layout {i + 1}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="map-sidebar-actions">
               <button type="button" className="map-link" onClick={showAll}>
                 show all
@@ -403,39 +517,45 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               value={poiSearch}
               onChange={(e) => setPoiSearch(e.target.value)}
             />
-            <div className="map-jump-wrap">
-              <input
-                type="search"
-                className="map-search"
-                placeholder="jump to player…"
-                value={playerSearch}
-                onChange={(e) => setPlayerSearch(e.target.value)}
-              />
-              {playerSearchNorm && playerMatches.length > 0 && (
-                <ul className="map-jump-list">
-                  {playerMatches.slice(0, 8).map((p) => (
-                    <li key={p.actor_id}>
-                      <button
-                        type="button"
-                        className="map-jump-item"
-                        onClick={() => {
-                          jumpTo(p.world_x, p.world_y)
-                          setPlayerSearch('')
-                        }}
-                      >
-                        {p.character_name}
-                        <span className="hint">
-                          {p.online_status?.toLowerCase() === 'online' ? '·online' : ''}
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
+            {mode === 'hagga' && (
+              <div className="map-jump-wrap">
+                <input
+                  type="search"
+                  className="map-search"
+                  placeholder="jump to player…"
+                  value={playerSearch}
+                  onChange={(e) => setPlayerSearch(e.target.value)}
+                />
+                {playerSearchNorm && playerMatches.length > 0 && (
+                  <ul className="map-jump-list">
+                    {playerMatches.slice(0, 8).map((p) => (
+                      <li key={p.actor_id}>
+                        <button
+                          type="button"
+                          className="map-jump-item"
+                          onClick={() => {
+                            jumpTo(p.world_x, p.world_y)
+                            setPlayerSearch('')
+                          }}
+                        >
+                          {p.character_name}
+                          <span className="hint">
+                            {p.online_status?.toLowerCase() === 'online' ? '·online' : ''}
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
             <div className="map-icon-list">
               {/* Live layers — kept above POIs since they're admin-
-                  oriented and tend to be looked at first. */}
+                  oriented and tend to be looked at first. Hidden in DD
+                  mode because the live coords project onto Hagga's
+                  texture and would render in the wrong spots over a DD
+                  layout. */}
+              {mode === 'hagga' && (
               <section className="map-group">
                 <header className="map-group-header" style={{ cursor: 'default' }}>
                   <span className="map-group-label">Live data</span>
@@ -475,6 +595,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                 </ul>
                 <StormSchedule storms={data.storms} now={now} />
               </section>
+              )}
               {pois.groups.map((g) => {
                 const groupVisible = g.icons.filter((i) => !hidden.has(i.id))
                 const allOff = groupVisible.length === 0
@@ -566,11 +687,11 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
             }}
           >
             <img
-              src="/maps/hagga.webp"
+              src={baseImageSrc}
               width={tex}
               height={tex}
               draggable={false}
-              alt="Hagga Basin"
+              alt={baseImageAlt}
             />
             <svg
               width={tex}
@@ -579,12 +700,17 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
               viewBox={`0 0 ${tex} ${tex}`}
             >
               {/* Layer paint order, bottom → top:
-                    1. POI icons (static, lowest priority)
-                    2. Sandstorm path + active wall (amber sweep)
-                    3. Land-claim totems (purple diamond)
-                    4. Vehicles (cyan triangle)
-                    5. Recent death markers (red X)
-                    6. Live players (always on top so you can find them) */}
+                    1. DD sector grid (DD mode only — drawn first so it
+                       sits beneath every marker layer)
+                    2. POI icons (static, lowest priority)
+                    3. Sandstorm path + active wall (amber sweep)
+                    4. Land-claim totems (purple diamond)
+                    5. Vehicles (cyan triangle)
+                    6. Recent death markers (red X)
+                    7. Live players (always on top so you can find them) */}
+              {mode === 'dd' && (
+                <DdSectorGrid project={project} scale={scale} />
+              )}
               {visiblePois.map((poi, i) => {
                 const pos = project(poi.x, poi.y)
                 if (!pos) return null
@@ -616,7 +742,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                   </g>
                 )
               })}
-              {!hiddenLayers.has('storms') &&
+              {mode === 'hagga' && !hiddenLayers.has('storms') &&
                 data.storms?.active.map((s, i) => {
                   const startPx = project(s.start_x, s.start_y)
                   const endPx = project(s.end_x, s.end_y)
@@ -684,7 +810,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {!hiddenLayers.has('respawns') &&
+              {mode === 'hagga' && !hiddenLayers.has('respawns') &&
                 data.respawns?.map((r) => {
                   const pos = project(r.world_x, r.world_y)
                   if (!pos) return null
@@ -707,7 +833,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {!hiddenLayers.has('buildings') &&
+              {mode === 'hagga' && !hiddenLayers.has('buildings') &&
                 data.buildings.map((b) => {
                   const pos = project(b.world_x, b.world_y)
                   if (!pos) return null
@@ -731,7 +857,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {!hiddenLayers.has('vehicles') &&
+              {mode === 'hagga' && !hiddenLayers.has('vehicles') &&
                 data.vehicles.map((v) => {
                   const pos = project(v.world_x, v.world_y)
                   if (!pos) return null
@@ -755,7 +881,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {!hiddenLayers.has('deaths') &&
+              {mode === 'hagga' && !hiddenLayers.has('deaths') &&
                 data.deaths.map((d) => {
                   const pos = project(d.world_x, d.world_y)
                   if (!pos) return null
@@ -775,7 +901,7 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
                     </g>
                   )
                 })}
-              {!hiddenLayers.has('players') &&
+              {mode === 'hagga' && !hiddenLayers.has('players') &&
                 data.players.map((p) => {
                   const pos = project(p.world_x, p.world_y)
                   if (!pos) return null
@@ -838,8 +964,9 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
       </div>
       <div className="map-legend">
         <span>
-          {data.players.length} players · {visiblePois.length} of{' '}
-          {pois?.pois.length ?? 0} POIs visible
+          {mode === 'hagga' && `${data.players.length} players · `}
+          {mode === 'dd' && `Layout ${(ddSeed ?? 0) + 1} · `}
+          {visiblePois.length} of {pois?.pois.length ?? 0} POIs visible
           {allHidden && ' (all categories hidden)'}
         </span>
         <span className="hint">scroll to zoom · drag to pan · click a row to toggle</span>
@@ -850,6 +977,90 @@ export default function MapTab({ onPlayerClick }: MapTabProps = {}) {
 
 function clamp(n: number, lo: number, hi: number) {
   return Math.max(lo, Math.min(hi, n))
+}
+
+// 9×9 sector grid for Deep Desert (A1..I9). Columns A..I run W→E,
+// rows 1..9 run N→S, matching the gridCell strings in the gaming.tools
+// data. We draw the grid in world coordinates and let the SVG transform
+// scale lines down with zoom so they stay one screen pixel thin.
+function DdSectorGrid({
+  project,
+  scale,
+}: {
+  project: (wx: number, wy: number) => { x: number; y: number } | null
+  scale: number
+}) {
+  const lines: React.ReactNode[] = []
+  const labels: React.ReactNode[] = []
+  const step = (DD_GRID_MAX - DD_GRID_MIN) / 9
+  // 10 line positions enclose 9 cells.
+  for (let i = 0; i <= 9; i++) {
+    const v = DD_GRID_MIN + i * step
+    const xLineTop = project(v, DD_GRID_MAX)
+    const xLineBot = project(v, DD_GRID_MIN)
+    const yLineLeft = project(DD_GRID_MIN, v)
+    const yLineRight = project(DD_GRID_MAX, v)
+    if (xLineTop && xLineBot) {
+      lines.push(
+        <line
+          key={`gx-${i}`}
+          x1={xLineTop.x}
+          y1={xLineTop.y}
+          x2={xLineBot.x}
+          y2={xLineBot.y}
+          stroke="#000"
+          strokeOpacity={0.35}
+          strokeWidth={1 / scale}
+        />,
+      )
+    }
+    if (yLineLeft && yLineRight) {
+      lines.push(
+        <line
+          key={`gy-${i}`}
+          x1={yLineLeft.x}
+          y1={yLineLeft.y}
+          x2={yLineRight.x}
+          y2={yLineRight.y}
+          stroke="#000"
+          strokeOpacity={0.35}
+          strokeWidth={1 / scale}
+        />,
+      )
+    }
+  }
+  // Cell labels at the centre of each cell — A1 top-left, I9 bottom-right.
+  // Y flip on the projection means rows count from the highest world Y.
+  for (let row = 0; row < 9; row++) {
+    for (let col = 0; col < 9; col++) {
+      const wx = DD_GRID_MIN + (col + 0.5) * step
+      const wy = DD_GRID_MAX - (row + 0.5) * step
+      const pos = project(wx, wy)
+      if (!pos) continue
+      labels.push(
+        <text
+          key={`gl-${row}-${col}`}
+          x={pos.x}
+          y={pos.y}
+          fill="#000"
+          fillOpacity={0.55}
+          fontSize={48 / scale}
+          textAnchor="middle"
+          dominantBaseline="central"
+          style={{ pointerEvents: 'none' }}
+        >
+          {String.fromCharCode(0x41 + col)}
+          {row + 1}
+        </text>,
+      )
+    }
+  }
+  return (
+    <g style={{ pointerEvents: 'none' }}>
+      {lines}
+      {labels}
+    </g>
+  )
 }
 
 // Copy text to the OS clipboard. Tries the modern async Clipboard API

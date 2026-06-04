@@ -1110,6 +1110,29 @@ body {
   color: var(--text-dim);
 }
 
+/* Hagga / Deep Desert tab bar at the top of the sidebar. */
+.map-mode-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 4px 6px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+}
+
+/* DD layout selector — only rendered when DD mode is active. */
+.map-layout-picker {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px 4px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.map-layout-picker select {
+  flex: 1;
+}
+
 .map-link {
   background: none;
   border: none;
@@ -1117,6 +1140,11 @@ body {
   font: inherit;
   color: var(--accent);
   cursor: pointer;
+}
+
+.map-link.is-active {
+  color: var(--text);
+  font-weight: 600;
 }
 
 .map-link:hover {
