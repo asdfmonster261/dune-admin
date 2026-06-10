@@ -879,6 +879,10 @@ body {
   color: var(--danger);
 }
 
+.warn-text {
+  color: rgba(251, 191, 36, 0.95);
+}
+
 /* ── Admin Actions ───────────────────────────────────────────────────── */
 
 .warn-card {

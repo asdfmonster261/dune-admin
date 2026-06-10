@@ -27,6 +27,7 @@ type RestartJob = {
   started_at?: string
   finished_at?: string
   error?: string
+  warn_error?: string
 }
 
 export default function OpsTab() {
@@ -264,6 +265,7 @@ function RestartsCard({
           }`,
           status: j.status,
           error: j.error,
+          warnError: j.warn_error,
         }))}
         onCancel={onCancel}
       />
@@ -275,7 +277,14 @@ function JobList({
   jobs,
   onCancel,
 }: {
-  jobs: { id: string; title: string; subtitle: string; status: string; error?: string }[]
+  jobs: {
+    id: string
+    title: string
+    subtitle: string
+    status: string
+    error?: string
+    warnError?: string
+  }[]
   onCancel: (id: string) => void
 }) {
   if (jobs.length === 0) {
@@ -289,6 +298,11 @@ function JobList({
             <div className="job-title">{j.title}</div>
             <div className="job-sub mono">{j.subtitle}</div>
             {j.error && <div className="err-text mono">{j.error}</div>}
+            {j.warnError && (
+              <div className="warn-text mono">
+                warn-publish failed: {j.warnError}
+              </div>
+            )}
           </div>
           {(j.status === 'pending' || j.status === 'warning') && (
             <button className="btn" onClick={() => onCancel(j.id)}>

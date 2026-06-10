@@ -40,17 +40,23 @@ type AnnouncementJob struct {
 }
 
 type RestartJob struct {
-	ID          string   `json:"id"`
-	RunAt       string   `json:"run_at"`
-	WarnMins    int      `json:"warn_mins"`     // 0 = no warning
-	Services    []string `json:"services"`      // empty = all game-servers
-	Status      string   `json:"status"`        // pending | warning | running | done | failed
-	CreatedAt   string   `json:"created_at"`
-	UpdatedAt   string   `json:"updated_at"`
-	StoppedAt   string   `json:"stopped_at,omitempty"`
-	StartedAt   string   `json:"started_at,omitempty"`
-	FinishedAt  string   `json:"finished_at,omitempty"`
-	Error       string   `json:"error,omitempty"`
+	ID         string   `json:"id"`
+	RunAt      string   `json:"run_at"`
+	WarnMins   int      `json:"warn_mins"` // 0 = no warning
+	Services   []string `json:"services"`  // empty = all game-servers
+	Status     string   `json:"status"`    // pending | warning | running | done | failed
+	CreatedAt  string   `json:"created_at"`
+	UpdatedAt  string   `json:"updated_at"`
+	StoppedAt  string   `json:"stopped_at,omitempty"`
+	StartedAt  string   `json:"started_at,omitempty"`
+	FinishedAt string   `json:"finished_at,omitempty"`
+	Error      string   `json:"error,omitempty"`
+	// WarnError records why the warn-window broadcast didn't publish
+	// (OpsBridge disconnected, Call error, etc.). The restart itself
+	// still proceeds at run_at; this just surfaces to the operator
+	// that the in-game heads-up was missed. Cleared on a successful
+	// warn publish (idempotent — we only fire warn once anyway).
+	WarnError string `json:"warn_error,omitempty"`
 }
 
 var opsMu sync.Mutex

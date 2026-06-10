@@ -377,6 +377,7 @@ func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
 	}
 
 	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		r.WarnError = "OpsBridge disconnected at warn time"
 		writeAudit(AuditEvent{
 			Action: "ops.restart.warn",
 			OK:     false,
@@ -403,6 +404,7 @@ func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
 	defer cancel()
 	reply, err := globalOpsBridge.Call(callCtx, "Broadcast", args)
 	if err != nil {
+		r.WarnError = err.Error()
 		writeAudit(AuditEvent{
 			Action: "ops.restart.warn",
 			OK:     false,
@@ -419,6 +421,7 @@ func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
 		log.Printf("ops: restart %s warning publish failed: %v", r.ID, err)
 		return
 	}
+	r.WarnError = ""
 	writeAudit(AuditEvent{
 		Action: "ops.restart.warn",
 		OK:     true,
