@@ -133,7 +133,7 @@ export default function AdminActionsTab() {
     setResult(null)
     try {
       const coerced: Record<string, unknown> = {}
-      for (const p of selectedEntry.params) {
+      for (const p of selectedEntry.params ?? []) {
         const v = args[p.name]
         if (v === undefined || v === '') continue
         if (p.type === 'int') {
@@ -245,10 +245,10 @@ export default function AdminActionsTab() {
 
               <div className="card">
                 <h3 className="card-title">Execute</h3>
-                {selectedEntry.params.length === 0 && (
+                {(selectedEntry.params ?? []).length === 0 && (
                   <p className="hint">No parameters — Execute fires immediately.</p>
                 )}
-                {selectedEntry.params.map((p) => (
+                {(selectedEntry.params ?? []).map((p) => (
                   <ParamInput
                     key={p.name}
                     param={p}
