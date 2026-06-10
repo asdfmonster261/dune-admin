@@ -199,9 +199,16 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 // ── Players list (engine-side, cached) ─────────────────────────────────
 
 type GMPlayer struct {
-	Name     string `json:"name"`
+	Name string `json:"name"`
+	// PlayerId is the FLS hex string (e.g. "BF0F501CF45BC6EF") — the
+	// canonical Funcom Live Services identity. This is the value the
+	// engine's UDuneServerCommandSubsystem dispatcher expects in the
+	// envelope's "PlayerId" field (see [[dune-gm-target-player-format]]).
 	PlayerId string `json:"player_id"`
-	SteamId  string `json:"steam_id,omitempty"`
+	// IdType is the FUniqueNetIdRepl type tag ("Fls" on Funcom). Useful
+	// for diagnostics + a future build that ships multiple identity
+	// providers (e.g. Steam on PC, FLS on console).
+	IdType string `json:"id_type,omitempty"`
 }
 
 var (
