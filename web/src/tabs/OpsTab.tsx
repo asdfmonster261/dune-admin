@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
-import { api } from '../api'
+import { api, type Status } from '../api'
 
 type Announcement = {
   id: string
+  title: string
   message: string
+  duration_sec: number
   run_at: string
   mode: string
   routing: string
@@ -30,16 +32,19 @@ type RestartJob = {
 export default function OpsTab() {
   const [ann, setAnn] = useState<Announcement[]>([])
   const [rst, setRst] = useState<RestartJob[]>([])
+  const [status, setStatus] = useState<Status | null>(null)
   const [err, setErr] = useState<string | null>(null)
 
   const reload = () => {
     Promise.all([
       api.get<Announcement[]>('/ops/announcements'),
       api.get<RestartJob[]>('/ops/restarts'),
+      api.get<Status>('/status'),
     ])
-      .then(([a, r]) => {
+      .then(([a, r, s]) => {
         setAnn(a || [])
         setRst(r || [])
+        setStatus(s)
         setErr(null)
       })
       .catch((e) => setErr((e as Error).message))
@@ -55,14 +60,16 @@ export default function OpsTab() {
     <>
       {err && <div className="alert">{err}</div>}
 
-      <div className="card warn-card">
-        <div className="card-title">Announcements: preview only</div>
-        <p className="hint">
-          The in-game broadcast RMQ payload contract is unverified (same as GM commands). Scheduled
-          announcements still appear in the queue and the worker fires at the scheduled time, but
-          it audits the would-be envelope instead of publishing.
-        </p>
-      </div>
+      {status && !status.opsbridge_connected && (
+        <div className="card warn-card">
+          <div className="card-title">OpsBridge offline</div>
+          <p className="hint">
+            The dune-admin → game-server-survival connection is down (TCP 9877). Announcements you
+            queue stay <code>pending</code> and the worker retries every 15 s until the cppmod is
+            reachable again. Restart job execution still works through the docker socket.
+          </p>
+        </div>
+      )}
 
       <div className="two-col">
         <AnnouncementsCard
@@ -89,7 +96,9 @@ function AnnouncementsCard({
   onCreate: () => void
   onCancel: (id: string) => void
 }) {
+  const [title, setTitle] = useState('Server Announcement')
   const [message, setMessage] = useState('')
+  const [durationSec, setDurationSec] = useState('10')
   const [runAt, setRunAt] = useState(defaultRunAtLocal(15))
   const [submitting, setSubmitting] = useState(false)
   const [err, setErr] = useState<string | null>(null)
@@ -100,7 +109,9 @@ function AnnouncementsCard({
     setErr(null)
     try {
       await api.post('/ops/announcements', {
+        title,
         message,
+        duration_sec: Number(durationSec) || 10,
         run_at: new Date(runAt).toISOString(),
         mode: 'service-message',
         routing: '#',
@@ -120,12 +131,28 @@ function AnnouncementsCard({
         Announcements <span className="card-title-count">{jobs.length}</span>
       </h3>
       <form className="ops-form" onSubmit={submit}>
+        <label className="field-label">Title</label>
+        <input
+          className="input wide"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Server Announcement"
+        />
         <label className="field-label">Message</label>
         <input
           className="input wide"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Server restarting in 5 min"
+        />
+        <label className="field-label">Duration (seconds, 1–600)</label>
+        <input
+          className="input wide"
+          type="number"
+          min={1}
+          max={600}
+          value={durationSec}
+          onChange={(e) => setDurationSec(e.target.value)}
         />
         <label className="field-label">Run at (local)</label>
         <input
@@ -144,8 +171,8 @@ function AnnouncementsCard({
       <JobList
         jobs={jobs.map((j) => ({
           id: j.id,
-          title: j.message,
-          subtitle: `→ ${fmtDate(j.run_at)} · ${j.status}`,
+          title: j.title || j.message,
+          subtitle: `→ ${fmtDate(j.run_at)} · ${j.status} · ${j.duration_sec}s`,
           status: j.status,
           error: j.error,
         }))}

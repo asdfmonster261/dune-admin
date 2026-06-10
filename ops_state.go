@@ -26,15 +26,17 @@ type OpsState struct {
 }
 
 type AnnouncementJob struct {
-	ID        string `json:"id"`
-	Message   string `json:"message"`
-	RunAt     string `json:"run_at"`      // RFC3339
-	Mode      string `json:"mode"`        // RMQ envelope mode (preview only)
-	Routing   string `json:"routing"`     // e.g. "PlayerOnlineState", "#"
-	Status    string `json:"status"`      // pending | preview-skipped | failed
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
-	Error     string `json:"error,omitempty"`
+	ID          string `json:"id"`
+	Title       string `json:"title"`        // HUD popup title; default "Server Announcement"
+	Message     string `json:"message"`      // HUD popup body
+	DurationSec int    `json:"duration_sec"` // 1..600; default 10
+	RunAt       string `json:"run_at"`       // RFC3339
+	Mode        string `json:"mode"`         // legacy GM-envelope mode tag; carried through audit but unused for Broadcast publish
+	Routing     string `json:"routing"`      // legacy RMQ routing tag; same
+	Status      string `json:"status"`       // pending | done | failed
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+	Error       string `json:"error,omitempty"`
 }
 
 type RestartJob struct {

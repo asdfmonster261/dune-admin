@@ -33,18 +33,37 @@ func handleOpsAnnouncementsList(w http.ResponseWriter, r *http.Request) {
 
 func handleOpsAnnouncementsCreate(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		Message string `json:"message"`
-		RunAt   string `json:"run_at"`
-		Mode    string `json:"mode"`
-		Routing string `json:"routing"`
+		Title       string `json:"title"`
+		Message     string `json:"message"`
+		DurationSec int    `json:"duration_sec"`
+		RunAt       string `json:"run_at"`
+		Mode        string `json:"mode"`
+		Routing     string `json:"routing"`
 	}
 	if err := decode(r, &req); err != nil {
 		jsonErr(w, err, 400)
 		return
 	}
+	req.Title = strings.TrimSpace(req.Title)
 	req.Message = strings.TrimSpace(req.Message)
+	if req.Title == "" {
+		req.Title = "Server Announcement"
+	}
+	if len(req.Title) > 200 {
+		jsonErr(w, fmt.Errorf("title too long (max 200)"), 400)
+		return
+	}
 	if req.Message == "" {
 		jsonErr(w, fmt.Errorf("message required"), 400)
+		return
+	}
+	if req.DurationSec == 0 {
+		req.DurationSec = 10
+	}
+	// Match the cppmod handler's accepted range; cheaper to reject here
+	// than wait for the OpsBridge reply to surface the error.
+	if req.DurationSec < 1 || req.DurationSec > 600 {
+		jsonErr(w, fmt.Errorf("duration_sec must be 1..600"), 400)
 		return
 	}
 	if _, err := parseRunAt(req.RunAt); err != nil {
@@ -59,14 +78,16 @@ func handleOpsAnnouncementsCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	job := AnnouncementJob{
-		ID:        newOpsID(),
-		Message:   req.Message,
-		RunAt:     req.RunAt,
-		Mode:      req.Mode,
-		Routing:   req.Routing,
-		Status:    "pending",
-		CreatedAt: nowRFC3339(),
-		UpdatedAt: nowRFC3339(),
+		ID:          newOpsID(),
+		Title:       req.Title,
+		Message:     req.Message,
+		DurationSec: req.DurationSec,
+		RunAt:       req.RunAt,
+		Mode:        req.Mode,
+		Routing:     req.Routing,
+		Status:      "pending",
+		CreatedAt:   nowRFC3339(),
+		UpdatedAt:   nowRFC3339(),
 	}
 	if err := updateOpsState(func(s *OpsState) error {
 		s.Announcements = append(s.Announcements, job)
@@ -76,11 +97,13 @@ func handleOpsAnnouncementsCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	auditOK(r, "ops.announcement.create", map[string]any{
-		"id":      job.ID,
-		"run_at":  job.RunAt,
-		"message": job.Message,
-		"mode":    job.Mode,
-		"routing": job.Routing,
+		"id":           job.ID,
+		"run_at":       job.RunAt,
+		"title":        job.Title,
+		"message":      job.Message,
+		"duration_sec": job.DurationSec,
+		"mode":         job.Mode,
+		"routing":      job.Routing,
 	})
 	jsonOK(w, job)
 }
@@ -235,7 +258,7 @@ func opsWorkerTick(ctx context.Context) {
 			if err != nil || now.Before(t) {
 				continue
 			}
-			executeAnnouncement(a)
+			executeAnnouncement(ctx, a)
 		}
 		// Restarts.
 		for i := range s.Restarts {
@@ -263,12 +286,29 @@ func opsWorkerTick(ctx context.Context) {
 	})
 }
 
-// executeAnnouncement mutates a in place. Since the RMQ payload contract
-// for in-game messages is the same un-verified problem as GM commands,
-// this fires the audit trail + renders the envelope shape but does NOT
-// publish. Status moves to preview-skipped so the worker doesn't retry.
-func executeAnnouncement(a *AnnouncementJob) {
-	envelope, err := buildGMEnvelope(a.Mode, "Broadcast "+a.Message, "", "")
+// executeAnnouncement mutates a in place. Publishes via OpsBridge's
+// Broadcast handler (Phase 10 C0/C2). If OpsBridge is currently
+// disconnected, the job stays "pending" so the next worker tick retries
+// — survival-container restarts (1–2 min cycle) shouldn't permanently
+// fail scheduled broadcasts.
+func executeAnnouncement(ctx context.Context, a *AnnouncementJob) {
+	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		// Stay pending; worker retries every 15 s. Audit only once per
+		// minute would be ideal, but the audit log here would be noisy
+		// across long outages — emit a single log line instead.
+		log.Printf("ops: announcement %s deferred — OpsBridge disconnected", a.ID)
+		return
+	}
+
+	args := map[string]any{
+		"Title":       a.Title,
+		"Body":        a.Message,
+		"DurationSec": a.DurationSec,
+	}
+	callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	reply, err := globalOpsBridge.Call(callCtx, "Broadcast", args)
+
 	a.UpdatedAt = nowRFC3339()
 	if err != nil {
 		a.Status = "failed"
@@ -277,24 +317,29 @@ func executeAnnouncement(a *AnnouncementJob) {
 			Action: "ops.announcement.execute",
 			OK:     false,
 			Error:  err.Error(),
-			Fields: map[string]any{"id": a.ID, "mode": a.Mode, "message": a.Message},
+			Fields: map[string]any{
+				"id":           a.ID,
+				"title":        a.Title,
+				"message":      a.Message,
+				"duration_sec": a.DurationSec,
+			},
 		})
+		log.Printf("ops: announcement %s publish failed: %v", a.ID, err)
 		return
 	}
-	a.Status = "preview-skipped"
+	a.Status = "done"
 	writeAudit(AuditEvent{
 		Action: "ops.announcement.execute",
 		OK:     true,
 		Fields: map[string]any{
-			"id":       a.ID,
-			"mode":     a.Mode,
-			"routing":  a.Routing,
-			"message":  a.Message,
-			"envelope": envelope,
-			"note":     "preview-only; RMQ payload contract not yet verified",
+			"id":           a.ID,
+			"title":        a.Title,
+			"message":      a.Message,
+			"duration_sec": a.DurationSec,
+			"reply":        string(reply),
 		},
 	})
-	log.Printf("ops: announcement %s would publish (mode=%s) — execute path unwired", a.ID, a.Mode)
+	log.Printf("ops: announcement %s published (%d s)", a.ID, a.DurationSec)
 }
 
 func emitRestartWarning(r *RestartJob) {
