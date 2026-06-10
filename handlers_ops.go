@@ -272,7 +272,7 @@ func opsWorkerTick(ctx context.Context) {
 				if r.WarnMins > 0 && now.After(t.Add(-time.Duration(r.WarnMins)*time.Minute)) && now.Before(t) {
 					r.Status = "warning"
 					r.UpdatedAt = nowRFC3339()
-					emitRestartWarning(r)
+					emitRestartWarning(ctx, r, t)
 				} else if !now.Before(t) {
 					executeRestart(ctx, r)
 				}
@@ -342,18 +342,97 @@ func executeAnnouncement(ctx context.Context, a *AnnouncementJob) {
 	log.Printf("ops: announcement %s published (%d s)", a.ID, a.DurationSec)
 }
 
-func emitRestartWarning(r *RestartJob) {
+// emitRestartWarning is the C5 publish step. Fires once when a restart
+// job enters its warn window. Composes a "Server restarting in N
+// (minutes|seconds)" broadcast where N is derived from the actual
+// remaining time, not r.WarnMins — by the time the worker tick fires,
+// remaining can be anywhere in [0, warn_mins+15s), so rounding off
+// remaining gives operators a more accurate countdown than echoing the
+// nominal threshold.
+//
+// One-shot publish: we transition r.Status = "warning" unconditionally
+// at the call site so that even if OpsBridge is down (or Call fails
+// otherwise) the worker doesn't re-enter this branch and spam broadcasts
+// every 15 s. The actual restart still proceeds at run_at.
+func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
+	remaining := time.Until(runAt)
+	if remaining < 0 {
+		remaining = 0
+	}
+	var body string
+	if remaining >= time.Minute {
+		mins := int((remaining + 30*time.Second) / time.Minute)
+		if mins == 1 {
+			body = "Server restarting in 1 minute"
+		} else {
+			body = fmt.Sprintf("Server restarting in %d minutes", mins)
+		}
+	} else {
+		secs := int((remaining + 500*time.Millisecond) / time.Second)
+		if secs <= 1 {
+			body = "Server restarting now"
+		} else {
+			body = fmt.Sprintf("Server restarting in %d seconds", secs)
+		}
+	}
+
+	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		writeAudit(AuditEvent{
+			Action: "ops.restart.warn",
+			OK:     false,
+			Error:  "OpsBridge disconnected",
+			Fields: map[string]any{
+				"id":           r.ID,
+				"run_at":       r.RunAt,
+				"warn_mins":    r.WarnMins,
+				"title":        "Server Restart",
+				"body":         body,
+				"duration_sec": 30,
+			},
+		})
+		log.Printf("ops: restart %s warning skipped — OpsBridge disconnected (body=%q)", r.ID, body)
+		return
+	}
+
+	args := map[string]any{
+		"Title":       "Server Restart",
+		"Body":        body,
+		"DurationSec": 30,
+	}
+	callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+	reply, err := globalOpsBridge.Call(callCtx, "Broadcast", args)
+	if err != nil {
+		writeAudit(AuditEvent{
+			Action: "ops.restart.warn",
+			OK:     false,
+			Error:  err.Error(),
+			Fields: map[string]any{
+				"id":           r.ID,
+				"run_at":       r.RunAt,
+				"warn_mins":    r.WarnMins,
+				"title":        "Server Restart",
+				"body":         body,
+				"duration_sec": 30,
+			},
+		})
+		log.Printf("ops: restart %s warning publish failed: %v", r.ID, err)
+		return
+	}
 	writeAudit(AuditEvent{
 		Action: "ops.restart.warn",
 		OK:     true,
 		Fields: map[string]any{
-			"id":         r.ID,
-			"run_at":     r.RunAt,
-			"warn_mins":  r.WarnMins,
-			"note":       "would publish in-game warning here; RMQ contract unverified",
+			"id":           r.ID,
+			"run_at":       r.RunAt,
+			"warn_mins":    r.WarnMins,
+			"title":        "Server Restart",
+			"body":         body,
+			"duration_sec": 30,
+			"reply":        string(reply),
 		},
 	})
-	log.Printf("ops: restart %s warning fired (mins to go = %d)", r.ID, r.WarnMins)
+	log.Printf("ops: restart %s warning broadcast: %q", r.ID, body)
 }
 
 // executeRestart actually stops + starts containers via the docker socket
