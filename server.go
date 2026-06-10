@@ -43,6 +43,13 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/settings", handleSettingsList)
 	mux.HandleFunc("POST /api/v1/settings", handleSettingsSave)
 
+	// Phase 10 Stage D — live GM-command execute path through OpsBridge.
+	// The legacy /gm/catalog + /gm/preview routes coexist until Stage D1
+	// retires the Snapetech-speculation surface.
+	mux.HandleFunc("GET /api/v1/gm/v2/catalog", handleGMv2Catalog)
+	mux.HandleFunc("POST /api/v1/gm/v2/execute", handleGMv2Execute)
+	mux.HandleFunc("GET /api/v1/gm/v2/players", handleGMv2Players)
+
 	// Phase 7 — ops (announcements + scheduled restarts)
 	mux.HandleFunc("GET /api/v1/ops/announcements", handleOpsAnnouncementsList)
 	mux.HandleFunc("POST /api/v1/ops/announcements", handleOpsAnnouncementsCreate)
