@@ -508,6 +508,30 @@ body {
   color: var(--text-fade);
 }
 
+.split-row-meta.tag-ok {
+  color: var(--ok, #4ade80);
+}
+
+.split-row-meta.tag-dim {
+  color: var(--text-fade);
+  opacity: 0.6;
+}
+
+.split-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-fade);
+  padding: 12px 12px 4px;
+  border-bottom: 1px solid var(--surface-3, rgba(255, 255, 255, 0.06));
+  margin-bottom: 2px;
+}
+
+.req {
+  color: var(--danger, #f87171);
+  margin-left: 4px;
+}
+
 .split-main {
   min-width: 0;
   display: flex;

@@ -54,6 +54,8 @@ type GMEntry struct {
 // (ServiceBroadcast, proved live by C0). D2/D3/D4/D6 fill the rest.
 
 var gmCatalog = map[string]*GMEntry{
+
+	// ── comms ──────────────────────────────────────────────────────
 	"ServiceBroadcast": {
 		Name:   "ServiceBroadcast",
 		Tier:   "comms",
@@ -67,9 +69,308 @@ var gmCatalog = map[string]*GMEntry{
 		},
 		builder: buildServiceBroadcast,
 	},
+
+	// ── safe (synth wrappers — no side effects) ────────────────────
+	"PrintAllowedCommands": {
+		Name: "PrintAllowedCommands", Tier: "safe", Kind: "synth", Status: "deferred",
+		Notes:  "Dumps the engine's registered command list to the server log. Synth via DuneOpsBridgeMod registry walk.",
+		Params: nil,
+	},
+	"PrintPos": {
+		Name: "PrintPos", Tier: "safe", Kind: "synth", Status: "deferred",
+		Notes:  "Reads target player's Pawn position and logs it. Synth via reflection.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true, Help: "Whose position to print."}},
+	},
+
+	// ── movement ───────────────────────────────────────────────────
+	"TeleportToExact": {
+		Name: "TeleportToExact", Tier: "movement", Kind: "native", Status: "deferred",
+		Notes:  "Native — moves PlayerId to (X,Y,Z). Verified live earlier via REPL; needs Go builder.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "X", Type: "float", Required: true},
+			{Name: "Y", Type: "float", Required: true},
+			{Name: "Z", Type: "float", Required: true},
+		},
+	},
+	"TeleportTo": {
+		Name: "TeleportTo", Tier: "movement", Kind: "native", Status: "needs-probe",
+		Notes:  "Arg shape never probed. Needs RE via !gmjson + gmverbose to learn required fields.",
+		Params: nil,
+	},
+	"TeleportToPlayer": {
+		Name: "TeleportToPlayer", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Reads dest player's coords and dispatches TeleportToExact for the source player.",
+		Params: []GMParam{
+			{Name: "SourcePlayerId", Type: "player", Required: true, Help: "Who moves."},
+			{Name: "DestPlayerId", Type: "player", Required: true, Help: "Whose position they move to."},
+		},
+	},
+	"TeleportToMap": {
+		Name: "TeleportToMap", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Moves player to a named map. Synth via engine travel call; map ID list TBD.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Map", Type: "string", Required: true, Placeholder: "HaggaBasin"},
+		},
+	},
+	"TravelTo": {
+		Name: "TravelTo", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Engine travel. Arg shape TBD.",
+		Params: nil,
+	},
+	"TravelToDimension": {
+		Name: "TravelToDimension", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Travel to a specific Deep Desert dimension. Arg shape TBD.",
+		Params: nil,
+	},
+	"TeleportToSandworm": {
+		Name: "TeleportToSandworm", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Find a live Sandworm actor, teleport target player to it.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"TeleportToVehicleSpawner": {
+		Name: "TeleportToVehicleSpawner", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Find nearest vehicle spawner to target player. Class name TBD.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"TeleportToPersonalMarker": {
+		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Teleport to the player's own placed marker. Needs marker-state lookup.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"PatrolShipTeleportToNearest": {
+		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes:  "Find nearest patrol ship and teleport target player to it.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+
+	// ── progression ────────────────────────────────────────────────
+	"AwardXP": {
+		Name:   "AwardXP",
+		Tier:   "progression",
+		Kind:   "native",
+		Status: "live",
+		Notes:  "Grants Experience to a player. Category is required by the dispatcher but inert (engine accepts any string); we hard-code 'Combat'.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Experience", Type: "int", Required: true, Min: 1, Placeholder: "100"},
+		},
+		builder: buildAwardXP,
+	},
+	"SkillsSetUnspentSkillPoints": {
+		Name: "SkillsSetUnspentSkillPoints", Tier: "progression", Kind: "native", Status: "deferred",
+		Notes:  "Sets the player's unspent skill-point pool to Amount.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Amount", Type: "int", Required: true, Min: 0},
+		},
+	},
+	"SkillsSetModuleLevel": {
+		Name: "SkillsSetModuleLevel", Tier: "progression", Kind: "native", Status: "deferred",
+		Notes:  "Sets a specific skill module's level. Module ID enum TBD.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Module", Type: "string", Required: true},
+			{Name: "Level", Type: "int", Required: true, Min: 0},
+		},
+	},
+
+	// ── inventory ──────────────────────────────────────────────────
+	"AddItemToInventory": {
+		Name: "AddItemToInventory", Tier: "inventory", Kind: "native", Status: "deferred",
+		Notes:  "Grants an item to the target player. Template names from the inventory_type enum (already RE'd).",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Template", Type: "string", Required: true},
+			{Name: "Count", Type: "int", Required: false, Min: 1, Placeholder: "1"},
+			{Name: "Quality", Type: "int", Required: false, Min: 0, Placeholder: "0"},
+		},
+	},
+	"AddBasicInventoryToCharacter": {
+		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "deferred",
+		Notes:  "Wrapper that grants the canonical starter kit via repeated AddItemToInventory calls.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+
+	// ── spawn ──────────────────────────────────────────────────────
+	"SpawnVehicleAt": {
+		Name: "SpawnVehicleAt", Tier: "spawn", Kind: "native", Status: "deferred",
+		Notes:  "Native — spawns ClassName/TemplateName at (X,Y,Z) for PlayerId. Vehicle catalog already RE'd this session.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ClassName", Type: "string", Required: true, Placeholder: "OrnithopterLight"},
+			{Name: "TemplateName", Type: "string", Required: true, Placeholder: "T6_Combat"},
+			{Name: "X", Type: "float", Required: true},
+			{Name: "Y", Type: "float", Required: true},
+			{Name: "Z", Type: "float", Required: true},
+		},
+	},
+	"SpawnVehicle": {
+		Name: "SpawnVehicle", Tier: "spawn", Kind: "synth", Status: "deferred",
+		Notes:  "Synth wrapper — reads target player's coords and dispatches SpawnVehicleAt there.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ClassName", Type: "string", Required: true, Placeholder: "OrnithopterLight"},
+			{Name: "TemplateName", Type: "string", Required: true, Placeholder: "T6_Combat"},
+		},
+	},
+
+	// ── player ─────────────────────────────────────────────────────
+	"KickPlayer": {
+		Name: "KickPlayer", Tier: "player", Kind: "native", Status: "deferred",
+		Notes:  "Disconnects the target player.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"BattlEyeMegaKick": {
+		Name: "BattlEyeMegaKick", Tier: "player", Kind: "synth", Status: "needs-probe",
+		Notes:  "Harsher disconnect through BattlEye. Probe-first: not clear if Funcom exposes a BattlEye kick API to UScript.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+
+	// ── destructive ────────────────────────────────────────────────
+	"ResetProgression": {
+		Name: "ResetProgression", Tier: "destructive", Kind: "native", Status: "deferred",
+		Notes:  "Wipes the target player's progression. Irrecoverable — D4 will gate with type-to-confirm.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"CleanPlayerInventory": {
+		Name: "CleanPlayerInventory", Tier: "destructive", Kind: "native", Status: "deferred",
+		Notes:  "Empties the target player's inventory. Irrecoverable.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"DestroyTargetVehicle": {
+		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes:  "Synth — Destroy* family deferred to D8 entirely (targeting model on dedicated server still TBD; see dune-gm-commands plan).",
+		Params: nil,
+	},
+	"DestroyTotem": {
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes:  "Deferred to D8 with the rest of Destroy*.",
+		Params: nil,
+	},
+	"DestroyPlaceable": {
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes:  "Deferred to D8 with the rest of Destroy*.",
+		Params: nil,
+	},
+	"DestroyEntireBuilding": {
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes:  "Deferred to D8 with the rest of Destroy*.",
+		Params: nil,
+	},
+	"DestroyBuildingPiece": {
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes:  "Deferred to D8 with the rest of Destroy*.",
+		Params: nil,
+	},
+
+	// ── journey (needs-probe — arg shapes unknown) ─────────────────
+	"JourneyCompleteStoryNode": {
+		Name: "JourneyCompleteStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
+		Notes:  "Arg shape unknown. Probe via !gmjson + gmverbose to learn required fields.",
+		Params: nil,
+	},
+	"JourneyRevealStoryNode": {
+		Name: "JourneyRevealStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
+		Params: nil,
+	},
+	"JourneyResetStoryNode": {
+		Name: "JourneyResetStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
+		Params: nil,
+	},
+	"JourneyDeleteStoryNode": {
+		Name: "JourneyDeleteStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
+		Params: nil,
+	},
+
+	// ── global ─────────────────────────────────────────────────────
+	"UpdateAllWaterFillables": {
+		Name: "UpdateAllWaterFillables", Tier: "global", Kind: "native", Status: "deferred",
+		Notes:  "Engine-wide refresh of water-fillable actors. No player target; no args expected.",
+		Params: nil,
+	},
+
+	// ── cheat (synth — wrap DuneCheatEnablerMod cheaton) ───────────
+	"Fly": {
+		Name: "Fly", Tier: "cheat", Kind: "synth", Status: "deferred",
+		Notes:  "Toggles fly mode on the target player. Synth via DuneCheatEnablerMod's cheaton (already RE'd).",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"Ghost": {
+		Name: "Ghost", Tier: "cheat", Kind: "synth", Status: "deferred",
+		Notes:  "Toggles noclip/ghost mode on the target player. Same cheaton wrapper.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+	"Walk": {
+		Name: "Walk", Tier: "cheat", Kind: "synth", Status: "deferred",
+		Notes:  "Clears Fly/Ghost mode on the target player.",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+	},
+
+	// ── console (power tools — gated) ──────────────────────────────
+	"CheatScript": {
+		Name: "CheatScript", Tier: "console", Kind: "native", Status: "deferred",
+		Notes:  "Runs a freeform cheat script string. D4 confirm-gate.",
+		Params: []GMParam{{Name: "Script", Type: "string", Required: true}},
+	},
+	"ServerExec": {
+		Name: "ServerExec", Tier: "console", Kind: "native", Status: "deferred",
+		Notes:  "Runs a freeform UE console command. D4 confirm-gate.",
+		Params: []GMParam{{Name: "Command", Type: "string", Required: true}},
+	},
+	"RunLuaScriptFile": {
+		Name: "RunLuaScriptFile", Tier: "console", Kind: "synth", Status: "deferred",
+		Notes:  "Synth — loadstrings the passed script body in the mod's hook_L. D4 confirm-gate.",
+		Params: []GMParam{{Name: "Script", Type: "string", Required: true}},
+	},
+	"obj": {
+		Name: "obj", Tier: "console", Kind: "synth", Status: "deferred",
+		Notes:  "Synth — pipes through a live PC's ProcessConsoleExec.",
+		Params: []GMParam{{Name: "Command", Type: "string", Required: true}},
+	},
 }
 
 // ── Builders ───────────────────────────────────────────────────────────
+
+// buildAwardXP wraps the AwardXP envelope. Category is required by the
+// dispatcher but inert — we hard-code "Combat" since it's also the
+// canonical entry in both ESpecializationTrack and EXPEarnArea and the
+// engine ignores the string anyway (see [[dune-gm-awardxp]] memory).
+func buildAwardXP(args map[string]any) (string, error) {
+	playerId, _ := args["PlayerId"].(string)
+	if strings.TrimSpace(playerId) == "" {
+		return "", fmt.Errorf("PlayerId is required")
+	}
+	var experience int
+	switch v := args["Experience"].(type) {
+	case float64:
+		experience = int(v)
+	case int:
+		experience = v
+	case string:
+		// Loose tolerance for stringified ints — UI might send either.
+		if _, err := fmt.Sscanf(v, "%d", &experience); err != nil {
+			return "", fmt.Errorf("Experience: not a valid integer")
+		}
+	}
+	if experience < 1 {
+		return "", fmt.Errorf("Experience must be >= 1")
+	}
+	envelope := []map[string]any{
+		{
+			"ServerCommand": "AwardXP",
+			"PlayerId":      playerId,
+			"Category":      "Combat",
+			"Experience":    experience,
+		},
+	}
+	out, err := json.Marshal(envelope)
+	if err != nil {
+		return "", fmt.Errorf("marshal envelope: %w", err)
+	}
+	return string(out), nil
+}
 
 func buildServiceBroadcast(args map[string]any) (string, error) {
 	title, _ := args["Title"].(string)

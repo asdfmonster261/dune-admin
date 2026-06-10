@@ -36,8 +36,6 @@ func registerRoutes(mux *http.ServeMux) {
 
 	// Phase 5 — audit + GM commands
 	mux.HandleFunc("GET /api/v1/audit", handleAuditList)
-	mux.HandleFunc("GET /api/v1/gm/catalog", handleGMCatalog)
-	mux.HandleFunc("POST /api/v1/gm/preview", handleGMPreview)
 
 	// Phase 6 — settings
 	mux.HandleFunc("GET /api/v1/settings", handleSettingsList)
