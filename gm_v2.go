@@ -36,8 +36,19 @@ type GMParam struct {
 }
 
 // GMEntry describes one executable command. `builder` returns the
-// envelope JSON the Lua-side GMCommand handler will dispatch via
-// Native.Call3(0xda59f60, ...).
+// OpsBridge op name + the call args the dune-admin Go client will
+// hand to `globalOpsBridge.Call(opName, callArgs)`.
+//
+// For Kind="native":
+//   opName  = "GMCommand"
+//   callArgs = {"Envelope": "<JSON dispatcher envelope>", "Description": "..."}
+//
+// For Kind="synth":
+//   opName  = command name handled by DuneOpsBridgeMod (e.g. "PrintPos")
+//   callArgs = command-specific {key: value, ...} the Lua handler parses
+//
+// The HTTP execute handler doesn't need to know which is which — it
+// just calls OpsBridge with whatever the builder returns.
 type GMEntry struct {
 	Name    string    `json:"name"`
 	Tier    string    `json:"tier"`               // comms|safe|movement|inventory|progression|spawn|player|destructive|console
@@ -45,7 +56,7 @@ type GMEntry struct {
 	Status  string    `json:"status"`             // "live" | "needs-probe" | "deferred"
 	Notes   string    `json:"notes,omitempty"`
 	Params  []GMParam `json:"params"`
-	builder func(args map[string]any) (string, error)
+	builder func(args map[string]any) (opName string, callArgs map[string]any, err error)
 }
 
 // ── Catalog ────────────────────────────────────────────────────────────
@@ -72,26 +83,29 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── safe (synth wrappers — no side effects) ────────────────────
 	"PrintAllowedCommands": {
-		Name: "PrintAllowedCommands", Tier: "safe", Kind: "synth", Status: "deferred",
-		Notes:  "Dumps the engine's registered command list to the server log. Synth via DuneOpsBridgeMod registry walk.",
-		Params: nil,
+		Name: "PrintAllowedCommands", Tier: "safe", Kind: "synth", Status: "live",
+		Notes:   "Dumps the engine's registered command list. Synth via DuneOpsBridgeMod registry walk; returns the JSON array as the reply.",
+		Params:  nil,
+		builder: buildPrintAllowedCommands,
 	},
 	"PrintPos": {
-		Name: "PrintPos", Tier: "safe", Kind: "synth", Status: "deferred",
-		Notes:  "Reads target player's Pawn position and logs it. Synth via reflection.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true, Help: "Whose position to print."}},
+		Name: "PrintPos", Tier: "safe", Kind: "synth", Status: "live",
+		Notes:   "Reads the target player's Pawn position and returns it as \"X=... Y=... Z=...\" (also written to the server log).",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true, Help: "Whose position to print."}},
+		builder: buildPrintPos,
 	},
 
 	// ── movement ───────────────────────────────────────────────────
 	"TeleportToExact": {
-		Name: "TeleportToExact", Tier: "movement", Kind: "native", Status: "deferred",
-		Notes:  "Native — moves PlayerId to (X,Y,Z). Verified live earlier via REPL; needs Go builder.",
+		Name: "TeleportToExact", Tier: "movement", Kind: "native", Status: "live",
+		Notes: "Native — moves PlayerId to (X,Y,Z). Coordinates are world units; UE5 LWC mode (doubles).",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "X", Type: "float", Required: true},
 			{Name: "Y", Type: "float", Required: true},
 			{Name: "Z", Type: "float", Required: true},
 		},
+		builder: buildTeleportToExact,
 	},
 	"TeleportTo": {
 		Name: "TeleportTo", Tier: "movement", Kind: "native", Status: "needs-probe",
@@ -99,12 +113,13 @@ var gmCatalog = map[string]*GMEntry{
 		Params: nil,
 	},
 	"TeleportToPlayer": {
-		Name: "TeleportToPlayer", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Reads dest player's coords and dispatches TeleportToExact for the source player.",
+		Name: "TeleportToPlayer", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Reads dest player's coords and dispatches TeleportToExact for the source player. Both args required and must differ.",
 		Params: []GMParam{
 			{Name: "SourcePlayerId", Type: "player", Required: true, Help: "Who moves."},
 			{Name: "DestPlayerId", Type: "player", Required: true, Help: "Whose position they move to."},
 		},
+		builder: buildTeleportToPlayer,
 	},
 	"TeleportToMap": {
 		Name: "TeleportToMap", Tier: "movement", Kind: "synth", Status: "deferred",
@@ -333,63 +348,113 @@ var gmCatalog = map[string]*GMEntry{
 
 // ── Builders ───────────────────────────────────────────────────────────
 
+// wrapNative wraps a per-command envelope into the GMCommand call
+// args envelope. Centralized so each native builder doesn't repeat
+// the {"Envelope": <json>, "Description": <name>} boilerplate.
+func wrapNative(command string, envelope any) (string, map[string]any, error) {
+	out, err := json.Marshal(envelope)
+	if err != nil {
+		return "", nil, fmt.Errorf("marshal envelope: %w", err)
+	}
+	return "GMCommand", map[string]any{
+		"Envelope":    string(out),
+		"Description": "gm.execute " + command,
+	}, nil
+}
+
+// coerceInt accepts float64 (from json.Unmarshal of plain numbers),
+// int, or a stringified integer (from form input). Returns the int
+// and an error tagged with the parameter name on failure.
+func coerceInt(name string, v any) (int, error) {
+	switch x := v.(type) {
+	case float64:
+		return int(x), nil
+	case int:
+		return x, nil
+	case string:
+		var n int
+		if _, err := fmt.Sscanf(x, "%d", &n); err != nil {
+			return 0, fmt.Errorf("%s: not a valid integer", name)
+		}
+		return n, nil
+	}
+	return 0, fmt.Errorf("%s: missing or wrong type", name)
+}
+
+// coerceFloat — same idea for floats.
+func coerceFloat(name string, v any) (float64, error) {
+	switch x := v.(type) {
+	case float64:
+		return x, nil
+	case int:
+		return float64(x), nil
+	case string:
+		var n float64
+		if _, err := fmt.Sscanf(x, "%g", &n); err != nil {
+			return 0, fmt.Errorf("%s: not a valid number", name)
+		}
+		return n, nil
+	}
+	return 0, fmt.Errorf("%s: missing or wrong type", name)
+}
+
+// coerceString — just typed string assertion with required check.
+func coerceString(name string, v any, required bool) (string, error) {
+	s, _ := v.(string)
+	s = strings.TrimSpace(s)
+	if required && s == "" {
+		return "", fmt.Errorf("%s is required", name)
+	}
+	return s, nil
+}
+
 // buildAwardXP wraps the AwardXP envelope. Category is required by the
 // dispatcher but inert — we hard-code "Combat" since it's also the
 // canonical entry in both ESpecializationTrack and EXPEarnArea and the
 // engine ignores the string anyway (see [[dune-gm-awardxp]] memory).
-func buildAwardXP(args map[string]any) (string, error) {
-	playerId, _ := args["PlayerId"].(string)
-	if strings.TrimSpace(playerId) == "" {
-		return "", fmt.Errorf("PlayerId is required")
+func buildAwardXP(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
 	}
-	var experience int
-	switch v := args["Experience"].(type) {
-	case float64:
-		experience = int(v)
-	case int:
-		experience = v
-	case string:
-		// Loose tolerance for stringified ints — UI might send either.
-		if _, err := fmt.Sscanf(v, "%d", &experience); err != nil {
-			return "", fmt.Errorf("Experience: not a valid integer")
-		}
+	experience, err := coerceInt("Experience", args["Experience"])
+	if err != nil {
+		return "", nil, err
 	}
 	if experience < 1 {
-		return "", fmt.Errorf("Experience must be >= 1")
+		return "", nil, fmt.Errorf("Experience must be >= 1")
 	}
-	envelope := []map[string]any{
+	return wrapNative("AwardXP", []map[string]any{
 		{
 			"ServerCommand": "AwardXP",
 			"PlayerId":      playerId,
 			"Category":      "Combat",
 			"Experience":    experience,
 		},
-	}
-	out, err := json.Marshal(envelope)
-	if err != nil {
-		return "", fmt.Errorf("marshal envelope: %w", err)
-	}
-	return string(out), nil
+	})
 }
 
-func buildServiceBroadcast(args map[string]any) (string, error) {
-	title, _ := args["Title"].(string)
-	body, _ := args["Body"].(string)
-	if strings.TrimSpace(title) == "" && strings.TrimSpace(body) == "" {
-		return "", fmt.Errorf("at least one of Title or Body must be set")
+func buildServiceBroadcast(args map[string]any) (string, map[string]any, error) {
+	title, _ := coerceString("Title", args["Title"], false)
+	body, _ := coerceString("Body", args["Body"], false)
+	if title == "" && body == "" {
+		return "", nil, fmt.Errorf("at least one of Title or Body must be set")
 	}
 	duration := 10
-	if v, ok := args["DurationSec"].(float64); ok && v > 0 {
-		duration = int(v)
+	if v, ok := args["DurationSec"]; ok && v != nil && v != "" {
+		n, err := coerceInt("DurationSec", v)
+		if err != nil {
+			return "", nil, err
+		}
+		duration = n
 	}
 	if duration < 1 || duration > 600 {
-		return "", fmt.Errorf("DurationSec must be 1..600")
+		return "", nil, fmt.Errorf("DurationSec must be 1..600")
 	}
-	// Same shape DuneOpsBridgeMod's Broadcast handler builds locally.
-	envelope := []map[string]any{
+	return wrapNative("ServiceBroadcast", []map[string]any{
 		{
-			"ServerCommand":  "ServiceBroadcast",
-			"BroadcastType":  "Generic",
+			"ServerCommand": "ServiceBroadcast",
+			"BroadcastType": "Generic",
 			"BroadcastPayload": map[string]any{
 				"BroadcastDuration": duration,
 				"LocalizedText": []map[string]any{
@@ -397,12 +462,80 @@ func buildServiceBroadcast(args map[string]any) (string, error) {
 				},
 			},
 		},
-	}
-	out, err := json.Marshal(envelope)
+	})
+}
+
+// ── Wave A: comms + movement primitives (Phase 10 D2) ──────────────────
+
+// buildTeleportToExact — native, single-PC, three coords. Verified live
+// via REPL earlier this session; envelope is just the four PlayerId
+// plus X/Y/Z fields the dispatcher takes.
+func buildTeleportToExact(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
 	if err != nil {
-		return "", fmt.Errorf("marshal envelope: %w", err)
+		return "", nil, err
 	}
-	return string(out), nil
+	x, err := coerceFloat("X", args["X"])
+	if err != nil {
+		return "", nil, err
+	}
+	y, err := coerceFloat("Y", args["Y"])
+	if err != nil {
+		return "", nil, err
+	}
+	z, err := coerceFloat("Z", args["Z"])
+	if err != nil {
+		return "", nil, err
+	}
+	return wrapNative("TeleportToExact", []map[string]any{
+		{
+			"ServerCommand": "TeleportToExact",
+			"PlayerId":      playerId,
+			"X":             x,
+			"Y":             y,
+			"Z":             z,
+		},
+	})
+}
+
+// buildPrintAllowedCommands — synth. Dispatched to DuneOpsBridgeMod's
+// PrintAllowedCommands op, which walks the engine's gmregistry and
+// returns a JSON array of the registered command names.
+func buildPrintAllowedCommands(args map[string]any) (string, map[string]any, error) {
+	return "PrintAllowedCommands", map[string]any{}, nil
+}
+
+// buildPrintPos — synth. Routes to DuneOpsBridgeMod's PrintPos op
+// which looks up the target PC's Pawn position and returns it as
+// a "X=... Y=... Z=..." string (also written to the server log).
+func buildPrintPos(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	return "PrintPos", map[string]any{"PlayerId": playerId}, nil
+}
+
+// buildTeleportToPlayer — synth. The cppmod's TeleportToPlayer handler
+// reads the destination PC's coords and then dispatches TeleportToExact
+// for the source PC via Native.Call3 internally — same plumbing as the
+// PrintPos coord read but routed back to the dispatcher.
+func buildTeleportToPlayer(args map[string]any) (string, map[string]any, error) {
+	src, err := coerceString("SourcePlayerId", args["SourcePlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	dst, err := coerceString("DestPlayerId", args["DestPlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	if src == dst {
+		return "", nil, fmt.Errorf("SourcePlayerId and DestPlayerId must differ")
+	}
+	return "TeleportToPlayer", map[string]any{
+		"SourcePlayerId": src,
+		"DestPlayerId":   dst,
+	}, nil
 }
 
 // ── HTTP handlers ──────────────────────────────────────────────────────
@@ -442,7 +575,7 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 	if req.Args == nil {
 		req.Args = map[string]any{}
 	}
-	envelope, err := entry.builder(req.Args)
+	opName, callArgs, err := entry.builder(req.Args)
 	if err != nil {
 		jsonErr(w, fmt.Errorf("build envelope: %w", err), 400)
 		return
@@ -454,7 +587,8 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 			OK:     false,
 			Error:  "OpsBridge disconnected",
 			Fields: map[string]any{
-				"command": req.Command, "args": req.Args, "envelope": envelope,
+				"command": req.Command, "args": req.Args,
+				"op": opName, "call_args": callArgs,
 			},
 		})
 		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
@@ -463,17 +597,15 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 
 	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "GMCommand", map[string]any{
-		"Envelope":    envelope,
-		"Description": "gm.execute " + req.Command,
-	})
+	reply, err := globalOpsBridge.Call(callCtx, opName, callArgs)
 	if err != nil {
 		writeAudit(AuditEvent{
 			Action: "gm.execute",
 			OK:     false,
 			Error:  err.Error(),
 			Fields: map[string]any{
-				"command": req.Command, "args": req.Args, "envelope": envelope,
+				"command": req.Command, "args": req.Args,
+				"op": opName, "call_args": callArgs,
 			},
 		})
 		jsonErr(w, fmt.Errorf("opsbridge: %w", err), 500)
@@ -484,10 +616,11 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 		Action: "gm.execute",
 		OK:     true,
 		Fields: map[string]any{
-			"command":  req.Command,
-			"args":     req.Args,
-			"envelope": envelope,
-			"reply":    json.RawMessage(reply),
+			"command":   req.Command,
+			"args":      req.Args,
+			"op":        opName,
+			"call_args": callArgs,
+			"reply":     json.RawMessage(reply),
 		},
 	})
 	jsonOK(w, map[string]any{
