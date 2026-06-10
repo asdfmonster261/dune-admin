@@ -244,15 +244,30 @@ func handleGMv2Players(w http.ResponseWriter, r *http.Request) {
 	// The Lua handler can't return tables — the cppmod handler contract
 	// is string-or-nil. We get back a JSON-encoded STRING whose contents
 	// are themselves a JSON array. Unmarshal twice.
+	//
+	// Unmarshal-side tags MUST exactly match the keys the Lua mod emits
+	// (PascalCase: "Name", "PlayerId", "IdType"). Go's case-insensitive
+	// matcher fails on snake_case-vs-CamelCase pairs ("player_id" vs
+	// "playerid"), so the public GMPlayer tags can't double as parse
+	// tags. We parse into a transient struct + copy.
+	type wireRow struct {
+		Name     string `json:"Name"`
+		PlayerId string `json:"PlayerId"`
+		IdType   string `json:"IdType"`
+	}
 	var innerJSON string
 	if err := json.Unmarshal(reply, &innerJSON); err != nil {
 		jsonErr(w, fmt.Errorf("decode outer: %w", err), 500)
 		return
 	}
-	var players []GMPlayer
-	if err := json.Unmarshal([]byte(innerJSON), &players); err != nil {
+	var rows []wireRow
+	if err := json.Unmarshal([]byte(innerJSON), &rows); err != nil {
 		jsonErr(w, fmt.Errorf("decode inner: %w", err), 500)
 		return
+	}
+	players := make([]GMPlayer, len(rows))
+	for i, r := range rows {
+		players[i] = GMPlayer{Name: r.Name, PlayerId: r.PlayerId, IdType: r.IdType}
 	}
 
 	gmPlayersCacheMu.Lock()
