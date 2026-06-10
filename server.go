@@ -141,6 +141,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 		"version":                version,
 		"docker_connected":       globalDocker != nil,
 		"orchestrator_connected": globalOrchestrator != nil,
+		"opsbridge_connected":    globalOpsBridge != nil && globalOpsBridge.Connected(),
 		"battlegroup_ns":         battlegroupNS,
 	})
 }

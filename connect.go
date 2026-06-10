@@ -16,6 +16,7 @@ var (
 	globalDB           *pgxpool.Pool
 	globalDocker       *DockerClient
 	globalOrchestrator *OrchestratorClient
+	globalOpsBridge    *OpsBridgeClient
 )
 
 // connect bootstraps the docker socket + orchestrator HTTPS clients + the
@@ -38,6 +39,17 @@ func connect(ctx context.Context) error {
 		log.Printf("orchestrator client configured (url=%s insecure=%v)", orchestratorURL, orchestratorInsecure)
 	} else {
 		errs = append(errs, fmt.Errorf("ORCHESTRATOR_URL not set"))
+	}
+
+	// OpsBridge persistent connection to the survival game-server.
+	// Phase 10 C1 — the actual goroutine is kicked from main() so the
+	// client lives for the process lifetime, not just one connect()
+	// call (reconnect logic is internal).
+	if opsBridgeAddr != "" && opsBridgePassword != "" {
+		globalOpsBridge = NewOpsBridgeClient(opsBridgeAddr, opsBridgePassword)
+		log.Printf("opsbridge client configured (addr=%s)", opsBridgeAddr)
+	} else {
+		errs = append(errs, fmt.Errorf("OPSBRIDGE_ADDR or OPSBRIDGE_PASSWORD not set"))
 	}
 
 	// Postgres pool.

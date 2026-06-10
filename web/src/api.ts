@@ -38,5 +38,6 @@ export type Status = {
   version: string
   docker_connected: boolean
   orchestrator_connected: boolean
+  opsbridge_connected: boolean
   battlegroup_ns: string
 }

@@ -154,6 +154,7 @@ export default function App() {
         <div className="topbar-meta">
           <Pill label="docker" ok={status?.docker_connected} />
           <Pill label="orchestrator" ok={status?.orchestrator_connected} />
+          <Pill label="opsbridge" ok={status?.opsbridge_connected} />
           {status && <span className="version">{status.version}</span>}
           {err && <span className="pill bad">{err}</span>}
         </div>

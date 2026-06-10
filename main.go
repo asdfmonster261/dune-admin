@@ -41,6 +41,9 @@ var (
 	dockerProject  string
 	battlegroupNS  string
 	allowedOrigins string
+
+	opsBridgeAddr     string
+	opsBridgePassword string
 )
 
 func envOr(key, def string) string {
@@ -84,6 +87,8 @@ func init() {
 	flag.StringVar(&dockerProject, "docker-project", envOr("DOCKER_PROJECT", "dune-server"), "docker-compose project label to filter on")
 	flag.StringVar(&battlegroupNS, "battlegroup-ns", envOr("BATTLEGROUP_NS", ""), "Battlegroup namespace (funcom-seabass-<world-unique-name>)")
 	flag.StringVar(&allowedOrigins, "allowed-origins", envOr("ALLOWED_ORIGINS", ""), "Comma-separated extra CORS origins (same-origin always allowed)")
+	flag.StringVar(&opsBridgeAddr, "opsbridge-addr", envOr("OPSBRIDGE_ADDR", "game-server-survival:9877"), "OpsBridgeCppMod listener address (host:port)")
+	flag.StringVar(&opsBridgePassword, "opsbridge-password", envOr("OPSBRIDGE_PASSWORD", "devonly"), "OpsBridgeCppMod auth password — must match [Bridge].Password in the cppmod's config.ini")
 }
 
 func main() {
@@ -103,6 +108,13 @@ func main() {
 	// Phase 10 follow-up: tail the survival container's docker logs and
 	// keep a live snapshot of Hagga sandstorm spawn lines for the Map tab.
 	startStormTailer(rootCtx)
+
+	// Phase 10 C1: persistent connection to OpsBridgeCppMod inside the
+	// survival container. The Run goroutine reconnects automatically;
+	// callers in C2+ get a "currently connected" snapshot via Connected().
+	if globalOpsBridge != nil {
+		go globalOpsBridge.Run(rootCtx)
+	}
 
 	mux := http.NewServeMux()
 	registerRoutes(mux)
