@@ -12,7 +12,8 @@
   "AdvancedTrainer_Mentat_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Mentat Light Armor Set Variant"
   },
   "AdvancedTrainer_Planetologist_SetVariant": {
     "categories": [
@@ -52,12 +53,14 @@
   "Agrosaz_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Customization: Harkonnen Sandbike"
   },
   "Agrosaz_LightArmor_Swatch_12": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Swordmaster Light Armor Variant"
   },
   "Agrosaz_Stillsuit_Swatch": {
     "categories": [
@@ -72,7 +75,8 @@
   "Alexin_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Alexin Vehicle Swatch"
   },
   "Alexin_Placeables_Swatch": {
     "categories": [
@@ -82,12 +86,14 @@
   "Alexin_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Alexin Weapon Swatch"
   },
   "Alexin_Stillsuit_Swatch_12": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "CHOAM Tech Sword"
   },
   "AluminiumBar": {
     "categories": [
@@ -112,7 +118,8 @@
   "Argosaz_Placeables_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Argosaz Placeables Swatch"
   },
   "ArmorPack_BeneGeserit": {
     "categories": [
@@ -137,12 +144,14 @@
   "ArmorPack_Trooper": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Trooper Armor Set"
   },
   "ArrakeenStillsuit_T4_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Mercenary Stillsuit Set Variant"
   },
   "Assassin_Light06_Unique_Helmet": {
     "categories": [
@@ -152,7 +161,8 @@
   "Assassin_Light06_Unique_Helmet_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Phantom Whisper Helm"
   },
   "Assassin_Light06_Unique_Top": {
     "categories": [
@@ -202,7 +212,8 @@
   "AtreSandbike_MeshCustomization": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Kirab Stillsuit Set Variant"
   },
   "AtreSmg1": {
     "categories": [
@@ -272,7 +283,8 @@
   "AtreidesScout_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "'Thopter Pilot Set"
   },
   "AtreidesSet": {
     "categories": [
@@ -307,7 +319,8 @@
   "Atreides_LightOrni_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Assault Ornithopter Variant"
   },
   "Atreides_MediumOrni_Variant": {
     "categories": [
@@ -322,17 +335,20 @@
   "Atreides_Placeables_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Native Stillsuit Set Variant"
   },
   "Atreides_RangedWeapon_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Ranged Weapon Swatch"
   },
   "Atreides_Sandbike_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Sandbike Variant"
   },
   "Atreides_Stillsuit_01_Swatch": {
     "categories": [
@@ -362,12 +378,14 @@
   "B1C3_Atre_Karpov_Rifle": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "B.E.T.A. Sword"
   },
   "B1C3_Atre_Lasgun": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Habiliments of the Hidden Hand"
   },
   "B1C3_Atre_LightArmor": {
     "categories": [
@@ -377,172 +395,206 @@
   "B1C3_Atre_Maula_Pistol": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Hagal Garment Swatch"
   },
   "B1C3_Atre_Ornitopther": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Choam Faction Stillsuit Swatch"
   },
   "B1C3_Atre_Sandcrawler": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Kirab Heavy Armor Set Variant"
   },
   "B1C3_Atre_Shotgun": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Customization: Atreides Sandbike"
   },
   "B1C3_Atre_Spitdart_Rifle": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Slaver Light Armor Set Variant"
   },
   "B1C3_Atre_Sword": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Slaver Stillsuit Set Variant"
   },
   "B1C3_Atre_TransportOrnithopter": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Traitor Heavy Armor Set Variant"
   },
   "B1C3_AtreidesRusher": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Scavenger Stillsuit Set Variant"
   },
   "B1C3_Atreides_Buggy_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Maas Kharet Light Armor Set Swatch"
   },
   "B1C3_Atreides_Sandbike_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Light Armor Swatch"
   },
   "B1C3_GSuit": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Mercenary Stillsuit Set Variant"
   },
   "B1C3_Hark_HeavyArmor": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Maula Pistol Red Desert Swatch"
   },
   "B1C3_Hark_Karpov_Rifle": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Rifle Red Desert Swatch"
   },
   "B1C3_Hark_Lasgun": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Red Desert Ground Vehicle Swatch"
   },
   "B1C3_Hark_LightArmor": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Buggy Variant"
   },
   "B1C3_Hark_Maula_Pistol": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Slaver Stillsuit Set Variant"
   },
   "B1C3_Hark_Ornitopther": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Scavenger Stillsuit Set Variant"
   },
   "B1C3_Hark_Sandcrawler": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Enforcer Drillshot Variant"
   },
   "B1C3_Hark_Shotgun": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Enforcer Lasgun Variant"
   },
   "B1C3_Hark_Spitdart_Rifle": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Scavenger Stillsuit Set Swatch"
   },
   "B1C3_Hark_Sword": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Master Operative of the Dunes Jacket"
   },
   "B1C3_Hark_TransportOrnithopter": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Polar Operations Stillsuit Garment"
   },
   "B1C3_HarkonnenAssault": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Assault Ornithopter "
   },
   "B1C3_Harkonnen_Buggy_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Smuggler\u2019s Heavy Chausses"
   },
   "B1C3_Harkonnen_Sandbike_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Dragon's Breath Flamethrower"
   },
   "B1C3_LaborerLight": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Scout Ornithopter Variant"
   },
   "B1C3_Shaman_Raider": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Clone Cleaver"
   },
   "B1C3_SmugTech_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Contraband Swatch"
   },
   "B1C3_Smuggler_Assault_Ornithopter_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Bene Geserit Light Armor Variant"
   },
   "B1C3_Smuggler_Buggy_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Flamegouger's Gloves"
   },
   "B1C3_Smuggler_Drillshot_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Dune Man Coverall Gloves"
   },
   "B1C3_Smuggler_Fireballer_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Dune Man Coverall Boots"
   },
   "B1C3_Smuggler_Heavy_Armor_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Flamegouger's Pants"
   },
   "B1C3_Smuggler_Light_Armor_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Ranger Operations Gloves"
   },
   "B1C3_Smuggler_Sandbike_Variant": {
     "categories": [
@@ -567,12 +619,14 @@
   "B1C3_Smuggler_Transport_Ornithopter_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Contraband Carrier Ornithopter Variant"
   },
   "B1C3_Smuggler_Universal_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Smuggler Swatch"
   },
   "B1C3_Specializaton_Helmet_Combat": {
     "categories": [
@@ -657,12 +711,14 @@
   "B1C4_Unique_Consumable_T2": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "PH_Advanced Heat Pack"
   },
   "B1C4_Unique_Dirk2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Eel\u2019s Tooth"
   },
   "B1C4_Unique_Dirk2_Schematic": {
     "categories": [
@@ -677,7 +733,8 @@
   "B1C4_Unique_DualBlades1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Leech\u2019s Maw"
   },
   "B1C4_Unique_HarkAr2": {
     "categories": [
@@ -702,7 +759,8 @@
   "B1C4_Unique_Kindjal2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Serpent\u2019s Fang"
   },
   "B1C4_Unique_Kindjal2_Schematic": {
     "categories": [
@@ -722,7 +780,8 @@
   "B1C4_Unique_Rapier2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Prescient Edge"
   },
   "B1C4_Unique_Rapier2_Schematic": {
     "categories": [
@@ -737,7 +796,8 @@
   "B1C4_Unique_SMG2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Spitting Cobra"
   },
   "B1C4_Unique_SmugDmr1": {
     "categories": [
@@ -747,12 +807,14 @@
   "B1C4_Unique_SmugDmr1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Blind Fury"
   },
   "B1C4_Unique_Sword2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Branding Blade"
   },
   "B1C4_Unique_Sword2_Schematic": {
     "categories": [
@@ -791,7 +853,8 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "Native Stillsuit Set Variant"
   },
   "BasePack_Copper": {
     "categories": [
@@ -806,7 +869,8 @@
   "BasePack_Steel": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Specialized Building Materials"
   },
   "BasicBuildingTool": {
     "categories": [
@@ -861,7 +925,8 @@
   "Binoculars_1": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Binoculars"
   },
   "BlankSinkChart": {
     "categories": [
@@ -891,7 +956,8 @@
   "Bloodsack_02": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Medium Blood Sack"
   },
   "Bloodsack_03": {
     "categories": [
@@ -906,7 +972,8 @@
   "Bloodsack_Unique_Durable_02": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Scipio's Bloodbag"
   },
   "Bloodsack_Unique_Durable_02_Schematic": {
     "categories": [
@@ -916,7 +983,8 @@
   "Bloodsack_Unique_Durable_03": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Glutton's Bloodbag"
   },
   "Bloodsack_Unique_Durable_03_Schematic": {
     "categories": [
@@ -946,7 +1014,8 @@
   "Bloodsack_Unique_Durable_06": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "The Baron's Bloodbag"
   },
   "Bloodsack_Unique_Durable_06_Schematic": {
     "categories": [
@@ -984,7 +1053,8 @@
   "BodyFluidExtractor_Unique_Poison_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Impure Extractor Mk5"
   },
   "BodyFluidExtractor_Unique_Poison_05_Schematic": {
     "categories": [
@@ -1094,7 +1164,8 @@
   "BuggyChoamBoostHeatEfficient3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Rattler Boost Module Mk5"
   },
   "BuggyChoamBoostHeatEfficient4_Schematic": {
     "categories": [
@@ -1149,7 +1220,8 @@
   "BuggyEngine_Unique_Accelerate_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bluddshot Buggy Engine Mk5"
   },
   "BuggyEngine_Unique_Accelerate_06": {
     "categories": [
@@ -1264,7 +1336,8 @@
   "BuggyInventory_Unique_Capacity_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bigger Buggy Boot Mk3"
   },
   "BuggyInventory_Unique_Capacity_04": {
     "categories": [
@@ -1274,7 +1347,8 @@
   "BuggyInventory_Unique_Capacity_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bigger Buggy Boot Mk4"
   },
   "BuggyInventory_Unique_Capacity_05": {
     "categories": [
@@ -1284,7 +1358,8 @@
   "BuggyInventory_Unique_Capacity_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bigger Buggy Boot Mk5"
   },
   "BuggyInventory_Unique_Capacity_06": {
     "categories": [
@@ -1399,7 +1474,8 @@
   "BuggyMining_Unique_YieldIncrease_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Focused Buggy Cutteray Mk6"
   },
   "BuildingBlueprint_CopyDevice": {
     "categories": [
@@ -1439,7 +1515,8 @@
   "ChoamCargo": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "CHOAM Tech Rifle"
   },
   "ChoamCom1": {
     "categories": [
@@ -1459,7 +1536,8 @@
   "ChoamHeavyLasgunSchematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Maula Pistol"
   },
   "ChoamLevel2Set": {
     "categories": [
@@ -1494,7 +1572,8 @@
   "ChoamSda2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Maula Pistol"
   },
   "ChoamSda3": {
     "categories": [
@@ -1514,7 +1593,8 @@
   "ChoamSda6": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Adept Maula Pistol"
   },
   "ChoamSda7": {
     "categories": [
@@ -1579,7 +1659,8 @@
   "Cine_Minotaur_Sword": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Cinematic Minotaur Sword"
   },
   "CobaltBar": {
     "categories": [
@@ -1594,12 +1675,14 @@
   "Combat_Atre_Med01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Atreides Heavy Chestpiece"
   },
   "Combat_Choam_Heavy01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Heavy Boots"
   },
   "Combat_Choam_Heavy01_Bottom": {
     "categories": [
@@ -1609,12 +1692,14 @@
   "Combat_Choam_Heavy01_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Heavy Gloves"
   },
   "Combat_Choam_Heavy01_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Heavy Mask"
   },
   "Combat_Choam_Heavy01_Top": {
     "categories": [
@@ -1649,7 +1734,8 @@
   "Combat_Choam_Heavy03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Slaver Heavy Boots"
   },
   "Combat_Choam_Heavy03_Bottom": {
     "categories": [
@@ -1674,7 +1760,8 @@
   "Combat_Choam_Heavy04_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Mercenary Heavy Pants"
   },
   "Combat_Choam_Heavy04_Gloves": {
     "categories": [
@@ -1719,22 +1806,26 @@
   "Combat_Choam_Heavy06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "CHOAM Heavy Chestplate"
   },
   "Combat_Choam_Light02_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kirab Scout Boots"
   },
   "Combat_Choam_Light02_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kirab Scout Pants"
   },
   "Combat_Choam_Light02_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kirab Scout Gloves"
   },
   "Combat_Choam_Light02_Helmet": {
     "categories": [
@@ -1744,7 +1835,8 @@
   "Combat_Choam_Light02_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kirab Scout Jacket"
   },
   "Combat_Choam_Light03_Boots": {
     "categories": [
@@ -1769,12 +1861,14 @@
   "Combat_Choam_Light03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Slaver Scout Jacket"
   },
   "Combat_Choam_Light05_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Mercenary Scout Boots"
   },
   "Combat_Choam_Light05_Bottom": {
     "categories": [
@@ -1789,12 +1883,14 @@
   "Combat_Choam_Light05_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Mercenary Scout Helmet"
   },
   "Combat_Choam_Light05_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Mercenary Scout Top"
   },
   "Combat_Choam_Light06_Boots": {
     "categories": [
@@ -1819,22 +1915,26 @@
   "Combat_Choam_Light06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "CHOAM Scout Chestplate"
   },
   "Combat_Choam_Scout03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Scout Boots"
   },
   "Combat_Choam_Scout03_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Scout Pants"
   },
   "Combat_Choam_Scout03_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Scout Gloves"
   },
   "Combat_Choam_Scout03_Helmet": {
     "categories": [
@@ -1844,17 +1944,20 @@
   "Combat_Choam_Scout03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Scout Jacket"
   },
   "Combat_Hark_MedUnique01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Syndicate Boots"
   },
   "Combat_Hark_MedUnique01_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Syndicate Pants"
   },
   "Combat_Hark_MedUnique01_Gloves": {
     "categories": [
@@ -1864,7 +1967,8 @@
   "Combat_Hark_MedUnique01_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Syndicate Helmet"
   },
   "Combat_Hark_MedUnique01_Top": {
     "categories": [
@@ -1894,7 +1998,8 @@
   "Combat_Hark_MedUnique02_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "The Forge Gloves"
   },
   "Combat_Hark_MedUnique02_Gloves_Schematic": {
     "categories": [
@@ -1929,12 +2034,14 @@
   "Combat_Heavy_B1C4_Unique_Top1": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_Cut"
   },
   "Combat_Heavy_Unique_PowerEfficient_Gloves_02": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Iri's Gauntlets"
   },
   "Combat_Heavy_Unique_PowerEfficient_Gloves_02_Schematic": {
     "categories": [
@@ -1959,7 +2066,8 @@
   "Combat_Heavy_Unique_PowerEfficient_Gloves_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Power Gauntlets"
   },
   "Combat_Heavy_Unique_PowerEfficient_Gloves_05": {
     "categories": [
@@ -1974,12 +2082,14 @@
   "Combat_Heavy_Unique_PowerEfficient_Gloves_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Circuit Gauntlets"
   },
   "Combat_Heavy_Unique_PowerEfficient_Gloves_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Circuit Gauntlets"
   },
   "Combat_Heavy_Unique_PowerIncrease_Top_06": {
     "categories": [
@@ -2009,7 +2119,8 @@
   "Combat_Heavy_Unique_Reinforced_Boots_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bulwark Boots"
   },
   "Combat_Heavy_Unique_Reinforced_Bottom_05": {
     "categories": [
@@ -2024,7 +2135,8 @@
   "Combat_Heavy_Unique_Reinforced_Bottom_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Bulwark Leggings"
   },
   "Combat_Heavy_Unique_Reinforced_Bottom_06_Schematic": {
     "categories": [
@@ -2044,12 +2156,14 @@
   "Combat_Heavy_Unique_Reinforced_Gloves_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Bulwark Gloves"
   },
   "Combat_Heavy_Unique_Reinforced_Gloves_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bulwark Gloves"
   },
   "Combat_Heavy_Unique_Reinforced_Helmet_05": {
     "categories": [
@@ -2079,7 +2193,8 @@
   "Combat_Heavy_Unique_Reinforced_Top_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Mendek's Chestplate"
   },
   "Combat_Heavy_Unique_Reinforced_Top_06": {
     "categories": [
@@ -2094,27 +2209,32 @@
   "Combat_Heavy_Unique_StandStillDmgReduction_Top_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Fortress Chestpiece"
   },
   "Combat_Heavy_Unique_StandStillDmgReduction_Top_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Fortress Chestpiece"
   },
   "Combat_Heavy_Unique_Swordmaster_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Boots of Ginaz"
   },
   "Combat_Heavy_Unique_Swordmaster_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Leggings of Ginaz"
   },
   "Combat_Heavy_Unique_Swordmaster_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Gauntlets of Ginaz"
   },
   "Combat_Heavy_Unique_Swordmaster_Helmet": {
     "categories": [
@@ -2139,7 +2259,8 @@
   "Combat_Heavy_Unique_Trooper_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Trooper Heavy Armor Tactical Pants"
   },
   "Combat_Heavy_Unique_Trooper_Gloves": {
     "categories": [
@@ -2184,7 +2305,8 @@
   "Combat_Light_Unique_BeneGeserit_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Leggings of the Sisterhood"
   },
   "Combat_Light_Unique_BeneGeserit_Gloves": {
     "categories": [
@@ -2199,7 +2321,8 @@
   "Combat_Light_Unique_BeneGeserit_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Bene Gesserit Light Armor Set Schematic"
   },
   "Combat_Light_Unique_BeneGeserit_Top": {
     "categories": [
@@ -2209,7 +2332,8 @@
   "Combat_Light_Unique_BiomeHeat_Top_03": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Skin-lined Jacket"
   },
   "Combat_Light_Unique_BiomeHeat_Top_03_Schematic": {
     "categories": [
@@ -2224,7 +2348,8 @@
   "Combat_Light_Unique_BiomeHeat_Top_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Miner's Blessing"
   },
   "Combat_Light_Unique_BiomeHeat_Top_05": {
     "categories": [
@@ -2259,7 +2384,8 @@
   "Combat_Light_Unique_DewReap_Gloves_03": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Reaper Gloves"
   },
   "Combat_Light_Unique_DewReap_Gloves_03_Schematic": {
     "categories": [
@@ -2304,7 +2430,8 @@
   "Combat_Light_Unique_Mentat_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Leggings of the Mentat"
   },
   "Combat_Light_Unique_Mentat_Gloves": {
     "categories": [
@@ -2339,17 +2466,20 @@
   "Combat_Light_Unique_ReduceSuspensor_Top_03": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Rigged Suspensor Jacket"
   },
   "Combat_Light_Unique_ReduceSuspensor_Top_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Rigged Suspensor Jacket"
   },
   "Combat_Light_Unique_ReduceSuspensor_Top_04": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Improved Suspensor Jacket"
   },
   "Combat_Light_Unique_ReduceSuspensor_Top_04_Schematic": {
     "categories": [
@@ -2394,12 +2524,14 @@
   "Combat_Light_Unique_Scanning_Helmet_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Wayfinder Helm"
   },
   "Combat_Light_Unique_StaminaDmgIncrease_Helmet_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Seeker Helmet"
   },
   "Combat_Light_Unique_StaminaDmgIncrease_Helmet_06_Schematic": {
     "categories": [
@@ -2409,7 +2541,8 @@
   "Combat_Light_Unique_Stamina_Bottom_04": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Compression-Stim Leggings"
   },
   "Combat_Light_Unique_Stamina_Bottom_04_Schematic": {
     "categories": [
@@ -2419,7 +2552,8 @@
   "Combat_Light_Unique_Stamina_Bottom_05": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Stim-Leggings "
   },
   "Combat_Light_Unique_Stamina_Bottom_05_Schematic": {
     "categories": [
@@ -2429,7 +2563,8 @@
   "Combat_Light_Unique_Stamina_Bottom_06": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Ix-core Leggings"
   },
   "Combat_Light_Unique_Stamina_Bottom_06_Schematic": {
     "categories": [
@@ -2439,7 +2574,8 @@
   "Combat_Light_Unique_Story_Jackal_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "The Jackal's Blindfold"
   },
   "Combat_Light_Unique_WormThreat_Boots_02": {
     "categories": [
@@ -2459,7 +2595,8 @@
   "Combat_Light_Unique_WormThreat_Boots_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Ta'lab Softstep Boots"
   },
   "Combat_Light_Unique_WormThreat_Boots_04": {
     "categories": [
@@ -2489,7 +2626,8 @@
   "Combat_Light_Unique_WormThreat_Boots_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Tabr Softstep Boots"
   },
   "Combat_Nati_SandtroutLeathers01_Boots": {
     "categories": [
@@ -2514,7 +2652,8 @@
   "Combat_Nati_SandtroutLeathers01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Makeshift Jacket"
   },
   "Combat_Nati_ScavengerRags02_Boots": {
     "categories": [
@@ -2524,7 +2663,8 @@
   "Combat_Nati_ScavengerRags02_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Scavenger Pants"
   },
   "Combat_Nati_ScavengerRags02_Gloves": {
     "categories": [
@@ -2549,7 +2689,8 @@
   "Combat_Neut_AtreidesDeserterUnique01_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Oathbreaker Pants"
   },
   "Combat_Neut_AtreidesDeserterUnique01_Gloves": {
     "categories": [
@@ -2564,7 +2705,8 @@
   "Combat_Neut_AtreidesDeserterUnique01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Oathbreaker Chestpiece"
   },
   "Combat_Neut_AtreidesDeserterUnique02_Boots": {
     "categories": [
@@ -2574,12 +2716,14 @@
   "Combat_Neut_AtreidesDeserterUnique02_Boots_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Karak's Boots"
   },
   "Combat_Neut_AtreidesDeserterUnique02_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Karak's Pants"
   },
   "Combat_Neut_AtreidesDeserterUnique02_Bottom_Schematic": {
     "categories": [
@@ -2599,7 +2743,8 @@
   "Combat_Neut_AtreidesDeserterUnique02_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Karak's Helmet"
   },
   "Combat_Neut_AtreidesDeserterUnique02_Helmet_Schematic": {
     "categories": [
@@ -2614,7 +2759,8 @@
   "Combat_Neut_AtreidesDeserterUnique02_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Karak's Jacket"
   },
   "Combat_Neut_AtreidesDeserterUnique03_Boots": {
     "categories": [
@@ -2624,7 +2770,8 @@
   "Combat_Neut_AtreidesDeserterUnique03_Boots_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sentinel Boots"
   },
   "Combat_Neut_AtreidesDeserterUnique03_Bottom": {
     "categories": [
@@ -2659,12 +2806,14 @@
   "Combat_Neut_AtreidesDeserterUnique03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Sentinel Jacket"
   },
   "Combat_Neut_AtreidesDeserterUnique03_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sentinel Jacket"
   },
   "Combat_Neut_AtreidesDeserterUnique04_Boots": {
     "categories": [
@@ -2679,7 +2828,8 @@
   "Combat_Neut_AtreidesDeserterUnique04_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Acheronian Pants"
   },
   "Combat_Neut_AtreidesDeserterUnique04_Bottom_Schematic": {
     "categories": [
@@ -2694,7 +2844,8 @@
   "Combat_Neut_AtreidesDeserterUnique04_Gloves_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Acheronian Gauntlets"
   },
   "Combat_Neut_AtreidesDeserterUnique04_Helmet": {
     "categories": [
@@ -2704,7 +2855,8 @@
   "Combat_Neut_AtreidesDeserterUnique04_Helmet_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Acheronian Helmet"
   },
   "Combat_Neut_AtreidesDeserterUnique04_Top": {
     "categories": [
@@ -2734,7 +2886,8 @@
   "Combat_Neut_AtreidesDeserterUnique05_Bottom_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Executor's Pants"
   },
   "Combat_Neut_AtreidesDeserterUnique05_Gloves": {
     "categories": [
@@ -2769,12 +2922,14 @@
   "Combat_Neut_SmugglerDeserterUnique01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Aren's Boots"
   },
   "Combat_Neut_SmugglerDeserterUnique01_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Aren's Pants"
   },
   "Combat_Neut_SmugglerDeserterUnique01_Gloves": {
     "categories": [
@@ -2844,7 +2999,8 @@
   "Combat_Neut_SmugglerDeserterUnique03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Inkvine Boots"
   },
   "Combat_Neut_SmugglerDeserterUnique03_Boots_Schematic": {
     "categories": [
@@ -2854,7 +3010,8 @@
   "Combat_Neut_SmugglerDeserterUnique03_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Inkvine Pants"
   },
   "Combat_Neut_SmugglerDeserterUnique03_Bottom_Schematic": {
     "categories": [
@@ -2884,7 +3041,8 @@
   "Combat_Neut_SmugglerDeserterUnique03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Inkvine Jacket"
   },
   "Combat_Neut_SmugglerDeserterUnique03_Top_Schematic": {
     "categories": [
@@ -2949,7 +3107,8 @@
   "Combat_Neut_SmugglerDeserterUnique05_Boots_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Chosen Boots"
   },
   "Combat_Neut_SmugglerDeserterUnique05_Bottom": {
     "categories": [
@@ -2964,7 +3123,8 @@
   "Combat_Neut_SmugglerDeserterUnique05_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Chosen Gauntlets"
   },
   "Combat_Neut_SmugglerDeserterUnique05_Gloves_Schematic": {
     "categories": [
@@ -2984,12 +3144,14 @@
   "Combat_Neut_SmugglerDeserterUnique05_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Chosen Chestplate"
   },
   "Combat_Neut_SmugglerDeserterUnique05_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Chosen Chestplate"
   },
   "Combat_Neut_SmugglerDeserterUnique06_Boots": {
     "categories": [
@@ -3019,7 +3181,8 @@
   "Combat_Neut_SmugglerDeserterUnique06_Gloves_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Pincushion Gauntlets"
   },
   "Combat_Neut_SmugglerDeserterUnique06_Helmet": {
     "categories": [
@@ -3029,7 +3192,8 @@
   "Combat_Neut_SmugglerDeserterUnique06_Helmet_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Pincushion Helmet"
   },
   "Combat_Neut_SmugglerDeserterUnique06_Top": {
     "categories": [
@@ -3404,7 +3568,8 @@
   "Contract_LandsraadExperimentalWindTurbineComponent_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Experimental Wind Turbine Schematic"
   },
   "Contract_LandsraadIxianSurveillanceDevice_Schematic": {
     "categories": [
@@ -3414,7 +3579,8 @@
   "Contract_LandsraadMinefieldSurveyor_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "PH_Minefield Surveyor Schematic"
   },
   "Contract_LandsraadPhaseDancersSolidoDissembler_Schematic": {
     "categories": [
@@ -3434,12 +3600,14 @@
   "Contract_LandsraadRareMetalsExtractor_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Yafeng Ore Extractor Prototype"
   },
   "Contract_LandsraadSealedRecorder_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sealed Recorder Schematic"
   },
   "Contract_LandsraadSurveillanceSensor_Schematic": {
     "categories": [
@@ -3474,7 +3642,8 @@
   "Crysknife_CR": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Crysknife"
   },
   "Crysknife_Schematic": {
     "categories": [
@@ -3511,7 +3680,8 @@
   "DLC_B1C2_G_Suit_MaulaPistol_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Swordmaster Light Armor Variant"
   },
   "DLC_B1C2_ScrapGlassKnife_Variant": {
     "categories": [
@@ -3624,7 +3794,8 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "Scrap Metal Knife"
   },
   "Deflection_Slow": {
     "categories": [
@@ -3649,7 +3820,8 @@
   "DewReaper_03": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Dew Reaper Mk4"
   },
   "DewReaper_1h_Tier6": {
     "categories": [
@@ -3679,7 +3851,8 @@
   "DewReaper_1h_Unique_Compact_06": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Collapsible Dew Reaper Mk6"
   },
   "DewReaper_1h_Unique_Compact_06_Schematic": {
     "categories": [
@@ -3699,7 +3872,8 @@
   "DewReaper_2h_Unique_YieldIncrease_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Focused Reaper Mk5"
   },
   "DewReaper_2h_Unique_YieldIncrease_06": {
     "categories": [
@@ -3734,7 +3908,8 @@
   "DewReaper_Unique_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Buoyant Reaper Mk3"
   },
   "DewReaper_Unique_03": {
     "categories": [
@@ -3744,12 +3919,14 @@
   "DewReaper_Unique_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Buoyant Reaper Mk4"
   },
   "DewReaper_Unique_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Buoyant Reaper Mk5"
   },
   "DewReaper_Unique_04_Schematic": {
     "categories": [
@@ -3764,7 +3941,8 @@
   "DewReaper_Unique_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Buoyant Reaper Mk6"
   },
   "DewReaper_Unique_Story": {
     "categories": [
@@ -3774,17 +3952,20 @@
   "Dirk": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Artisan Dirk"
   },
   "Dirk_0": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "House Dirk"
   },
   "Dirk_3": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Regis Dirk"
   },
   "DolomiteRock": {
     "categories": [
@@ -3799,7 +3980,8 @@
   "DualBlades_1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Adept Dual Blades"
   },
   "DualBlades_2_Schematic": {
     "categories": [
@@ -3819,7 +4001,8 @@
   "Dyvetz_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Dyvetz Weapon Swatch"
   },
   "Dyvetz_LightArmor_Swatch": {
     "categories": [
@@ -4034,7 +4217,8 @@
   "EventEliteRaiderToken": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Elite Raider Token"
   },
   "EventItemActions": {
     "categories": [
@@ -4104,7 +4288,8 @@
   "Fireballer_2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Duraluminum Pyrocket"
   },
   "Fireballer_2_Schematic": {
     "categories": [
@@ -4119,7 +4304,8 @@
   "Fireballer_NPC": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "XX_WEAPON_FIREBALLER_3_NAME"
   },
   "Flamethrower1Schematic": {
     "categories": [
@@ -4134,7 +4320,8 @@
   "Flamethrower_Prototype_2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Glasser"
   },
   "FlourSand": {
     "categories": [
@@ -4164,7 +4351,8 @@
   "FuelCanister": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Small Vehicle Fuel Cell"
   },
   "FuelCanister_Large": {
     "categories": [
@@ -4189,17 +4377,20 @@
   "FullStabilizationBelt_Unique_DmgReduction_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sentinel Belt"
   },
   "FullSuspensorBelt": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Full Suspensor Belt"
   },
   "FullSuspensorBelt_Unique_Durability": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Power Pack Mk6"
   },
   "GameActions_Emote": {
     "categories": [
@@ -4264,7 +4455,8 @@
   "GameItemAmmunitionActions": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Cutteray Mk6"
   },
   "GameItemArmorActions": {
     "categories": [
@@ -4351,7 +4543,8 @@
   "GlidePartialStabilizationBelt": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Planar Suspensor Belt"
   },
   "GlidePartialStabilizationBelt_02": {
     "categories": [
@@ -4361,12 +4554,14 @@
   "GlidePartialStabilizationBelt_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "The Emperor's Wings Mk2"
   },
   "GlidePartialStabilizationBelt_03": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Industrial Kinetic Suspensor Belt"
   },
   "GlidePartialStabilizationBelt_03_Schematic": {
     "categories": [
@@ -4376,7 +4571,8 @@
   "GlidePartialStabilizationBelt_04": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Old Sparky Mk2"
   },
   "GlidePartialStabilizationBelt_04_Schematic": {
     "categories": [
@@ -4391,7 +4587,8 @@
   "GlidePartialStabilizationBelt_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "The Emperor's Wings Mk5"
   },
   "GlidePartialStabilizationBelt_06": {
     "categories": [
@@ -4491,7 +4688,8 @@
   "HarkHeavyPistol1": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Rafiq Snubnose Pistol"
   },
   "HarkHeavyPistol2": {
     "categories": [
@@ -4506,12 +4704,14 @@
   "HarkHeavyPistol4": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Adept Rafiq Snubnose"
   },
   "HarkHeavyPistol5": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Regis Rafiq Snubnose"
   },
   "HarkHeavyPistolNPC": {
     "categories": [
@@ -4591,7 +4791,8 @@
   "Harkonnen_Buggy_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Buggy Variant"
   },
   "Harkonnen_FlyingVehicle_01_Swatch": {
     "categories": [
@@ -4616,7 +4817,8 @@
   "Harkonnen_MeleeWeapon_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Harkonnen Melee Weapon Swatch"
   },
   "Harkonnen_Placeables_Swatch": {
     "categories": [
@@ -4641,7 +4843,8 @@
   "HealthPackSchematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Healkit"
   },
   "HealthPack_Channeled": {
     "categories": [
@@ -4651,12 +4854,14 @@
   "HealthPack_Channeled_2": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Healkit Mk2"
   },
   "HealthPack_Channeled_3": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Healkit Mk4"
   },
   "HeatConsumable": {
     "categories": [
@@ -4676,12 +4881,14 @@
   "HeavyPistol_Unique_Bleed_03": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Artisan Disruptor Pistol"
   },
   "HeavyPistol_Unique_Bleed_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Artisan Disruptor Pistol"
   },
   "HeavyPistol_Unique_Bleed_04": {
     "categories": [
@@ -4691,7 +4898,8 @@
   "HeavyPistol_Unique_Bleed_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "House Disruptor Pistol"
   },
   "HeavyPistol_Unique_Bleed_05": {
     "categories": [
@@ -4701,7 +4909,8 @@
   "HeavyPistol_Unique_Bleed_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Adept Disruptor Pistol"
   },
   "HeavyPistol_Unique_Bleed_06": {
     "categories": [
@@ -4716,7 +4925,8 @@
   "HeavyPistol_Unique_Headshot_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Cope"
   },
   "HeavyPistol_Unique_Headshot_05_Schematic": {
     "categories": [
@@ -4731,7 +4941,8 @@
   "HeavyPistol_Unique_Headshot_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Seethe"
   },
   "Heavy_Flamethrower_T2_NPC": {
     "categories": [
@@ -4756,7 +4967,8 @@
   "HighCapacityLiterjon_03": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Hajra Literjon Mk3"
   },
   "HighCapacityLiterjon_03_Schematic": {
     "categories": [
@@ -4776,7 +4988,8 @@
   "HighCapacityLiterjon_05": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Hajra Literjon Mk5"
   },
   "HighCapacityLiterjon_05_Schematic": {
     "categories": [
@@ -4801,17 +5014,20 @@
   "HoltzmanShieldActiveDrain": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Holtzman Shield Mk2"
   },
   "HoltzmanShieldActiveDrain2": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Improvised Power Pack"
   },
   "HoltzmanShieldActiveDrain3": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Adaptive Holtzman Shield"
   },
   "HoltzmanShieldActiveDrainNPC": {
     "categories": [
@@ -4821,12 +5037,14 @@
   "HoltzmanShieldActiveDrain_Story_Paranoid": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "The Emperor's Wings Mk3"
   },
   "HoltzmanShieldActiveDrain_Unique_01": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "The Emperor's Wings Mk2"
   },
   "HoltzmanShieldActiveDrain_Unique_01_Schematic": {
     "categories": [
@@ -4846,13 +5064,15 @@
   "Hook_NPC_01": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "NPC Glutton's Hook"
   },
   "HouseCredit": {
     "categories": [
       "Customizations",
       "Resources"
-    ]
+    ],
+    "name": "Atreides Envoy  Karpov Rifle Variant"
   },
   "HunterSeeker": {
     "categories": [
@@ -4877,7 +5097,8 @@
   "Hurata_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Hurata Garment Swatch"
   },
   "Hypersprint_FastSpeed": {
     "categories": [
@@ -4892,7 +5113,8 @@
   "Imota_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Imota Weapon Swatch"
   },
   "Imota_LightArmor_Swatch": {
     "categories": [
@@ -4912,12 +5134,14 @@
   "InfantryRocketAmmo": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Missile"
   },
   "InsulatedCryo_Combat_Heavy06_Unique_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold AND Cryo defense armor Heavy06_Unique_Boots NAME"
   },
   "InsulatedCryo_Combat_Heavy06_Unique_Bottom": {
     "categories": [
@@ -4942,7 +5166,8 @@
   "InsulatedCryo_Combat_Light06_Unique_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold AND Cryo defense armor Light06_Unique_Boots NAME"
   },
   "InsulatedCryo_Combat_Light06_Unique_Bottom": {
     "categories": [
@@ -4967,7 +5192,8 @@
   "Insulated_Combat_Choam_Heavy06_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold Survival Heavy Combat set, Bottom"
   },
   "Insulated_Combat_Choam_Heavy06_Gloves": {
     "categories": [
@@ -4982,7 +5208,8 @@
   "Insulated_Combat_Choam_Heavy06_Shoes": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold Survival Heavy Combat set, Shoes"
   },
   "Insulated_Combat_Choam_Heavy06_Top": {
     "categories": [
@@ -5032,7 +5259,8 @@
   "Insulated_Combat_Choam_Light06_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold Survival Light Combat set, Helmet"
   },
   "Insulated_Combat_Choam_Light06_Top": {
     "categories": [
@@ -5042,7 +5270,8 @@
   "Insulated_Combat_Choam_Light06_Unique_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold Survival Light Combat set, Shoes (Unique)"
   },
   "Insulated_Combat_Choam_Light06_Unique_Bottom": {
     "categories": [
@@ -5067,7 +5296,8 @@
   "IronBar": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Iron Ingot"
   },
   "ItemStackAndDurabilityStats": {
     "categories": [
@@ -5091,12 +5321,14 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "Concussive Dampening"
   },
   "JasmiumCrystal": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Jasmium Crystal"
   },
   "JourneyApartmentPoisonedMask": {
     "categories": [
@@ -5226,7 +5458,8 @@
   "Kenola_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Kenola Garment Swatch"
   },
   "Kenola_LightArmor_Swatch": {
     "categories": [
@@ -5251,12 +5484,14 @@
   "Kindjal_2": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "House Kindjal"
   },
   "Kindjal_Unique_Blood_01": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Kaleff's Drinker"
   },
   "Kindjal_Unique_Blood_01_Schematic": {
     "categories": [
@@ -5271,7 +5506,8 @@
   "Kindjal_Unique_Blood_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Scipio's Drinker"
   },
   "Kindjal_Unique_Blood_03": {
     "categories": [
@@ -5296,7 +5532,8 @@
   "Kindjal_Unique_Blood_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Pardot's Drinker"
   },
   "Kindjal_Unique_Blood_05_Schematic": {
     "categories": [
@@ -5311,7 +5548,8 @@
   "Kindjal_Unique_Blood_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Feyd's Drinker"
   },
   "Kindjal_Unique_Stamina_03": {
     "categories": [
@@ -5321,12 +5559,14 @@
   "Kindjal_Unique_Stamina_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Shock-Knife"
   },
   "Kindjal_Unique_Stamina_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Spark-Knife"
   },
   "Kindjal_Unique_Stamina_04_Schematic": {
     "categories": [
@@ -5391,7 +5631,8 @@
   "LMG_Unique_RapidFire_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Extravagant Message"
   },
   "LMG_Unique_RapidFire_05_Schematic": {
     "categories": [
@@ -5731,7 +5972,8 @@
   "LandsraadTreasureComponent1": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Opafire Gem"
   },
   "LandsraadTreasureNote": {
     "categories": [
@@ -5781,7 +6023,8 @@
   "LeakingStillsuit_T1_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Slaver Heavy Armor Set Swatch"
   },
   "LightOrnithopterChoamBoostHeatEfficient2_Schematic": {
     "categories": [
@@ -5806,7 +6049,8 @@
   "Lindaren_Placeables_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Lindaren Placeables Swatch"
   },
   "Lindaren_Stillsuit_Swatch": {
     "categories": [
@@ -5846,7 +6090,8 @@
   "LongRifle_Unique_LargeMag_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Regis Tripleshot Repeating Rifle"
   },
   "LongRifle_Unique_Poison_03": {
     "categories": [
@@ -5856,7 +6101,8 @@
   "LongRifle_Unique_Poison_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Assassin's Rifle"
   },
   "LongRifle_Unique_Poison_04": {
     "categories": [
@@ -5866,7 +6112,8 @@
   "LongRifle_Unique_Poison_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Long Shot"
   },
   "LongRifle_Unique_Poison_05": {
     "categories": [
@@ -5876,7 +6123,8 @@
   "LongRifle_Unique_Poison_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Thufir's Best"
   },
   "LongRifle_Unique_Poison_06": {
     "categories": [
@@ -5926,7 +6174,8 @@
   "MTX_Atre_CaladanTrenchcoat_SetVariant_Gloves": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Caladan Trenchcoat GLoves"
   },
   "MTX_Atre_CaladanTrenchcoat_SetVariant_Top": {
     "categories": [
@@ -6136,7 +6385,8 @@
   "MTX_B1C2_DuneManCoverallsSetVariant_Bottoms": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Dune Man Coverall Pants"
   },
   "MTX_B1C2_DuneManCoverallsSetVariant_Footwear": {
     "categories": [
@@ -6161,7 +6411,8 @@
   "MTX_B1C2_DuneManFlamethrowerSetVariant_Bottoms": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Flamegouger's Boots"
   },
   "MTX_B1C2_DuneManFlamethrowerSetVariant_Footwear": {
     "categories": [
@@ -6241,12 +6492,14 @@
   "MTX_B1C3_Smug_HeavyArmor_SetVariant_Gloves": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Smuggler\u2019s Heavy Gauntlets"
   },
   "MTX_B1C3_Smug_HeavyArmor_SetVariant_Headwear": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Smuggler\u2019s Heavy Casque"
   },
   "MTX_B1C3_Smug_HeavyArmor_SetVariant_Top": {
     "categories": [
@@ -6261,7 +6514,8 @@
   "MTX_B1C3_Smug_LightArmor_SetVariant_Bottom": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Smuggler\u2019s Chausses"
   },
   "MTX_B1C3_Smug_LightArmor_SetVariant_Gloves": {
     "categories": [
@@ -6311,7 +6565,8 @@
   "MTX_B1C4_WaterS_AssaultArmor_SetVariant_Headwear": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Ranger Operations Helmet"
   },
   "MTX_B1C4_WaterS_AssaultArmor_SetVariant_Top": {
     "categories": [
@@ -6341,12 +6596,14 @@
   "MTX_B1C4_WaterS_HeavyArmor_SetVariant_Headwear": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Tharnox Operations Helmet"
   },
   "MTX_B1C4_WaterS_HeavyArmor_SetVariant_Top": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Tharnox Operations Cuirass"
   },
   "MTX_B1C4_WaterS_Light_Orni_Variant": {
     "categories": [
@@ -6366,7 +6623,8 @@
   "MTX_Bonus_Universal_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Sunset Dye Global Swatch"
   },
   "MTX_Caladan_Movie_Bed_Patent": {
     "categories": [
@@ -6411,7 +6669,8 @@
   "MTX_CargoContainer_UltimateOrnithopter_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Blue Dasher Cargo Container Swatch"
   },
   "MTX_CargoContainer_Universal_Swatch": {
     "categories": [
@@ -6426,7 +6685,8 @@
   "MTX_ChoamTechRifle_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Flyer's Friend Maula Pistol"
   },
   "MTX_ChoamTechSMG_Variant": {
     "categories": [
@@ -6436,7 +6696,8 @@
   "MTX_ChoamTechSword_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Makeshift Plaz Knife"
   },
   "MTX_Choam_KirabTurret_Placeable": {
     "categories": [
@@ -6651,12 +6912,14 @@
   "MTX_Combat_Assault_Watershippers_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Ranger Operations Trousers"
   },
   "MTX_Combat_Assault_Watershippers_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Ranger Operations Gloves"
   },
   "MTX_Combat_Assault_Watershippers_Helmet": {
     "categories": [
@@ -6696,7 +6959,8 @@
   "MTX_D_Combat_Heavy_Smuggler_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler\u2019s Heavy Reinforced Boots"
   },
   "MTX_D_Combat_Heavy_Smuggler_Bottom": {
     "categories": [
@@ -6716,7 +6980,8 @@
   "MTX_D_Combat_Heavy_Smuggler_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler\u2019s Heavy Armored Coat"
   },
   "MTX_D_Combat_Light_Smuggler_Boots": {
     "categories": [
@@ -6726,7 +6991,8 @@
   "MTX_D_Combat_Light_Smuggler_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler\u2019s Chausses"
   },
   "MTX_D_Combat_Light_Smuggler_Gloves": {
     "categories": [
@@ -6811,12 +7077,14 @@
   "MTX_Fremen_MovieSuit_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Dune 2021 Stillsuit"
   },
   "MTX_G-suit_Ornithopter_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Fremen Stillsuit Set Swatch"
   },
   "MTX_Graben_Flamethrower_01_Swatch": {
     "categories": [
@@ -6836,7 +7104,8 @@
   "MTX_Graben_Rifle_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Graben Industrial Grey Rifle Swatch"
   },
   "MTX_Graben_Sandcrawler_01_Swatch": {
     "categories": [
@@ -6846,12 +7115,14 @@
   "MTX_Graben_Social_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Graben Industrial Grey Social Outfit Swatch"
   },
   "MTX_GunnerSniper_Rifle_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Wall Sentinel Long Rifle Variant"
   },
   "MTX_Gunner_Battlerifle_Variant": {
     "categories": [
@@ -6866,7 +7137,8 @@
   "MTX_HeavyRacer_Shotgun_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Heavy Racer Shotgun"
   },
   "MTX_Kirab_Buggy_Variant": {
     "categories": [
@@ -7201,7 +7473,8 @@
   "MTX_RedDesert_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Red Desert Heavy Armor Swatch"
   },
   "MTX_RedDesert_HeavyPistol_Swatch": {
     "categories": [
@@ -7246,12 +7519,14 @@
   "MTX_RedDesert_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Red Desert Stillsuit Armor Swatch"
   },
   "MTX_Richese_MaulaPistol_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Richese Maula Pistol"
   },
   "MTX_SandFlies_Flamethrower_Variant": {
     "categories": [
@@ -7266,7 +7541,8 @@
   "MTX_Sard_Scout_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Sardaukar Chestpiece Variant"
   },
   "MTX_Sard_Stillsuit_01_SetVariant": {
     "categories": [
@@ -7281,7 +7557,8 @@
   "MTX_SmugFormalSetVariant_Footwear": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Master Operative of the Dunes Boots"
   },
   "MTX_SmugFormalSetVariant_Gloves": {
     "categories": [
@@ -7291,7 +7568,8 @@
   "MTX_SmugFormalSetVariant_Gloves_12": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Atreides Envoy Spitdart Variant"
   },
   "MTX_SmugFormalSetVariant_Goggles": {
     "categories": [
@@ -7346,7 +7624,8 @@
   "MTX_Stillsuit_Watershippers_Helmet": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Polar Operations Stillsuit Helmet"
   },
   "MTX_Stillsuit_Watershippers_Top": {
     "categories": [
@@ -7376,7 +7655,8 @@
   "MTX_VermiliusGap_Free_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Vermillius Dusk Swatch"
   },
   "MTX_WaterFat_Ornithopter_01_Swatch": {
     "categories": [
@@ -7406,7 +7686,8 @@
   "MagnetiteOre": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Iron Ore"
   },
   "ManualOfTheFriendlyDesertSchematic": {
     "categories": [
@@ -7455,17 +7736,20 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "Energy Resistant Weave"
   },
   "MaulaPistol_T1_Variant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Improvised Maula Pistol Variant"
   },
   "Maula_Free_01_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Maula Swatch"
   },
   "MaybePoisonVial": {
     "categories": [
@@ -7501,7 +7785,8 @@
     "categories": [
       "Consumables",
       "Resources"
-    ]
+    ],
+    "name": "Literjon_03"
   },
   "MercHeavy_T5_SetVariant": {
     "categories": [
@@ -7526,7 +7811,8 @@
   "Mikarrol_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Mikarrol Vehicle Swatch"
   },
   "Mikarrol_Placeables_Swatch": {
     "categories": [
@@ -7536,7 +7822,8 @@
   "Mikarrol_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Mikarrol Weapon Swatch"
   },
   "MiningTool_1h_Heavy": {
     "categories": [
@@ -7556,7 +7843,8 @@
   "MiningTool_1h_StandardSchematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Cutteray"
   },
   "MiningTool_1h_Unique_01": {
     "categories": [
@@ -7601,7 +7889,8 @@
   "MiningTool_2h_Unique_03": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Tarl Cutteray"
   },
   "MiningTool_2h_Unique_04": {
     "categories": [
@@ -7626,7 +7915,8 @@
   "MissionariaProtectivaDoc3": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "On Witches"
   },
   "MobileHUDButtonFire": {
     "categories": [
@@ -7651,12 +7941,14 @@
   "Moritani_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Moritani Garment Swatch"
   },
   "Mouse_Corpse": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Mouse Corpse"
   },
   "Mutelli_HeavyArmor_Swatch": {
     "categories": [
@@ -7691,12 +7983,14 @@
   "Napalm": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Incendiary Gel"
   },
   "NativeStillsuit_T2_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Native Stillsuit Set Variant"
   },
   "NerveStrike": {
     "categories": [
@@ -7716,7 +8010,8 @@
   "Novebruns_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Novebruns Garment Swatch"
   },
   "Novebruns_Placeables_Swatch": {
     "categories": [
@@ -7726,7 +8021,8 @@
   "Novebruns_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Novebruns Weapon Swatch"
   },
   "Oil": {
     "categories": [
@@ -7741,7 +8037,8 @@
   "OldImperialComponent2": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Particle Capacitor"
   },
   "Ordos_HeavyArmor_Swatch": {
     "categories": [
@@ -7751,12 +8048,14 @@
   "Ordos_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Ordos Light Armor Swatch"
   },
   "Ordos_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Ordos Stillsuit Armor Swatch"
   },
   "OrnithopterDashAbility": {
     "categories": [
@@ -7821,7 +8120,8 @@
   "OrnithopterLightEngine_Unique_Speed_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Dyvetz Ornithopter Engine Mk4"
   },
   "OrnithopterLightEngine_Unique_Speed_05_Schematic": {
     "categories": [
@@ -7876,7 +8176,8 @@
   "OrnithopterLightLauncher_Unique_RapidFire_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Heaven's Wrath Rocket Module Mk5"
   },
   "OrnithopterLightLauncher_Unique_RapidFire_06_Schematic": {
     "categories": [
@@ -7911,7 +8212,8 @@
   "OrnithopterLightLocomotion_Unique_Speed_6_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Albatross Wing Module Mk6"
   },
   "OrnithopterLightScanner": {
     "categories": [
@@ -7981,7 +8283,8 @@
   "OrnithopterMediumEngine_Unique_Speed_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Dyvetz Ornithopter Engine Mk6"
   },
   "OrnithopterMediumGenerator": {
     "categories": [
@@ -8036,7 +8339,8 @@
   "OrnithopterMediumLauncher_Unique_LargeExplosion_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Regis High-payload Rocket Module"
   },
   "OrnithopterMediumLocomotion": {
     "categories": [
@@ -8056,7 +8360,8 @@
   "OrnithopterMediumLocomotion_Unique_Strafe_6_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Hummingbird Wing Module Mk6"
   },
   "OrnithopterRocketsAbility": {
     "categories": [
@@ -8161,28 +8466,33 @@
   "PU_BowlPlate": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Spice Residue"
   },
   "PU_ClothFabric": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Servoks"
   },
   "PU_Crystal": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Steel Welding Wire"
   },
   "PU_GrainsSand": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Granite Stone"
   },
   "PU_Metal": {
     "categories": [
       "Resources",
       "Vehicles"
-    ]
+    ],
+    "name": "Medium Sized Vehicle Fuel Cell"
   },
   "PU_PlantFiber": {
     "categories": [
@@ -8199,14 +8509,16 @@
       "Resources",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "NU CHOAM Scout Top"
   },
   "PU_TechItem": {
     "categories": [
       "Augments",
       "Resources",
       "SolidFuels"
-    ]
+    ],
+    "name": "RESOURCE_COPPER_ORE_NAME"
   },
   "PU_ToolEquipment": {
     "categories": [
@@ -8240,7 +8552,8 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "Detoxifying Fabrics"
   },
   "PlaceableMine_Suspensor_Amplification": {
     "categories": [
@@ -8260,7 +8573,8 @@
   "Plastone": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Plastone"
   },
   "PoisonCapsuleAndMineDamage": {
     "categories": [
@@ -8305,7 +8619,8 @@
   "PowerPack": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Power Pack Mk2"
   },
   "PowerPack2": {
     "categories": [
@@ -8340,7 +8655,8 @@
   "PowerPack_Unique_Capacity_06": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Accelerator Power Pack"
   },
   "PowerPack_Unique_Capacity_06_Schematic": {
     "categories": [
@@ -8360,7 +8676,8 @@
   "PowerPack_Unique_Regen_01": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Old Sparky Mk1"
   },
   "PowerPack_Unique_Regen_01_Schematic": {
     "categories": [
@@ -8380,7 +8697,8 @@
   "PowerPack_Unique_Regen_03": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Young Sparky Mk5"
   },
   "PowerPack_Unique_Regen_03_Schematic": {
     "categories": [
@@ -8400,7 +8718,8 @@
   "PowerPack_Unique_Regen_05": {
     "categories": [
       "MiscEquipment"
-    ]
+    ],
+    "name": "Young Sparky Mk6"
   },
   "PowerPack_Unique_Regen_05_Schematic": {
     "categories": [
@@ -8415,7 +8734,8 @@
   "PowerPack_Unique_Regen_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Young Sparky Mk6"
   },
   "QualityLevelTest_Schematic": {
     "categories": [
@@ -8430,7 +8750,8 @@
   "Radiation_Suit": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Radiation Suit Mk4"
   },
   "Radiation_Suit_T5": {
     "categories": [
@@ -8450,7 +8771,8 @@
   "Radiation_Suit_T6_Unique_Armored_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Tactical Radiation Suit "
   },
   "RadioactivecrateAnvil": {
     "categories": [
@@ -8520,7 +8842,8 @@
   "RepairTool": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Welding Torch Mk1"
   },
   "RepairTool3": {
     "categories": [
@@ -8530,13 +8853,15 @@
   "RepairTool5": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Welding Torch Mk5"
   },
   "RespawnBeacon": {
     "categories": [
       "Placeables",
       "Weapons"
-    ]
+    ],
+    "name": "Respawn Beacon"
   },
   "Richese_HeavyArmor_Swatch": {
     "categories": [
@@ -8606,12 +8931,14 @@
   "RocketLauncher_Unique_Homing_06": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "The Ancient Way"
   },
   "RocketLauncher_Unique_Homing_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "The Ancient Way"
   },
   "RowName": {
     "categories": [
@@ -8640,17 +8967,20 @@
       "SolidFuels",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "RESOURCE_ALUMINUM_INGOT_NAME"
   },
   "SMG_Unique_LargeMag_02": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Legion Tattoo"
   },
   "SMG_Unique_LargeMag_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Legion Tattoo"
   },
   "SMG_Unique_LargeMag_03": {
     "categories": [
@@ -8665,7 +8995,8 @@
   "SMG_Unique_LargeMag_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Ironwatch Special"
   },
   "SMG_Unique_LargeMag_04_Schematic": {
     "categories": [
@@ -8685,12 +9016,14 @@
   "SMG_Unique_LargeMag_06": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "A Dart for Every Man"
   },
   "SMG_Unique_LargeMag_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "A Dart for Every Man"
   },
   "SaguaroResourceRaw": {
     "categories": [
@@ -8720,7 +9053,8 @@
   "SandbikeChoamBoostHeatEfficient2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Night Rider Sandbike Boost Mk3"
   },
   "SandbikeChoamBoostHeatEfficient3_Schematic": {
     "categories": [
@@ -8735,7 +9069,8 @@
   "SandbikeChoamBoostHeatEfficient5_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Night Rider Sandbike Boost Mk6"
   },
   "SandbikeEngine": {
     "categories": [
@@ -8970,12 +9305,14 @@
   "SaphoJuice": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Sapho Juice"
   },
   "SardaukarBlade": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Sardaukar Blade"
   },
   "SardaukarPull_Short": {
     "categories": [
@@ -8990,7 +9327,8 @@
   "SardaukarSword_1": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "XX_Sardaukar Blade"
   },
   "Sardaukar_Dagger_CR": {
     "categories": [
@@ -9015,7 +9353,8 @@
   "Scanner_Efficient_1": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Long Range Scanner"
   },
   "Scanner_Unique_Body_03": {
     "categories": [
@@ -9065,12 +9404,14 @@
   "ScavengerRagsLight_T1_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Scavenger Light Armor Set Variant"
   },
   "Schematic_UniqueBattleRifle": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "The Tapper"
   },
   "Schematic_UniqueBikeBoost": {
     "categories": [
@@ -9080,7 +9421,8 @@
   "Schematic_UniqueBuggyBoost": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Rattler Boost Module Mk3"
   },
   "Schematic_UniqueChoamSword": {
     "categories": [
@@ -9090,7 +9432,8 @@
   "Schematic_UniqueCutteray2": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sim's Cutter"
   },
   "Schematic_UniqueCutteray3": {
     "categories": [
@@ -9110,7 +9453,8 @@
   "Schematic_UniqueCutteray6": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sandflies Carver"
   },
   "Schematic_UniqueDewReaper": {
     "categories": [
@@ -9135,7 +9479,8 @@
   "Schematic_UniqueForgeFeet": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Syndicate Boots"
   },
   "Schematic_UniqueForgeHands": {
     "categories": [
@@ -9150,7 +9495,8 @@
   "Schematic_UniqueForgeLegs": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Syndicate Pants"
   },
   "Schematic_UniqueLiterjon": {
     "categories": [
@@ -9185,7 +9531,8 @@
   "Schematic_UniqueOathbreakerLegs": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Oathbreaker Pants"
   },
   "Schematic_UniquePincushionChest": {
     "categories": [
@@ -9200,7 +9547,8 @@
   "Schematic_UniquePincushionHands": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Aren's Gloves"
   },
   "Schematic_UniquePincushionHead": {
     "categories": [
@@ -9275,7 +9623,8 @@
   "ShigawireGarotte": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Shigawire Garotte"
   },
   "ShipmentofJunk": {
     "categories": [
@@ -9295,7 +9644,8 @@
   "Shotgun_Unique_Explosive_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "House Burst Drillshot"
   },
   "Shotgun_Unique_Explosive_04_Schematic": {
     "categories": [
@@ -9340,7 +9690,8 @@
   "Silicone": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Silicone Block"
   },
   "Sinkchart": {
     "categories": [
@@ -9360,7 +9711,8 @@
   "SlaverStillsuit_T3_SetVariant": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Mercenary Stillsuit Set Variant"
   },
   "SmallChemicalRefinery": {
     "categories": [
@@ -9405,7 +9757,8 @@
   "SmugShot3": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "House Drillshot FK7"
   },
   "SmugShot4": {
     "categories": [
@@ -9435,12 +9788,14 @@
   "Social_Atre_Casual03_Shoes": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Caladan Casual Boots"
   },
   "Social_Atre_Casual03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Atreides Heavy Pants"
   },
   "Social_Atre_Casual03_Unique_Story_TheBloodline_Bottom": {
     "categories": [
@@ -9460,7 +9815,8 @@
   "Social_Choam_MaulaCastOffs01_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Maula Breeches"
   },
   "Social_Choam_MaulaCastOffs01_Gloves": {
     "categories": [
@@ -9470,7 +9826,8 @@
   "Social_Choam_MaulaCastOffs01_Shoes": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "The Forge Boots"
   },
   "Social_Choam_MaulaCastOffs01_Top": {
     "categories": [
@@ -9485,7 +9842,8 @@
   "Social_Hark_GiediCasual03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Radiation Suit Mk5"
   },
   "Social_Hark_GiediCasual03_Bottom": {
     "categories": [
@@ -9500,57 +9858,68 @@
   "Social_Neut_ImperialCasual_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Scout Helmet"
   },
   "Social_Neut_ImperialCasual_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Makeshift Hood"
   },
   "Social_Neut_Unique_Story_ProcesVerbal_NobleMask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Smuggler Stillsuit"
   },
   "Social_Smug_EntrepreneurCasual03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Entrepreneur Casual Shoes"
   },
   "Social_Smug_EntrepreneurCasual03_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Entrepreneur Casual Pants"
   },
   "Social_Smug_EntrepreneurCasual03_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Entrepreneur Casual Gloves"
   },
   "Social_Smug_EntrepreneurCasual03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Aren's Chestpiece"
   },
   "Social_Smug_Formal01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Makeshift Gloves"
   },
   "Social_Smug_Formal01_Bottom": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Master Operative of the Dunes Trousers"
   },
   "Social_Smug_Formal01_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Inkvine Gauntlets"
   },
   "Social_Smug_Formal01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Master Operative of the Dunes Jacket"
   },
   "SolarisCoin": {
     "categories": [
@@ -9605,7 +9974,8 @@
   "SpiceAddictionConsumable_04": {
     "categories": [
       "Consumables"
-    ]
+    ],
+    "name": "Melange Spiced Wine"
   },
   "SpiceAddictionConsumable_T6": {
     "categories": [
@@ -9625,7 +9995,8 @@
   "SpiceSand": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Spice Sand"
   },
   "SpiceSilo_Patent": {
     "categories": [
@@ -9640,7 +10011,8 @@
   "Spinette_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Spinnette Vehicle Swatch"
   },
   "Spinette_LightArmor_Swatch": {
     "categories": [
@@ -9660,7 +10032,8 @@
   "StakingUnit": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Staking Unit"
   },
   "StakingUnitVertical": {
     "categories": [
@@ -9675,7 +10048,8 @@
   "StaticCompactorTier6": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Omni Static Compactor"
   },
   "StaticCompactor_CR": {
     "categories": [
@@ -9715,22 +10089,26 @@
   "StaticCompactor_Unique_Compact_06": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Compact Compactor Mk6"
   },
   "StaticCompactor_Unique_Compact_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Compact Compactor Mk6"
   },
   "SteelBar": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Steel Ingot"
   },
   "Stillsuit_Choam_01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Executor's Chestpiece"
   },
   "Stillsuit_Choam_01_Gloves": {
     "categories": [
@@ -9740,17 +10118,20 @@
   "Stillsuit_Choam_01_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Fremen Exile Cuirass"
   },
   "Stillsuit_Choam_01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Duneman Heavy Jacket"
   },
   "Stillsuit_Choam_02_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Harko Commoner Shoes"
   },
   "Stillsuit_Choam_02_Gloves": {
     "categories": [
@@ -9760,47 +10141,56 @@
   "Stillsuit_Choam_02_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kirab Stillsuit Boots"
   },
   "Stillsuit_Choam_02_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Imperial Casual Shoes"
   },
   "Stillsuit_Choam_04_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Prison Uniform Hood"
   },
   "Stillsuit_Choam_04_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Windsack Commoner Hat"
   },
   "Stillsuit_Choam_04_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Imperial Casual Gloves"
   },
   "Stillsuit_Choam_04_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Harkonnen Stillsuit"
   },
   "Stillsuit_Choam_05_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Slaver Heavy Gloves"
   },
   "Stillsuit_Choam_05_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Arrakeen Commoner Shirt"
   },
   "Stillsuit_Choam_05_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Arrakis Headwrap 03"
   },
   "Stillsuit_Choam_05_Top": {
     "categories": [
@@ -9810,12 +10200,14 @@
   "Stillsuit_Choam_06_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "CHOAM Stillsuit Boots"
   },
   "Stillsuit_Choam_06_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Arrakis Trader Top"
   },
   "Stillsuit_Choam_06_Mask": {
     "categories": [
@@ -9825,12 +10217,14 @@
   "Stillsuit_Choam_06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Spice Trader Finery Shoes"
   },
   "Stillsuit_Choam_Unique_Dashed02_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Atreides Heavy Boots"
   },
   "Stillsuit_Choam_Unique_Dashed02_Top_Schematic": {
     "categories": [
@@ -9840,17 +10234,20 @@
   "Stillsuit_Choam_Unique_Dashed03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Hollower Stillsuit Garment"
   },
   "Stillsuit_Choam_Unique_Dashed03_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sprinter's Stillsuit Garment"
   },
   "Stillsuit_Choam_Unique_Dashed04_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Sand Strider Stillsuit Garment"
   },
   "Stillsuit_Choam_Unique_Dashed04_Top_Schematic": {
     "categories": [
@@ -9860,7 +10257,8 @@
   "Stillsuit_Choam_Unique_Dashed05_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Arrakis Trader Shoes"
   },
   "Stillsuit_Choam_Unique_Dashed05_Top_Schematic": {
     "categories": [
@@ -9870,7 +10268,8 @@
   "Stillsuit_Choam_Unique_Dashed06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Tactical Radiation Suit"
   },
   "Stillsuit_Choam_Unique_Dashed06_Top_Schematic": {
     "categories": [
@@ -9880,27 +10279,32 @@
   "Stillsuit_Neut_Leaking01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler Pathfinder Gloves"
   },
   "Stillsuit_Neut_Leaking01_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Scavenger Stillsuit Gloves"
   },
   "Stillsuit_Neut_Leaking01_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Scavenger Stillsuit Mask"
   },
   "Stillsuit_Neut_Leaking01_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "NU CHOAM Scout Helmet"
   },
   "Stillsuit_Unique_Armored_01_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Cold Survival Exploration Suit, Top"
   },
   "Stillsuit_Unique_Armored_01_Boots_Schematic": {
     "categories": [
@@ -9910,7 +10314,8 @@
   "Stillsuit_Unique_Armored_01_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Hollower Stillsuit Gloves"
   },
   "Stillsuit_Unique_Armored_01_Gloves_Schematic": {
     "categories": [
@@ -9920,7 +10325,8 @@
   "Stillsuit_Unique_Armored_01_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Harkonnen Assault Chestpiece"
   },
   "Stillsuit_Unique_Armored_01_Mask_Schematic": {
     "categories": [
@@ -9940,7 +10346,8 @@
   "Stillsuit_Unique_Armored_02_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Atreides Dress Uniform Gloves"
   },
   "Stillsuit_Unique_Armored_02_Boots_Schematic": {
     "categories": [
@@ -9955,12 +10362,14 @@
   "Stillsuit_Unique_Armored_02_Gloves_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Menol's Stillsuit Gloves"
   },
   "Stillsuit_Unique_Armored_02_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Cold Survival Exploration Suit, Boots"
   },
   "Stillsuit_Unique_Armored_02_Mask_Schematic": {
     "categories": [
@@ -9970,17 +10379,20 @@
   "Stillsuit_Unique_Armored_02_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Station Garb"
   },
   "Stillsuit_Unique_Armored_02_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Menol's Stillsuit Garment"
   },
   "Stillsuit_Unique_Armored_03_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kel's Stillsuit Boots"
   },
   "Stillsuit_Unique_Armored_03_Boots_Schematic": {
     "categories": [
@@ -9990,7 +10402,8 @@
   "Stillsuit_Unique_Armored_03_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Prison Uniform Hood"
   },
   "Stillsuit_Unique_Armored_03_Gloves_Schematic": {
     "categories": [
@@ -10005,12 +10418,14 @@
   "Stillsuit_Unique_Armored_03_Mask_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Kel's Stillsuit Mask"
   },
   "Stillsuit_Unique_Armored_03_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Kel's Stillsuit Garment"
   },
   "Stillsuit_Unique_Armored_03_Top_Schematic": {
     "categories": [
@@ -10020,7 +10435,8 @@
   "Stillsuit_Unique_Armored_04_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Fremen Exile Breeches"
   },
   "Stillsuit_Unique_Armored_04_Boots_Schematic": {
     "categories": [
@@ -10040,17 +10456,20 @@
   "Stillsuit_Unique_Armored_04_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Windsack Legs"
   },
   "Stillsuit_Unique_Armored_04_Mask_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Shadrath's Stillsuit Mask"
   },
   "Stillsuit_Unique_Armored_04_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Villari's Stillsuit Boots"
   },
   "Stillsuit_Unique_Armored_04_Top_Schematic": {
     "categories": [
@@ -10070,17 +10489,20 @@
   "Stillsuit_Unique_Armored_05_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Trooper Heavy Armor Tactical Gauntlets"
   },
   "Stillsuit_Unique_Armored_05_Gloves_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Saturnine Stillsuit Gloves"
   },
   "Stillsuit_Unique_Armored_05_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Red Scorpion's Boots"
   },
   "Stillsuit_Unique_Armored_05_Mask_Schematic": {
     "categories": [
@@ -10090,17 +10512,20 @@
   "Stillsuit_Unique_Armored_05_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Bulwark Helmet"
   },
   "Stillsuit_Unique_Armored_05_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Saturnine Stillsuit Garment"
   },
   "Stillsuit_Unique_Armored_06_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Sprinter's Stillsuit Garment"
   },
   "Stillsuit_Unique_Armored_06_Boots_Schematic": {
     "categories": [
@@ -10110,7 +10535,8 @@
   "Stillsuit_Unique_Armored_06_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Shaddam's Bladder"
   },
   "Stillsuit_Unique_Armored_06_Gloves_Schematic": {
     "categories": [
@@ -10120,17 +10546,20 @@
   "Stillsuit_Unique_Armored_06_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler\u2019s Agile Assault Boots"
   },
   "Stillsuit_Unique_Armored_06_Mask_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Imperial Stillsuit Mask"
   },
   "Stillsuit_Unique_Armored_06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Windsack Head"
   },
   "Stillsuit_Unique_Armored_06_Top_Schematic": {
     "categories": [
@@ -10150,7 +10579,8 @@
   "Stillsuit_Unique_Efficient_04_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Smuggler\u2019s Nimble-Fingered Gloves"
   },
   "Stillsuit_Unique_Efficient_04_Gloves_Schematic": {
     "categories": [
@@ -10160,7 +10590,8 @@
   "Stillsuit_Unique_Efficient_04_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Boots of the Sisterhood"
   },
   "Stillsuit_Unique_Efficient_04_Mask_Schematic": {
     "categories": [
@@ -10170,7 +10601,8 @@
   "Stillsuit_Unique_Efficient_04_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Harkonnen Traitor Boots"
   },
   "Stillsuit_Unique_Efficient_04_Top_Schematic": {
     "categories": [
@@ -10180,7 +10612,8 @@
   "Stillsuit_Unique_Efficient_05_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Batigh Stillsuit Boots"
   },
   "Stillsuit_Unique_Efficient_05_Boots_Schematic": {
     "categories": [
@@ -10190,7 +10623,8 @@
   "Stillsuit_Unique_Efficient_05_Gloves": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Batigh Stillsuit Gloves"
   },
   "Stillsuit_Unique_Efficient_05_Gloves_Schematic": {
     "categories": [
@@ -10200,22 +10634,26 @@
   "Stillsuit_Unique_Efficient_05_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "XX_NOTUSED_Harkonnen Traitor Helmet"
   },
   "Stillsuit_Unique_Efficient_05_Mask_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Batigh Stillsuit Mask"
   },
   "Stillsuit_Unique_Efficient_05_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Power Gauntlets"
   },
   "Stillsuit_Unique_Efficient_05_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Batigh Stillsuit Garment"
   },
   "Stillsuit_Unique_Efficient_06_Boots": {
     "categories": [
@@ -10240,7 +10678,8 @@
   "Stillsuit_Unique_Efficient_06_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Tharnox Operations Gauntlets"
   },
   "Stillsuit_Unique_Efficient_06_Mask_Schematic": {
     "categories": [
@@ -10260,7 +10699,8 @@
   "Stillsuit_Unique_HeatMitigation_04_Mask": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Shadow Hood"
   },
   "Stillsuit_Unique_HeatMitigation_04_Mask_Schematic": {
     "categories": [
@@ -10295,12 +10735,14 @@
   "Stillsuit_Unique_HighCapacity_06_Top_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Shaddam's Bladder"
   },
   "Stillsuit_Unique_Planetologist_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Planetologist Light Armor Boots"
   },
   "Stillsuit_Unique_Planetologist_Bottom": {
     "categories": [
@@ -10330,7 +10772,8 @@
   "Stillsuit_Unique_ThermalSuit_06_Boots": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "PH_Cold Survival Heavy Combat set, Shoes (Unique)"
   },
   "Stillsuit_Unique_ThermalSuit_06_Gloves": {
     "categories": [
@@ -10345,7 +10788,8 @@
   "Stillsuit_Unique_ThermalSuit_06_Top": {
     "categories": [
       "Clothing"
-    ]
+    ],
+    "name": "Adrenal Boots"
   },
   "Stilltent": {
     "categories": [
@@ -10362,7 +10806,8 @@
     "categories": [
       "Placeables",
       "Weapons"
-    ]
+    ],
+    "name": "Double-sealed Stilltent"
   },
   "Stilltent_Unique_01_Schematic": {
     "categories": [
@@ -10442,12 +10887,14 @@
   "T1AssaultComponent": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Gun Parts"
   },
   "T1ExplorationComponent": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Holtzman Actuator"
   },
   "T1RusherComponent": {
     "categories": [
@@ -10462,12 +10909,14 @@
   "T1_UtilityClothing_LeakyStillsuit_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Damaged Stillsuit"
   },
   "T2HeavyComponent": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Armor Plating"
   },
   "T2MachineComponent": {
     "categories": [
@@ -10487,12 +10936,14 @@
   "T2_MiscEquipment_PowerPack_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Improvised Power Pack"
   },
   "T3MarksmanComponent": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Range Finder"
   },
   "T3MiningGalleryComponent1": {
     "categories": [
@@ -10537,7 +10988,8 @@
   "T4MaasKharetComponent1": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Sandtrout Leathers"
   },
   "T4MaasKharetComponent2": {
     "categories": [
@@ -10547,12 +10999,14 @@
   "T4MysaTarilComponent1": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Diamondine Dust"
   },
   "T4MysaTarilComponent2": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Carbide Scraps"
   },
   "T4PyonVillageComponent": {
     "categories": [
@@ -10572,7 +11026,8 @@
   "T4_Structure_Thumper1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Thumper"
   },
   "T5DeepDesertShieldWallComponent": {
     "categories": [
@@ -10602,7 +11057,8 @@
   "T6ArmorPlating": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Plasteel Composite Armor Plating"
   },
   "T6BalisticWeave": {
     "categories": [
@@ -10657,7 +11113,8 @@
   "T6IrradiatedCore": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Irradiated Core"
   },
   "T6LandsraadCraftedComponent": {
     "categories": [
@@ -10687,7 +11144,8 @@
   "T6RangeFinder": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Advanced Machinery"
   },
   "T6RayAmplifier": {
     "categories": [
@@ -10702,7 +11160,8 @@
   "T6RefinedResourceB": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Station 15 Component"
   },
   "T6ResourceA": {
     "categories": [
@@ -10722,7 +11181,8 @@
   "T6SchematicFragmentQL2": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Schematic Pattern Grade 2"
   },
   "T6SchematicFragmentQL2_Schematic": {
     "categories": [
@@ -10777,7 +11237,8 @@
   "T6_Augment_Acuracy1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Precision Barrel Adjuster"
   },
   "T6_Augment_Armor1": {
     "categories": [
@@ -10792,7 +11253,8 @@
   "T6_Augment_Armor10_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Energy Resistant Weave"
   },
   "T6_Augment_Armor11": {
     "categories": [
@@ -10802,7 +11264,8 @@
   "T6_Augment_Armor11_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Detoxifying Fabrics"
   },
   "T6_Augment_Armor12": {
     "categories": [
@@ -10812,7 +11275,8 @@
   "T6_Augment_Armor12_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Dart-proof Latticing"
   },
   "T6_Augment_Armor13": {
     "categories": [
@@ -10822,7 +11286,8 @@
   "T6_Augment_Armor13_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Flame-resistant Fabrics"
   },
   "T6_Augment_Armor14": {
     "categories": [
@@ -10832,7 +11297,8 @@
   "T6_Augment_Armor14_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Blade-warding Weave"
   },
   "T6_Augment_Armor16": {
     "categories": [
@@ -10842,7 +11308,8 @@
   "T6_Augment_Armor16_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Radiation Absorbing Fabrics"
   },
   "T6_Augment_Armor17": {
     "categories": [
@@ -10852,7 +11319,8 @@
   "T6_Augment_Armor17_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Radiation Shielded Latticing"
   },
   "T6_Augment_Armor1_Schematic": {
     "categories": [
@@ -10867,7 +11335,8 @@
   "T6_Augment_Armor2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Concussive Redirection"
   },
   "T6_Augment_Armor3": {
     "categories": [
@@ -10892,7 +11361,8 @@
   "T6_Augment_Armor5": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Energy Dispersing Padding"
   },
   "T6_Augment_Armor5_Schematic": {
     "categories": [
@@ -10902,7 +11372,8 @@
   "T6_Augment_Armor6": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Precision Barrel Adjuster"
   },
   "T6_Augment_Armor6_Schematic": {
     "categories": [
@@ -10917,7 +11388,8 @@
   "T6_Augment_Armor8_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Desert-tested Weave"
   },
   "T6_Augment_Armor9": {
     "categories": [
@@ -10932,7 +11404,8 @@
   "T6_Augment_BR1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Pressurizer"
   },
   "T6_Augment_BR1_Schematic": {
     "categories": [
@@ -10942,7 +11415,8 @@
   "T6_Augment_BR2": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Dart Sprayer"
   },
   "T6_Augment_BR2_Schematic": {
     "categories": [
@@ -10952,7 +11426,8 @@
   "T6_Augment_BR3": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Heavy Kit"
   },
   "T6_Augment_BR3_Schematic": {
     "categories": [
@@ -10962,7 +11437,8 @@
   "T6_Augment_BR4": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Focuser"
   },
   "T6_Augment_BR4_Schematic": {
     "categories": [
@@ -10972,7 +11448,8 @@
   "T6_Augment_BR8": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Precision Kit"
   },
   "T6_Augment_BR8_Schematic": {
     "categories": [
@@ -10982,7 +11459,8 @@
   "T6_Augment_Ch5_BR1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Karpov 38 Sniper Barrel"
   },
   "T6_Augment_Ch5_BR1_Schematic": {
     "categories": [
@@ -10992,7 +11470,8 @@
   "T6_Augment_Ch5_Fireballer1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Pyrocket Decimator "
   },
   "T6_Augment_Ch5_Fireballer1_Schematic": {
     "categories": [
@@ -11002,7 +11481,8 @@
   "T6_Augment_Ch5_Flamethrower1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Flamethrower Decimator"
   },
   "T6_Augment_Ch5_Flamethrower1_Schematic": {
     "categories": [
@@ -11027,7 +11507,8 @@
   "T6_Augment_Ch5_LMG1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "VULCAN GAU-92 Accelerator"
   },
   "T6_Augment_Ch5_Lasgun1": {
     "categories": [
@@ -11037,12 +11518,14 @@
   "T6_Augment_Ch5_Lasgun1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Lasgun Concentrator"
   },
   "T6_Augment_Ch5_Maulapistol1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Maula Pistol Antipersonnel Rounds"
   },
   "T6_Augment_Ch5_Maulapistol1_Schematic": {
     "categories": [
@@ -11062,7 +11545,8 @@
   "T6_Augment_Ch5_Melee3": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Blade Blood Grooves"
   },
   "T6_Augment_Ch5_Melee3_Schematic": {
     "categories": [
@@ -11117,12 +11601,14 @@
   "T6_Augment_Ch5_Spitdart1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "JABAL Spitdart Ranger"
   },
   "T6_Augment_Damage1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Heavy Caliber Upgrade"
   },
   "T6_Augment_Damage1_Schematic": {
     "categories": [
@@ -11132,7 +11618,8 @@
   "T6_Augment_Damage2": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "House Heavy Caliber Upgrade"
   },
   "T6_Augment_Damage2_Schematic": {
     "categories": [
@@ -11142,7 +11629,8 @@
   "T6_Augment_DeathDurabilityOff": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Protective Coating"
   },
   "T6_Augment_DeathDurabilityOff_Schematic": {
     "categories": [
@@ -11232,7 +11720,8 @@
   "T6_Augment_HeavyPistol2": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Rafiq Snubnose Disruptive Coating"
   },
   "T6_Augment_HeavyPistol2_Schematic": {
     "categories": [
@@ -11257,7 +11746,8 @@
   "T6_Augment_HeavyPistol4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Rafiq Snubnose Expander"
   },
   "T6_Augment_HeavyPistol5": {
     "categories": [
@@ -11272,7 +11762,8 @@
   "T6_Augment_Lasgun1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Lasgun Focuser"
   },
   "T6_Augment_Lasgun1_Schematic": {
     "categories": [
@@ -11282,7 +11773,8 @@
   "T6_Augment_Lasgun2": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Lasgun Extender"
   },
   "T6_Augment_Lasgun2_Schematic": {
     "categories": [
@@ -11292,7 +11784,8 @@
   "T6_Augment_Lasgun3": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Lasgun Harmonizer"
   },
   "T6_Augment_Lasgun3_Schematic": {
     "categories": [
@@ -11302,7 +11795,8 @@
   "T6_Augment_Lasgun4": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Lasgun Amplifier"
   },
   "T6_Augment_Lasgun4_Schematic": {
     "categories": [
@@ -11312,7 +11806,8 @@
   "T6_Augment_Lmg1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "VULCAN GAU-92 Expander"
   },
   "T6_Augment_Lmg1_Schematic": {
     "categories": [
@@ -11337,7 +11832,8 @@
   "T6_Augment_Lmg5_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "VULCAN GAU-92 Disruptive Coating"
   },
   "T6_Augment_Lmg6": {
     "categories": [
@@ -11352,7 +11848,8 @@
   "T6_Augment_Magazinecapacity1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Capacity Expander"
   },
   "T6_Augment_Magazinecapacity1_Schematic": {
     "categories": [
@@ -11367,7 +11864,8 @@
   "T6_Augment_MaulaPistol1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Maula Pistol Sprayer"
   },
   "T6_Augment_MaulaPistol2": {
     "categories": [
@@ -11382,7 +11880,8 @@
   "T6_Augment_MaulaPistol3": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Maula Pistol Expander"
   },
   "T6_Augment_MaulaPistol3_Schematic": {
     "categories": [
@@ -11407,7 +11906,8 @@
   "T6_Augment_MaulaPistol5_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Maula Pistol Tactical Enhancer"
   },
   "T6_Augment_Melee1": {
     "categories": [
@@ -11427,7 +11927,8 @@
   "T6_Augment_Melee2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Blade Grip Adjuster"
   },
   "T6_Augment_Melee3": {
     "categories": [
@@ -11442,7 +11943,8 @@
   "T6_Augment_Melee4": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Aggressive Grip Adjuster"
   },
   "T6_Augment_Melee4_Schematic": {
     "categories": [
@@ -11467,7 +11969,8 @@
   "T6_Augment_Melee6_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Heavy Blade Adjuster"
   },
   "T6_Augment_Melee7": {
     "categories": [
@@ -11482,7 +11985,8 @@
   "T6_Augment_Melee8": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Blade Optimizer"
   },
   "T6_Augment_Melee8_Schematic": {
     "categories": [
@@ -11507,7 +12011,8 @@
   "T6_Augment_Range1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Barrel Extender"
   },
   "T6_Augment_Rateoffire1": {
     "categories": [
@@ -11547,7 +12052,8 @@
   "T6_Augment_RocketLauncher1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Missile Launcher Fragmenter"
   },
   "T6_Augment_RocketLauncher2": {
     "categories": [
@@ -11557,7 +12063,8 @@
   "T6_Augment_RocketLauncher2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Missile Launcher Disruptive Coating"
   },
   "T6_Augment_RocketLauncher3": {
     "categories": [
@@ -11567,7 +12074,8 @@
   "T6_Augment_RocketLauncher3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Missile Launcher Quickloader"
   },
   "T6_Augment_RocketLauncher4": {
     "categories": [
@@ -11577,7 +12085,8 @@
   "T6_Augment_RocketLauncher4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Missile Launcher Heavy Payload"
   },
   "T6_Augment_Scattergun2": {
     "categories": [
@@ -11587,7 +12096,8 @@
   "T6_Augment_Scattergun2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Tactical Amplifier"
   },
   "T6_Augment_Scattergun4": {
     "categories": [
@@ -11597,7 +12107,8 @@
   "T6_Augment_Scattergun4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Expander"
   },
   "T6_Augment_Scattergun5": {
     "categories": [
@@ -11607,7 +12118,8 @@
   "T6_Augment_Scattergun5_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Amplifier"
   },
   "T6_Augment_Scattergun6": {
     "categories": [
@@ -11617,7 +12129,8 @@
   "T6_Augment_Scattergun6_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Optimizer"
   },
   "T6_Augment_Scattergun7": {
     "categories": [
@@ -11627,7 +12140,8 @@
   "T6_Augment_Scattergun7_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Sprayer"
   },
   "T6_Augment_Scattergun8": {
     "categories": [
@@ -11637,7 +12151,8 @@
   "T6_Augment_Scattergun8_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "GRDA 44 Micro-Rigidity Coating"
   },
   "T6_Augment_Shielddamage1": {
     "categories": [
@@ -11647,12 +12162,14 @@
   "T6_Augment_Shielddamage1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Disruptive Coating"
   },
   "T6_Augment_Shotgun1": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Drillshot FK7 Tactical Adjuster"
   },
   "T6_Augment_Shotgun1_Schematic": {
     "categories": [
@@ -11677,7 +12194,8 @@
   "T6_Augment_Shotgun3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Drillshot FK7 Optimizer"
   },
   "T6_Augment_Shotgun4": {
     "categories": [
@@ -11692,7 +12210,8 @@
   "T6_Augment_Shotgun5": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Drillshot FK7 Quickloader"
   },
   "T6_Augment_Shotgun5_Schematic": {
     "categories": [
@@ -11722,7 +12241,8 @@
   "T6_Augment_SpitdartRifle6": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "JABAL Spitdart Disruptive Coating"
   },
   "T6_Augment_SpitdartRifle6_Schematic": {
     "categories": [
@@ -11747,7 +12267,8 @@
   "T6_Augment_SpitdartRifle8_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "JABAL Spitdart Toxicity Amplifier"
   },
   "T6_Augment_Spitdartrifle2": {
     "categories": [
@@ -11767,7 +12288,8 @@
   "T6_Augment_Spitdartrifle3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "JABAL Spitdart Range Adjuster"
   },
   "T6_Augment_smg1": {
     "categories": [
@@ -11777,7 +12299,8 @@
   "T6_Augment_smg1_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Atreides Heavy Gloves"
   },
   "T6_Augment_smg2": {
     "categories": [
@@ -11787,7 +12310,8 @@
   "T6_Augment_smg2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Disruptor M11 Quickloader"
   },
   "T6_Augment_smg3": {
     "categories": [
@@ -11802,7 +12326,8 @@
   "T6_Augment_smg4": {
     "categories": [
       "Augments"
-    ]
+    ],
+    "name": "Disruptor M11 Sprayer"
   },
   "T6_Augment_smg4_Schematic": {
     "categories": [
@@ -11817,12 +12342,14 @@
   "T6_Augment_smg7_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Disruptor M11 Heavy Kit"
   },
   "T6_ChoamLg2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Black Market K-28 Lasgun"
   },
   "T6_UniqueFlamethrower_Prototype_2_Schematic": {
     "categories": [
@@ -11835,7 +12362,8 @@
       "Placeables",
       "Vehicles",
       "Weapons"
-    ]
+    ],
+    "name": "XX_NOTUSED Vehicle Parts Fab"
   },
   "Taligari_HeavyArmor_Swatch": {
     "categories": [
@@ -11935,7 +12463,8 @@
   "ThePit_Cosmetic_Armor_Light": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "Paragon of the Polar Sink Armor Set"
   },
   "TheQuarry_Armor_Heavy_Variant": {
     "categories": [
@@ -11945,7 +12474,8 @@
   "Thorvald_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Thorvald Weapon Swatch"
   },
   "Thorvald_LightArmor_Swatch": {
     "categories": [
@@ -11971,7 +12501,8 @@
     "categories": [
       "Placeables",
       "Weapons"
-    ]
+    ],
+    "name": "Thumper"
   },
   "Totem_Patent": {
     "categories": [
@@ -12016,7 +12547,8 @@
   "TreadwheelBoost_Unique_LessHeat_6_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Steady Treadwheel Boost Module Mk6"
   },
   "TreadwheelChassis": {
     "categories": [
@@ -12036,7 +12568,8 @@
   "TreadwheelChassis_4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel Chassis Mk4"
   },
   "TreadwheelChassis_5": {
     "categories": [
@@ -12121,7 +12654,8 @@
   "TreadwheelGenerator_4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel PSU Mk4"
   },
   "TreadwheelGenerator_6": {
     "categories": [
@@ -12141,7 +12675,8 @@
   "TreadwheelHull_4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel Hull Mk4"
   },
   "TreadwheelInventory": {
     "categories": [
@@ -12156,7 +12691,8 @@
   "TreadwheelInventory_2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel Inventory Mk2"
   },
   "TreadwheelInventory_3": {
     "categories": [
@@ -12196,7 +12732,8 @@
   "TreadwheelLocomotion_4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel Tread Mk4"
   },
   "TreadwheelPassenger": {
     "categories": [
@@ -12236,7 +12773,8 @@
   "Tseida_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Tseida Garment Swatch"
   },
   "Tseida_LightArmor_Swatch": {
     "categories": [
@@ -12246,7 +12784,8 @@
   "Tseida_Placeables_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Tseida Placeables Swatch"
   },
   "Tseida_Stillsuit_Swatch": {
     "categories": [
@@ -12271,7 +12810,8 @@
   "UniqueAr2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Pipecleaner"
   },
   "UniqueAr3": {
     "categories": [
@@ -12291,12 +12831,14 @@
   "UniqueAr4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Salusan Vengeance"
   },
   "UniqueAr6_Electric": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Experimental Lightning Gun"
   },
   "UniqueAr6_Electric_Schematic": {
     "categories": [
@@ -12306,12 +12848,14 @@
   "UniqueAr_Burst_01": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Aren's Vengeance"
   },
   "UniqueAr_Burst_01_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Aren's Vengeance"
   },
   "UniqueAr_Burst_02": {
     "categories": [
@@ -12336,7 +12880,8 @@
   "UniqueAr_Burst_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Stammershot"
   },
   "UniqueAr_Burst_04_Schematic": {
     "categories": [
@@ -12346,12 +12891,14 @@
   "UniqueAr_Burst_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Mendek's Rattle"
   },
   "UniqueAr_Burst_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Mendek's Rattle"
   },
   "UniqueAr_Burst_06": {
     "categories": [
@@ -12361,7 +12908,8 @@
   "UniqueAr_Burst_06_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Indara's Lullaby"
   },
   "UniqueAr_Burst_RadiationNPC": {
     "categories": [
@@ -12376,7 +12924,8 @@
   "UniqueDirk_02": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Denira's Gift"
   },
   "UniqueDirk_02_Schematic": {
     "categories": [
@@ -12391,12 +12940,14 @@
   "UniqueDirk_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Moisture Sealer"
   },
   "UniqueDirk_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Cauterizer"
   },
   "UniqueDirk_04_Schematic": {
     "categories": [
@@ -12426,12 +12977,14 @@
   "UniqueFlameThrower_02": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Survey Probe"
   },
   "UniqueFlameThrower_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Treadwheel Engine Mk4"
   },
   "UniqueRapier": {
     "categories": [
@@ -12481,7 +13034,8 @@
   "UniqueScattergun2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Ripper"
   },
   "UniqueScattergun3": {
     "categories": [
@@ -12521,7 +13075,8 @@
   "UniqueScattergun_Fire_04_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Firestorm"
   },
   "UniqueScattergun_Fire_05": {
     "categories": [
@@ -12531,7 +13086,8 @@
   "UniqueScattergun_Fire_05_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Starburst"
   },
   "UniqueScattergun_Fire_06": {
     "categories": [
@@ -12546,7 +13102,8 @@
   "UniqueSda1": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Way of the Fallen "
   },
   "UniqueSda2": {
     "categories": [
@@ -12556,7 +13113,8 @@
   "UniqueSda2_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Way of the Wanderer"
   },
   "UniqueSda3": {
     "categories": [
@@ -12566,7 +13124,8 @@
   "UniqueSda3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Way of the Lost"
   },
   "UniqueSda4": {
     "categories": [
@@ -12581,7 +13140,8 @@
   "UniqueSda5": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Way of the Desert"
   },
   "UniqueSda5_Schematic": {
     "categories": [
@@ -12631,7 +13191,8 @@
   "UniqueSda_Story_Ari": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Harkonnen BR_NPC"
   },
   "UniqueSmg1": {
     "categories": [
@@ -12651,32 +13212,38 @@
   "UniqueSmg3": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Piter's Disruptor"
   },
   "UniqueSmg3_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sardaukar Intimidator"
   },
   "UniqueSword": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Sardaukar Intimidator"
   },
   "UniqueSword_02": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Improvised Maula Pistol"
   },
   "UniqueSword_02_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Shock-sword "
   },
   "UniqueSword_03": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Prototype Weapon 1"
   },
   "UniqueSword_03_Schematic": {
     "categories": [
@@ -12686,7 +13253,8 @@
   "UniqueSword_04": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "XX_Long Range Scanner"
   },
   "UniqueSword_04_Schematic": {
     "categories": [
@@ -12696,7 +13264,8 @@
   "UniqueSword_05": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Replica Pulse-sword"
   },
   "UniqueSword_05_Damasteel_Schematic": {
     "categories": [
@@ -12718,7 +13287,8 @@
     "categories": [
       "Placeables",
       "Weapons"
-    ]
+    ],
+    "name": "Clapper Mk4"
   },
   "UniqueThumper_02_Schematic": {
     "categories": [
@@ -12734,12 +13304,14 @@
   "UniqueThumper_03_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Clapper Mk3"
   },
   "Unique_MiscEquipment_FullSuspensorBelt_Durability_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Elohim-Class Suspensor Belt"
   },
   "Unique_Sword_BleedyBlocky": {
     "categories": [
@@ -12749,12 +13321,14 @@
   "Unique_Sword_BleedyBlocky_4_Schematic": {
     "categories": [
       "Schematics"
-    ]
+    ],
+    "name": "Sword of Seven Sorrows"
   },
   "Unique_Sword_BleedyBlocky_5": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Bite Back Blade"
   },
   "Unique_Sword_BleedyBlocky_5_Schematic": {
     "categories": [
@@ -12764,7 +13338,8 @@
   "Unique_Sword_BleedyBlocky_6": {
     "categories": [
       "Weapons"
-    ]
+    ],
+    "name": "Spike Hilt Sword"
   },
   "Unique_Sword_BleedyBlocky_6_Schematic": {
     "categories": [
@@ -12774,7 +13349,8 @@
   "Varota_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Varota Vehicle Swatch"
   },
   "Varota_LightArmor_Swatch": {
     "categories": [
@@ -12849,22 +13425,26 @@
   "Wallach_HeavyArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Wallach Garment Swatch"
   },
   "Wallach_LightArmor_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Wallach Vehicle Swatch"
   },
   "Wallach_Placeables_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Wallach Placeables Swatch"
   },
   "Wallach_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Wallach Weapon Swatch"
   },
   "WaterCistern_Patent": {
     "categories": [
@@ -12964,7 +13544,8 @@
   "WeldingMaterial5": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Duraluminum Welding Wire"
   },
   "Whirlwind": {
     "categories": [
@@ -12979,7 +13560,8 @@
   "WindTrapFilter2": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Standard Filter"
   },
   "WindTrapFilter3": {
     "categories": [
@@ -12989,12 +13571,14 @@
   "WindTrapFilter4": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Advanced Particulate Filter"
   },
   "WindTurbineLubricant1": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Low-grade Lubricant"
   },
   "WindTurbineLubricant2": {
     "categories": [
@@ -13029,7 +13613,8 @@
   "WormTooth": {
     "categories": [
       "Resources"
-    ]
+    ],
+    "name": "Worm Tooth"
   },
   "Wydras_HeavyArmor_Swatch": {
     "categories": [
@@ -13049,7 +13634,8 @@
   "Wydras_Stillsuit_Swatch": {
     "categories": [
       "Customizations"
-    ]
+    ],
+    "name": "House Wydras Garment Swatch"
   },
   "ZantaraSignetRing": {
     "categories": [

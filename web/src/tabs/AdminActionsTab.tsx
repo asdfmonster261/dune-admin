@@ -39,6 +39,11 @@ type GMPlayer = {
   id_type?: string
 }
 
+type ItemRow = {
+  id: string
+  name?: string
+}
+
 type ExecuteResponse = {
   ok: boolean
   command: string
@@ -70,7 +75,9 @@ export default function AdminActionsTab() {
   const [journeyNodes, setJourneyNodes] = useState<string[]>([])
   // Item-template autocomplete list. Static embed in dune-admin binary
   // (regenerated from server paks via /workspace/dune-pak-tools).
-  const [items, setItems] = useState<string[]>([])
+  // Shape: { id: "Radiation_Suit", name: "Radiation Suit Mk4" } — name
+  // is optional and falls back to the id in the UI.
+  const [items, setItems] = useState<ItemRow[]>([])
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -110,7 +117,7 @@ export default function AdminActionsTab() {
     const entry = catalog.find((c) => c.name === selected)
     if (!entry) return
     if (!(entry.params ?? []).some((p) => p.type === 'item')) return
-    api.get<string[]>('/gm/v2/items').then(setItems).catch(() => {})
+    api.get<ItemRow[]>('/gm/v2/items').then(setItems).catch(() => {})
   }, [selected, catalog, items.length])
 
   const filtered = useMemo(() => {
@@ -334,7 +341,7 @@ function ParamInput({
   value: string | undefined
   players: GMPlayer[]
   journeyNodes: string[]
-  items: string[]
+  items: ItemRow[]
   onChange: (v: string) => void
 }) {
   if (param.type === 'player') {
@@ -419,13 +426,21 @@ function ParamInput({
           placeholder={param.placeholder ?? 'SalvageMetal'}
         />
         <datalist id="gm-item-templates">
-          {items.map((n) => (
-            <option key={n} value={n} />
+          {items.map((it) => (
+            // Browser datalist: `value` is what fills the input on
+            // select (always the template id); `label` is what's
+            // shown in the dropdown row (the display name when we
+            // have one, otherwise the id alone).
+            <option
+              key={it.id}
+              value={it.id}
+              label={it.name ? `${it.name}  (${it.id})` : it.id}
+            />
           ))}
         </datalist>
         <p className="hint">
           {items.length > 0
-            ? `${items.length} known item templates — autocomplete is a best-effort catalog from server paks; the dispatcher accepts any valid template name even if it isn't listed.`
+            ? `${items.length} known item templates (${items.filter((i) => i.name).length} with display names) — autocomplete is a best-effort catalog from server paks; the dispatcher accepts any valid template name even if it isn't listed.`
             : 'Loading item template list…'}
         </p>
         {param.help && <p className="hint">{param.help}</p>}

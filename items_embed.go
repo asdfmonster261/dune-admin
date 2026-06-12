@@ -21,21 +21,34 @@ import (
 var itemsCatalogJSON []byte
 
 type ItemCatalogEntry struct {
+	Name       string   `json:"name,omitempty"`
 	Categories []string `json:"categories"`
+}
+
+// What we expose over HTTP — each row has the template id + optional
+// display name. Wire shape lets the React side render "Display (id)" in
+// the datalist while submitting the raw id back to the backend.
+type ItemListRow struct {
+	Id   string `json:"id"`
+	Name string `json:"name,omitempty"`
 }
 
 var (
 	itemsCatalog       map[string]ItemCatalogEntry
-	itemsCatalogList   []string   // sorted template ids
+	itemsCatalogList   []ItemListRow   // sorted by id
 )
 
 func init() {
 	if err := json.Unmarshal(itemsCatalogJSON, &itemsCatalog); err != nil {
 		panic("items.json embed: " + err.Error())
 	}
-	itemsCatalogList = make([]string, 0, len(itemsCatalog))
+	ids := make([]string, 0, len(itemsCatalog))
 	for k := range itemsCatalog {
-		itemsCatalogList = append(itemsCatalogList, k)
+		ids = append(ids, k)
 	}
-	sort.Strings(itemsCatalogList)
+	sort.Strings(ids)
+	itemsCatalogList = make([]ItemListRow, len(ids))
+	for i, id := range ids {
+		itemsCatalogList[i] = ItemListRow{Id: id, Name: itemsCatalog[id].Name}
+	}
 }
