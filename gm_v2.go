@@ -363,21 +363,35 @@ var gmCatalog = map[string]*GMEntry{
 		Params: nil,
 	},
 
-	// ── cheat (synth — wrap DuneCheatEnablerMod cheaton) ───────────
+	// ── cheat (stock UE UCheatManager — Fly/Ghost/Walk) ────────────
+	//
+	// These ride stock UE's UCheatManager (retained in the Funcom 1979201
+	// dedicated server binary — symbols ClientCheatFly/Ghost/Walk and
+	// CheatFly/bCheatFlying all present). NOT Funcom's m_PlayerCheats
+	// ECheatMode system (God/DemiGod/InfiniteAmmo/etc., which lives in
+	// DuneCheatEnablerMod). The two systems are independent.
+	//
+	// Implementation path: dispatch to DuneOpsBridgeMod's cheat_manager_op
+	// helper which resolves PC by FLS → pc.CheatManager → calls Fly()/
+	// Ghost()/Walk() exec UFunction via reflection. ChangeState +
+	// ClientCheat* fan-out replicates to the owning client.
 	"Fly": {
-		Name: "Fly", Tier: "cheat", Kind: "synth", Status: "deferred",
-		Notes:  "Toggles fly mode on the target player. Synth via DuneCheatEnablerMod's cheaton (already RE'd).",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "Fly", Tier: "cheat", Kind: "synth", Status: "live",
+		Notes:   "Puts the target player into stock UE flying state. Replicates via ClientCheatFly.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildCheatManagerOp("Fly"),
 	},
 	"Ghost": {
-		Name: "Ghost", Tier: "cheat", Kind: "synth", Status: "deferred",
-		Notes:  "Toggles noclip/ghost mode on the target player. Same cheaton wrapper.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "Ghost", Tier: "cheat", Kind: "synth", Status: "live",
+		Notes:   "Puts the target player into stock UE noclip/ghost state (collision off). Replicates via ClientCheatGhost.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildCheatManagerOp("Ghost"),
 	},
 	"Walk": {
-		Name: "Walk", Tier: "cheat", Kind: "synth", Status: "deferred",
-		Notes:  "Clears Fly/Ghost mode on the target player.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "Walk", Tier: "cheat", Kind: "synth", Status: "live",
+		Notes:   "Returns the target player to stock UE walking state — cancels Fly/Ghost. Replicates via ClientCheatWalk.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildCheatManagerOp("Walk"),
 	},
 
 	// ── console (power tools — gated) ──────────────────────────────
@@ -637,6 +651,22 @@ func buildJourneyOp(handlerName string) func(map[string]any) (string, map[string
 		return handlerName, map[string]any{
 			"PlayerId":    playerId,
 			"StoryNodeId": nodeId,
+		}, nil
+	}
+}
+
+// buildCheatManagerOp returns a builder for Fly/Ghost/Walk that routes
+// to DuneOpsBridgeMod's cheat_manager_op handler. Each takes a single
+// PlayerId and calls the matching stock UE UCheatManager exec UFunction
+// (Fly/Ghost/Walk) on the resolved PC's cheat manager.
+func buildCheatManagerOp(handlerName string) func(map[string]any) (string, map[string]any, error) {
+	return func(args map[string]any) (string, map[string]any, error) {
+		playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		return handlerName, map[string]any{
+			"PlayerId": playerId,
 		}, nil
 	}
 }
