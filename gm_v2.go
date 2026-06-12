@@ -156,23 +156,35 @@ var gmCatalog = map[string]*GMEntry{
 	},
 	"TeleportToSandworm": {
 		Name: "TeleportToSandworm", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Find a live Sandworm actor, teleport target player to it.",
+		Notes: "Sandworms aren't actor-classed — they're spline-managed by SandwormSubsystem, " +
+			"with SandwormRootComponent + SandwormDisplacementSplineComponent attached to a manager " +
+			"singleton. To target a 'live worm' we'd need to walk SandwormSubsystem's internal " +
+			"spawn array and pick a spline anchor point. Deferred until the use case justifies " +
+			"that RE pass.",
 		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
 	},
 	"TeleportToVehicleSpawner": {
-		Name: "TeleportToVehicleSpawner", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Find nearest vehicle spawner to target player. Class name TBD.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "TeleportToVehicleSpawner", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Finds the closest vehicle spawner (any of BP_VehicleSpawner_C / " +
+			"BP_VehicleSpawner_Buggy_C / BP_VehicleSpawner_SandBike_C) to the target PC's " +
+			"pawn and teleports them to it.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("TeleportToVehicleSpawner"),
 	},
 	"TeleportToPersonalMarker": {
-		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Teleport to the player's own placed marker. Needs marker-state lookup.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Reads PlayerMapMarkerComponent.m_PersonalMarkerActor on the target PC's " +
+			"DunePlayerController and teleports to its world location. Errors out if the player " +
+			"hasn't placed a personal marker.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("TeleportToPersonalMarker"),
 	},
 	"PatrolShipTeleportToNearest": {
-		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Find nearest patrol ship and teleport target player to it.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Finds the closest BP_PatrolShip_C instance to the target PC's pawn and " +
+			"teleports them to it. 10 patrol ships are placed across the Survival map.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("PatrolShipTeleportToNearest"),
 	},
 
 	// ── progression ────────────────────────────────────────────────
@@ -960,6 +972,21 @@ func buildServerExec(args map[string]any) (string, map[string]any, error) {
 			"Exec":          exec,
 		},
 	})
+}
+
+// buildSinglePlayerSynth returns a builder for any synth OpsBridge
+// handler whose envelope is just {"PlayerId":"<fls>"}. Covers the
+// actor-query teleport synths (TeleportToVehicleSpawner / patrol
+// ship / personal marker) which all need the same input from
+// dune-admin and do the work Lua-side.
+func buildSinglePlayerSynth(handlerName string) func(map[string]any) (string, map[string]any, error) {
+	return func(args map[string]any) (string, map[string]any, error) {
+		playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		return handlerName, map[string]any{"PlayerId": playerId}, nil
+	}
 }
 
 // buildSinglePlayerNative returns a builder for any native dispatcher
