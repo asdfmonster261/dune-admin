@@ -26,13 +26,14 @@ import (
 // ── Types ──────────────────────────────────────────────────────────────
 
 type GMParam struct {
-	Name        string `json:"name"`
-	Type        string `json:"type"`              // "string" | "int" | "float" | "player"
-	Required    bool   `json:"required"`
-	Placeholder string `json:"placeholder,omitempty"`
-	Min         int    `json:"min,omitempty"`     // for int
-	Max         int    `json:"max,omitempty"`     // for int
-	Help        string `json:"help,omitempty"`
+	Name        string   `json:"name"`
+	Type        string   `json:"type"`              // "string" | "int" | "float" | "player"
+	Required    bool     `json:"required"`
+	Placeholder string   `json:"placeholder,omitempty"`
+	Min         int      `json:"min,omitempty"`     // for int
+	Max         int      `json:"max,omitempty"`     // for int
+	Help        string   `json:"help,omitempty"`
+	Options     []string `json:"options,omitempty"` // fixed enum — renders as <select>
 }
 
 // GMEntry describes one executable command. `builder` returns the
@@ -146,7 +147,8 @@ var gmCatalog = map[string]*GMEntry{
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
-				Help: "Bare map name — HaggaBasin / DeepDesert / etc."},
+				Help:    "Bare map name. Picker is limited to maps active on this stack.",
+				Options: []string{"HaggaBasin", "DeepDesert"}},
 			{Name: "X", Type: "float", Required: true},
 			{Name: "Y", Type: "float", Required: true},
 			{Name: "Z", Type: "float", Required: true},
@@ -170,7 +172,8 @@ var gmCatalog = map[string]*GMEntry{
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
-				Help: "Bare map name — HaggaBasin / DeepDesert / etc."},
+				Help:    "Bare map name. Picker is limited to maps active on this stack.",
+				Options: []string{"HaggaBasin", "DeepDesert"}},
 			{Name: "X", Type: "float", Required: true},
 			{Name: "Y", Type: "float", Required: true},
 			{Name: "Z", Type: "float", Required: true},

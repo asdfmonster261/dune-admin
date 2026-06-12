@@ -22,6 +22,7 @@ type GMParam = {
   min?: number
   max?: number
   help?: string
+  options?: string[]
 }
 
 type GMEntry = {
@@ -489,6 +490,34 @@ function ParamInput({
         skillModules={skillModules}
         onChange={onChange}
       />
+    )
+  }
+  if (param.options && param.options.length > 0) {
+    return (
+      <>
+        <label className="field-label">
+          {param.name}
+          {param.required && <span className="req">*</span>}
+        </label>
+        <select
+          className="input wide"
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+        >
+          {!param.required && <option value="">— none —</option>}
+          {param.required && !value && (
+            <option value="" disabled>
+              — pick {param.name} —
+            </option>
+          )}
+          {param.options.map((opt) => (
+            <option key={opt} value={opt}>
+              {opt}
+            </option>
+          ))}
+        </select>
+        {param.help && <p className="hint">{param.help}</p>}
+      </>
     )
   }
   const isNumeric = param.type === 'int' || param.type === 'float'
