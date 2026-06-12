@@ -201,13 +201,15 @@ var gmCatalog = map[string]*GMEntry{
 	},
 	"SkillsSetModuleLevel": {
 		Name: "SkillsSetModuleLevel", Tier: "progression", Kind: "native", Status: "live",
-		Notes: "Sets a specific skill module's level. Module is a string id " +
-			"(enum values not yet enumerated — try 'Combat', 'Survival', 'Crafting' etc. " +
-			"or check live skill data). RE'd 2026-06-12.",
+		Notes: "Sets a skill module's level on the target. Module is an FGameplayTag — " +
+			"the binary hardcodes 10 Skills.Key.* tags (5 base classes + advanced 'Key1' " +
+			"variants). Look up via UGameplayTagsManager; passing an unknown tag silently " +
+			"no-ops with 'No Module data found' logged at LogVerbose. RE'd 2026-06-12.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "Module", Type: "string", Required: true,
-				Placeholder: "Combat", Help: "Skill module id (string)."},
+				Placeholder: "Skills.Key.Mentat",
+				Help: "Skill-key gameplay tag. Verified-valid: Skills.Key.{Mentat,Swordmaster,Planetologist,Trooper,BeneGesserit} or any of those + '1' for the advanced specialization."},
 			{Name: "Level", Type: "int", Required: true, Min: 0,
 				Placeholder: "5"},
 		},
