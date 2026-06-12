@@ -12,7 +12,7 @@ import { api, type Status } from '../api'
 // every command's name, tier, kind (native/synth), status, and param
 // schema. UI renders dynamically from that.
 
-type GMParamType = 'string' | 'int' | 'float' | 'player'
+type GMParamType = 'string' | 'int' | 'float' | 'player' | 'node'
 
 type GMParam = {
   name: string
@@ -53,6 +53,7 @@ const TIER_ORDER = [
   'movement',
   'inventory',
   'progression',
+  'journey',
   'spawn',
   'player',
   'destructive',
@@ -62,6 +63,11 @@ const TIER_ORDER = [
 export default function AdminActionsTab() {
   const [catalog, setCatalog] = useState<GMEntry[]>([])
   const [players, setPlayers] = useState<GMPlayer[]>([])
+  // Journey-node autocomplete list. Fetched on first render of any
+  // entry that declares a `node` param; cached for the tab's lifetime
+  // (the Go-side cache TTL is 10 min, the Lua-side is the same — design
+  // data doesn't change between server restarts).
+  const [journeyNodes, setJourneyNodes] = useState<string[]>([])
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -83,6 +89,17 @@ export default function AdminActionsTab() {
     const id = setInterval(refresh, 5000)
     return () => clearInterval(id)
   }, [])
+
+  // Fetch journey-node list lazily — only when the user selects an entry
+  // that declares a `node` param. Skip if we already have it; the server
+  // caches 10 min and the list is ~1964 entries (~100 KB).
+  useEffect(() => {
+    if (journeyNodes.length > 0) return
+    const entry = catalog.find((c) => c.name === selected)
+    if (!entry) return
+    if (!(entry.params ?? []).some((p) => p.type === 'node')) return
+    api.get<string[]>('/gm/v2/journey/nodes').then(setJourneyNodes).catch(() => {})
+  }, [selected, catalog, journeyNodes.length])
 
   const filtered = useMemo(() => {
     if (!filter) return catalog
@@ -254,6 +271,7 @@ export default function AdminActionsTab() {
                     param={p}
                     value={args[p.name]}
                     players={players}
+                    journeyNodes={journeyNodes}
                     onChange={(v) =>
                       setArgs((prev) => ({ ...prev, [p.name]: v }))
                     }
@@ -295,11 +313,13 @@ function ParamInput({
   param,
   value,
   players,
+  journeyNodes,
   onChange,
 }: {
   param: GMParam
   value: string | undefined
   players: GMPlayer[]
+  journeyNodes: string[]
   onChange: (v: string) => void
 }) {
   if (param.type === 'player') {
@@ -330,6 +350,39 @@ function ParamInput({
             placeholder={param.placeholder ?? 'FLS hex string'}
           />
         )}
+        {param.help && <p className="hint">{param.help}</p>}
+      </>
+    )
+  }
+  if (param.type === 'node') {
+    // Free-text input with a <datalist> for native browser autocomplete.
+    // datalist tolerates a 2k-entry option list without perceptible
+    // slowdown in modern browsers; the canonical FindTheFremen tree
+    // alone is 46 entries, the full design set ~1964. Lower-case
+    // substring match is browser-native — no client-side filter needed.
+    return (
+      <>
+        <label className="field-label">
+          {param.name}
+          {param.required && <span className="req">*</span>}
+        </label>
+        <input
+          className="input wide"
+          list="gm-journey-nodes"
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={param.placeholder ?? 'DataAsset.UniqueName[.UniqueName...]'}
+        />
+        <datalist id="gm-journey-nodes">
+          {journeyNodes.map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+        <p className="hint">
+          {journeyNodes.length > 0
+            ? `${journeyNodes.length} known node IDs — start typing to filter, or paste a full path. Completing a parent cascades to descendants.`
+            : 'Loading node list from game-server…'}
+        </p>
         {param.help && <p className="hint">{param.help}</p>}
       </>
     )

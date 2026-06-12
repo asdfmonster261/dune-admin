@@ -280,23 +280,74 @@ var gmCatalog = map[string]*GMEntry{
 		Params: nil,
 	},
 
-	// ── journey (needs-probe — arg shapes unknown) ─────────────────
-	"JourneyCompleteStoryNode": {
-		Name: "JourneyCompleteStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
-		Notes:  "Arg shape unknown. Probe via !gmjson + gmverbose to learn required fields.",
-		Params: nil,
+	// ── journey ────────────────────────────────────────────────────
+	//
+	// All five route through OpsBridge handlers in DuneOpsBridgeMod
+	// added 2026-06-12. Path A1 (cheat-mgr UFunctions) for the first
+	// four; Path E (dispatcher route with unguarded SQL) for delete.
+	// Works on connected players — no relog required. See
+	// [[dune-journey-system-re]] for the full RE.
+	//
+	// StoryNodeId format: <DataAsset>.<UniqueName>[.<UniqueName>...]
+	// (e.g. "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"). Autocomplete
+	// pulls the canonical list via /api/v1/gm/v2/journey/nodes which
+	// walks live JourneyStoryData -> root -> ChildNodes in mini-UE4SS.
+	// Completion cascades to descendants — operators can target the
+	// questline root and don't need to enumerate leaves.
+	"JourneyComplete": {
+		Name: "JourneyComplete", Tier: "journey", Kind: "synth", Status: "live",
+		Notes: "Marks node + all descendants complete in live state. " +
+			"Replicates to client UI; binary's natural save flush persists to DB.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "StoryNodeId", Type: "node", Required: true,
+				Placeholder: "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"},
+		},
+		builder: buildJourneyOp("JourneyComplete"),
 	},
-	"JourneyRevealStoryNode": {
-		Name: "JourneyRevealStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
-		Params: nil,
+	"JourneyReveal": {
+		Name: "JourneyReveal", Tier: "journey", Kind: "synth", Status: "live",
+		Notes: "Reveals one node (does not reveal ancestors — use JourneyRevealTree to skip ahead).",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "StoryNodeId", Type: "node", Required: true,
+				Placeholder: "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"},
+		},
+		builder: buildJourneyOp("JourneyReveal"),
 	},
-	"JourneyResetStoryNode": {
-		Name: "JourneyResetStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
-		Params: nil,
+	"JourneyRevealTree": {
+		Name: "JourneyRevealTree", Tier: "journey", Kind: "synth", Status: "live",
+		Notes: "Reveals node + every ancestor up to the questline root. " +
+			"Use for skip-ahead unlocks when the player is gated behind upstream content.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "StoryNodeId", Type: "node", Required: true,
+				Placeholder: "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"},
+		},
+		builder: buildJourneyOp("JourneyRevealTree"),
 	},
-	"JourneyDeleteStoryNode": {
-		Name: "JourneyDeleteStoryNode", Tier: "journey", Kind: "native", Status: "needs-probe",
-		Params: nil,
+	"JourneyReset": {
+		Name: "JourneyReset", Tier: "journey", Kind: "synth", Status: "live",
+		Notes: "Clears completion on the node + all descendants. " +
+			"Reveal state is preserved (the player still sees them as available).",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "StoryNodeId", Type: "node", Required: true,
+				Placeholder: "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"},
+		},
+		builder: buildJourneyOp("JourneyReset"),
+	},
+	"JourneyDelete": {
+		Name: "JourneyDelete", Tier: "journey", Kind: "synth", Status: "live",
+		Notes: "Routes through GM dispatcher (JourneyDeleteStoryNode). " +
+			"Deletes the DB row outright; on next session start the node returns to its base state. " +
+			"The only journey op whose underlying SQL is unguarded against online players.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "StoryNodeId", Type: "node", Required: true,
+				Placeholder: "DA_MQ_FindTheFremen.SecondTest.SecondQuestion"},
+		},
+		builder: buildJourneyOp("JourneyDelete"),
 	},
 
 	// ── global ─────────────────────────────────────────────────────
@@ -516,6 +567,29 @@ func buildPrintPos(args map[string]any) (string, map[string]any, error) {
 	return "PrintPos", map[string]any{"PlayerId": playerId}, nil
 }
 
+// buildJourneyOp returns a builder for one of the five Journey synth
+// handlers in DuneOpsBridgeMod. All five take the same two args
+// (PlayerId + StoryNodeId); the difference is which OpsBridge handler
+// name we route to. The Lua handler validates both args server-side
+// (and re-checks that the PC is connected); we just type-coerce + pass
+// through here.
+func buildJourneyOp(handlerName string) func(map[string]any) (string, map[string]any, error) {
+	return func(args map[string]any) (string, map[string]any, error) {
+		playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		nodeId, err := coerceString("StoryNodeId", args["StoryNodeId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		return handlerName, map[string]any{
+			"PlayerId":    playerId,
+			"StoryNodeId": nodeId,
+		}, nil
+	}
+}
+
 // buildTeleportToPlayer — synth. The cppmod's TeleportToPlayer handler
 // reads the destination PC's coords and then dispatches TeleportToExact
 // for the source PC via Native.Call3 internally — same plumbing as the
@@ -710,4 +784,63 @@ func handleGMv2Players(w http.ResponseWriter, r *http.Request) {
 	gmPlayersCacheMu.Unlock()
 
 	jsonOK(w, players)
+}
+
+// ── Journey node-id autocomplete ──────────────────────────────────────
+//
+// Walks the live JourneyStoryData tree via the OpsBridge ListJourneyNodes
+// handler (added 2026-06-12). Design data is static between server
+// restarts, so dune-admin caches 10 minutes — the same TTL the Lua-side
+// cache uses, so we hit our cache before re-poking the server.
+
+var (
+	gmJourneyNodesCacheMu    sync.Mutex
+	gmJourneyNodesCache      []string
+	gmJourneyNodesCacheUntil time.Time
+	gmJourneyNodesCacheTTL   = 10 * time.Minute
+)
+
+func handleGMv2JourneyNodes(w http.ResponseWriter, r *http.Request) {
+	gmJourneyNodesCacheMu.Lock()
+	if time.Now().Before(gmJourneyNodesCacheUntil) {
+		cached := gmJourneyNodesCache
+		gmJourneyNodesCacheMu.Unlock()
+		jsonOK(w, cached)
+		return
+	}
+	gmJourneyNodesCacheMu.Unlock()
+
+	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
+		return
+	}
+
+	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	reply, err := globalOpsBridge.Call(callCtx, "ListJourneyNodes", nil)
+	if err != nil {
+		jsonErr(w, err, 500)
+		return
+	}
+
+	// Lua handler returns a JSON-encoded STRING whose contents are a JSON
+	// array of strings. Same double-unmarshal trick as ListPlayers.
+	var innerJSON string
+	if err := json.Unmarshal(reply, &innerJSON); err != nil {
+		jsonErr(w, fmt.Errorf("decode outer: %w", err), 500)
+		return
+	}
+	var nodes []string
+	if err := json.Unmarshal([]byte(innerJSON), &nodes); err != nil {
+		jsonErr(w, fmt.Errorf("decode inner: %w", err), 500)
+		return
+	}
+	sort.Strings(nodes)
+
+	gmJourneyNodesCacheMu.Lock()
+	gmJourneyNodesCache = nodes
+	gmJourneyNodesCacheUntil = time.Now().Add(gmJourneyNodesCacheTTL)
+	gmJourneyNodesCacheMu.Unlock()
+
+	jsonOK(w, nodes)
 }
