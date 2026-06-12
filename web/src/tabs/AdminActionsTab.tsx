@@ -410,41 +410,13 @@ function ParamInput({
     )
   }
   if (param.type === 'item') {
-    // Item template autocomplete — same datalist pattern as `node`,
-    // backed by the static catalog regenerated from server paks.
     return (
-      <>
-        <label className="field-label">
-          {param.name}
-          {param.required && <span className="req">*</span>}
-        </label>
-        <input
-          className="input wide"
-          list="gm-item-templates"
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={param.placeholder ?? 'SalvageMetal'}
-        />
-        <datalist id="gm-item-templates">
-          {items.map((it) => (
-            // Browser datalist: `value` is what fills the input on
-            // select (always the template id); `label` is what's
-            // shown in the dropdown row (the display name when we
-            // have one, otherwise the id alone).
-            <option
-              key={it.id}
-              value={it.id}
-              label={it.name ? `${it.name}  (${it.id})` : it.id}
-            />
-          ))}
-        </datalist>
-        <p className="hint">
-          {items.length > 0
-            ? `${items.length} known item templates (${items.filter((i) => i.name).length} with display names) — autocomplete is a best-effort catalog from server paks; the dispatcher accepts any valid template name even if it isn't listed.`
-            : 'Loading item template list…'}
-        </p>
-        {param.help && <p className="hint">{param.help}</p>}
-      </>
+      <ItemAutocomplete
+        param={param}
+        value={value}
+        items={items}
+        onChange={onChange}
+      />
     )
   }
   const isNumeric = param.type === 'int' || param.type === 'float'
@@ -464,6 +436,143 @@ function ParamInput({
         onChange={(e) => onChange(e.target.value)}
         placeholder={param.placeholder}
       />
+      {param.help && <p className="hint">{param.help}</p>}
+    </>
+  )
+}
+
+// Custom dropdown for item templates. The native <datalist> renders
+// `value` as the bold primary line, which surfaces the internal
+// template id (e.g. "Radiation_Suit") instead of the player-facing
+// display name. We need the display name to be primary and the id to
+// be secondary, so we render our own list.
+function ItemAutocomplete({
+  param,
+  value,
+  items,
+  onChange,
+}: {
+  param: GMParam
+  value: string | undefined
+  items: ItemRow[]
+  onChange: (v: string) => void
+}) {
+  const [focused, setFocused] = useState(false)
+  const q = (value ?? '').trim().toLowerCase()
+
+  const matches = useMemo(() => {
+    if (items.length === 0) return []
+    const scored = items
+      .filter((it) => {
+        if (!q) return true
+        return (
+          it.id.toLowerCase().includes(q) ||
+          (it.name ? it.name.toLowerCase().includes(q) : false)
+        )
+      })
+      .sort((a, b) => {
+        // Items with display names float to the top; among those, sort
+        // by name; among the rest, sort by id.
+        const an = a.name ? 0 : 1
+        const bn = b.name ? 0 : 1
+        if (an !== bn) return an - bn
+        const ak = (a.name ?? a.id).toLowerCase()
+        const bk = (b.name ?? b.id).toLowerCase()
+        return ak < bk ? -1 : ak > bk ? 1 : 0
+      })
+    return scored.slice(0, 50)
+  }, [items, q])
+
+  return (
+    <>
+      <label className="field-label">
+        {param.name}
+        {param.required && <span className="req">*</span>}
+      </label>
+      <div style={{ position: 'relative' }}>
+        <input
+          className="input wide"
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setTimeout(() => setFocused(false), 150)}
+          placeholder={param.placeholder ?? 'SalvageMetal'}
+          autoComplete="off"
+        />
+        {focused && matches.length > 0 && (
+          <ul
+            style={{
+              position: 'absolute',
+              top: '100%',
+              left: 0,
+              right: 0,
+              maxHeight: '260px',
+              overflowY: 'auto',
+              margin: '4px 0 0 0',
+              padding: 0,
+              listStyle: 'none',
+              background: 'var(--bg-card, #1e1e1e)',
+              border: '1px solid var(--border, #333)',
+              borderRadius: '4px',
+              zIndex: 50,
+              boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+            }}
+          >
+            {matches.map((it) => (
+              <li key={it.id}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // onMouseDown fires before the input's onBlur, so
+                    // the click registers before the dropdown closes.
+                    e.preventDefault()
+                    onChange(it.id)
+                    setFocused(false)
+                  }}
+                  style={{
+                    display: 'block',
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '6px 10px',
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                    font: 'inherit',
+                  }}
+                  onMouseEnter={(e) =>
+                    (e.currentTarget.style.background =
+                      'rgba(255,255,255,0.06)')
+                  }
+                  onMouseLeave={(e) =>
+                    (e.currentTarget.style.background = 'transparent')
+                  }
+                >
+                  <div style={{ fontWeight: it.name ? 600 : 400 }}>
+                    {it.name ?? it.id}
+                  </div>
+                  {it.name && (
+                    <div
+                      style={{
+                        fontSize: '0.8em',
+                        opacity: 0.6,
+                        marginTop: '1px',
+                      }}
+                    >
+                      {it.id}
+                    </div>
+                  )}
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+      <p className="hint">
+        {items.length > 0
+          ? `${items.length} known item templates (${items.filter((i) => i.name).length} with display names) — autocomplete is a best-effort catalog from server paks; the dispatcher accepts any valid template name even if it isn't listed.`
+          : 'Loading item template list…'}
+      </p>
       {param.help && <p className="hint">{param.help}</p>}
     </>
   )
