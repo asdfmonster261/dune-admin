@@ -471,33 +471,13 @@ function ParamInput({
     )
   }
   if (param.type === 'module') {
-    // Skill-module tag autocomplete — datalist of the 145 module tags
-    // from DT_TrainingModules. Same shape as the journey-node field.
     return (
-      <>
-        <label className="field-label">
-          {param.name}
-          {param.required && <span className="req">*</span>}
-        </label>
-        <input
-          className="input wide"
-          list="gm-skill-modules"
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-          placeholder={param.placeholder ?? 'Skills.Key.Mentat'}
-        />
-        <datalist id="gm-skill-modules">
-          {skillModules.map((m) => (
-            <option key={m} value={m} />
-          ))}
-        </datalist>
-        <p className="hint">
-          {skillModules.length > 0
-            ? `${skillModules.length} skill-module tags loaded from DT_TrainingModules — start typing to filter (Ability, Attribute, Key, Perk, Spice).`
-            : 'Loading skill-module list…'}
-        </p>
-        {param.help && <p className="hint">{param.help}</p>}
-      </>
+      <ModuleCascadePicker
+        param={param}
+        value={value}
+        skillModules={skillModules}
+        onChange={onChange}
+      />
     )
   }
   const isNumeric = param.type === 'int' || param.type === 'float'
@@ -527,6 +507,127 @@ function ParamInput({
 // template id (e.g. "Radiation_Suit") instead of the player-facing
 // display name. We need the display name to be primary and the id to
 // be secondary, so we render our own list.
+// Cascading two-dropdown picker for the SkillsSetModuleLevel Module
+// field. The backend still expects a single tag like
+// `Skills.Ability.Hypersprint`, so the picker just splits the choice
+// into Tree (second segment, e.g. "Ability") + Skill (everything after,
+// e.g. "Hypersprint") and joins them on submit. Pasting a full tag into
+// either field still works — when the value parses back into a known
+// Tree+Skill pair we round-trip cleanly.
+function ModuleCascadePicker({
+  param,
+  value,
+  skillModules,
+  onChange,
+}: {
+  param: GMParam
+  value: string | undefined
+  skillModules: string[]
+  onChange: (v: string) => void
+}) {
+  // Split each tag on the second dot: prefix=Skills, tree=second, skill=rest.
+  // E.g. "Skills.Ability.Hypersprint" → tree="Ability", skill="Hypersprint".
+  const parsed = useMemo(() => {
+    const buckets = new Map<string, string[]>()
+    for (const tag of skillModules) {
+      const parts = tag.split('.')
+      if (parts.length < 3 || parts[0] !== 'Skills') continue
+      const tree = parts[1]
+      const skill = parts.slice(2).join('.')
+      const list = buckets.get(tree) ?? []
+      list.push(skill)
+      buckets.set(tree, list)
+    }
+    return buckets
+  }, [skillModules])
+
+  const trees = useMemo(
+    () => [...parsed.keys()].sort(),
+    [parsed],
+  )
+
+  // Parse incoming value into (tree, skill). If the caller already set
+  // the field externally we recover the dropdown state from it.
+  const currentParts = (value ?? '').split('.')
+  const currentTree =
+    currentParts.length >= 3 && currentParts[0] === 'Skills'
+      ? currentParts[1]
+      : ''
+  const currentSkill =
+    currentParts.length >= 3 && currentParts[0] === 'Skills'
+      ? currentParts.slice(2).join('.')
+      : ''
+
+  const skillsForTree = useMemo(
+    () => (parsed.get(currentTree) ?? []).slice().sort(),
+    [parsed, currentTree],
+  )
+
+  const setTree = (t: string) => {
+    if (!t) {
+      onChange('')
+      return
+    }
+    // Switching trees clears the skill — the previous skill almost
+    // never exists in the new tree.
+    onChange(`Skills.${t}.`)
+  }
+  const setSkill = (s: string) => {
+    if (!currentTree) return
+    onChange(s ? `Skills.${currentTree}.${s}` : `Skills.${currentTree}.`)
+  }
+
+  return (
+    <>
+      <label className="field-label">
+        {param.name}
+        {param.required && <span className="req">*</span>}
+      </label>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+        <select
+          className="input"
+          style={{ flex: '0 0 35%' }}
+          value={currentTree}
+          onChange={(e) => setTree(e.target.value)}
+        >
+          <option value="">(tree)</option>
+          {trees.map((t) => (
+            <option key={t} value={t}>
+              {t} ({parsed.get(t)?.length ?? 0})
+            </option>
+          ))}
+        </select>
+        <select
+          className="input"
+          style={{ flex: '1' }}
+          value={currentSkill}
+          onChange={(e) => setSkill(e.target.value)}
+          disabled={!currentTree}
+        >
+          <option value="">
+            {currentTree
+              ? `(skill — ${skillsForTree.length})`
+              : '(pick a tree first)'}
+          </option>
+          {skillsForTree.map((s) => (
+            <option key={s} value={s}>
+              {s}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="hint">
+        {value
+          ? `Sending: ${value}`
+          : skillModules.length > 0
+          ? `${skillModules.length} tags across ${trees.length} trees`
+          : 'Loading skill-module list…'}
+      </p>
+      {param.help && <p className="hint">{param.help}</p>}
+    </>
+  )
+}
+
 function ItemAutocomplete({
   param,
   value,
