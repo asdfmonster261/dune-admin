@@ -108,9 +108,24 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildTeleportToExact,
 	},
 	"TeleportTo": {
-		Name: "TeleportTo", Tier: "movement", Kind: "native", Status: "needs-probe",
-		Notes:  "Arg shape never probed. Needs RE via !gmjson + gmverbose to learn required fields.",
-		Params: nil,
+		Name: "TeleportTo", Tier: "movement", Kind: "native", Status: "live",
+		Notes: "Like TeleportToExact but also sets character yaw + optional camera rotation. " +
+			"All positional fields verified from 1988751 binary RE 2026-06-12.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "X", Type: "float", Required: true},
+			{Name: "Y", Type: "float", Required: true},
+			{Name: "Z", Type: "float", Required: true},
+			{Name: "Yaw", Type: "float", Required: true,
+				Help: "Character yaw in degrees (0 = +X, 90 = +Y)."},
+			{Name: "CamPitch", Type: "float", Required: false,
+				Placeholder: "0", Help: "Optional camera pitch override (default 0)."},
+			{Name: "CamYaw", Type: "float", Required: false,
+				Placeholder: "0", Help: "Optional camera yaw override (default 0)."},
+			{Name: "CamRoll", Type: "float", Required: false,
+				Placeholder: "0", Help: "Optional camera roll override (default 0)."},
+		},
+		builder: buildTeleportTo,
 	},
 	"TeleportToPlayer": {
 		Name: "TeleportToPlayer", Tier: "movement", Kind: "synth", Status: "live",
@@ -174,21 +189,29 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildAwardXP,
 	},
 	"SkillsSetUnspentSkillPoints": {
-		Name: "SkillsSetUnspentSkillPoints", Tier: "progression", Kind: "native", Status: "deferred",
-		Notes:  "Sets the player's unspent skill-point pool to Amount.",
+		Name: "SkillsSetUnspentSkillPoints", Tier: "progression", Kind: "native", Status: "live",
+		Notes: "Sets the player's unspent skill-point pool. Field name verified from " +
+			"1988751 binary RE 2026-06-12: dispatcher reads SkillPoints (int), not Amount.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "Amount", Type: "int", Required: true, Min: 0},
+			{Name: "SkillPoints", Type: "int", Required: true, Min: 0,
+				Placeholder: "10"},
 		},
+		builder: buildSkillsSetUnspentSkillPoints,
 	},
 	"SkillsSetModuleLevel": {
-		Name: "SkillsSetModuleLevel", Tier: "progression", Kind: "native", Status: "deferred",
-		Notes:  "Sets a specific skill module's level. Module ID enum TBD.",
+		Name: "SkillsSetModuleLevel", Tier: "progression", Kind: "native", Status: "live",
+		Notes: "Sets a specific skill module's level. Module is a string id " +
+			"(enum values not yet enumerated — try 'Combat', 'Survival', 'Crafting' etc. " +
+			"or check live skill data). RE'd 2026-06-12.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "Module", Type: "string", Required: true},
-			{Name: "Level", Type: "int", Required: true, Min: 0},
+			{Name: "Module", Type: "string", Required: true,
+				Placeholder: "Combat", Help: "Skill module id (string)."},
+			{Name: "Level", Type: "int", Required: true, Min: 0,
+				Placeholder: "5"},
 		},
+		builder: buildSkillsSetModuleLevel,
 	},
 
 	// ── inventory ──────────────────────────────────────────────────
@@ -657,6 +680,110 @@ func buildJourneyOp(handlerName string) func(map[string]any) (string, map[string
 			"StoryNodeId": nodeId,
 		}, nil
 	}
+}
+
+// buildSkillsSetUnspentSkillPoints — verified shape from Ghidra RE
+// of handler @ 0xda64690 (1988751 binary). Reads PlayerId (string,
+// required) + SkillPoints (int, required) via FUN_0da63930.
+func buildSkillsSetUnspentSkillPoints(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	skillPoints, err := coerceInt("SkillPoints", args["SkillPoints"])
+	if err != nil {
+		return "", nil, err
+	}
+	if skillPoints < 0 {
+		return "", nil, fmt.Errorf("SkillPoints must be >= 0")
+	}
+	return wrapNative("SkillsSetUnspentSkillPoints", []map[string]any{
+		{
+			"ServerCommand": "SkillsSetUnspentSkillPoints",
+			"PlayerId":      playerId,
+			"SkillPoints":   skillPoints,
+		},
+	})
+}
+
+// buildSkillsSetModuleLevel — verified shape from Ghidra RE of
+// handler @ 0xda64350. Reads PlayerId (str, req) + Module (str, req,
+// via FUN_0da63040) + Level (int, req, via FUN_0da644e0).
+func buildSkillsSetModuleLevel(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	module, err := coerceString("Module", args["Module"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	level, err := coerceInt("Level", args["Level"])
+	if err != nil {
+		return "", nil, err
+	}
+	if level < 0 {
+		return "", nil, fmt.Errorf("Level must be >= 0")
+	}
+	return wrapNative("SkillsSetModuleLevel", []map[string]any{
+		{
+			"ServerCommand": "SkillsSetModuleLevel",
+			"PlayerId":      playerId,
+			"Module":        module,
+			"Level":         level,
+		},
+	})
+}
+
+// buildTeleportTo — verified shape from Ghidra RE of handler @
+// 0xda65230. PlayerId (str, req) + X/Y/Z/Yaw (float, req) +
+// CamPitch/CamYaw/CamRoll (float, optional, default 0).
+func buildTeleportTo(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	requiredFloat := func(name string) (float64, error) {
+		v, ok := args[name]
+		if !ok || v == nil || v == "" {
+			return 0, fmt.Errorf("%s is required", name)
+		}
+		return coerceFloat(name, v)
+	}
+	x, err := requiredFloat("X")
+	if err != nil {
+		return "", nil, err
+	}
+	y, err := requiredFloat("Y")
+	if err != nil {
+		return "", nil, err
+	}
+	z, err := requiredFloat("Z")
+	if err != nil {
+		return "", nil, err
+	}
+	yaw, err := requiredFloat("Yaw")
+	if err != nil {
+		return "", nil, err
+	}
+	envelope := map[string]any{
+		"ServerCommand": "TeleportTo",
+		"PlayerId":      playerId,
+		"X":             x,
+		"Y":             y,
+		"Z":             z,
+		"Yaw":           yaw,
+	}
+	for _, cam := range []string{"CamPitch", "CamYaw", "CamRoll"} {
+		if v, ok := args[cam]; ok && v != nil && v != "" {
+			f, err := coerceFloat(cam, v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope[cam] = f
+		}
+	}
+	return wrapNative("TeleportTo", []map[string]any{envelope})
 }
 
 // buildSinglePlayerNative returns a builder for any native dispatcher
