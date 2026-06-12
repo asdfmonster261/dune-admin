@@ -172,16 +172,15 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("TeleportToVehicleSpawner"),
 	},
 	"TeleportToPersonalMarker": {
-		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes: "Storage hunt incomplete. PlayerMapMarkerComponent.m_PersonalMarkerActor reads " +
-			"<invalid> even when a waypoint is placed. m_MapMarkers.m_MarkerMap contains the " +
-			"base/respawn home (payload=1) but NOT the user-placeable map waypoint (verified " +
-			"2026-06-12 with marker placed far from base — map state unchanged). PingComponent " +
-			".m_GenericPingMarker / .m_EnemyPingMarker are also candidates but their EMapMarker " +
-			"structs have no UPROPERTY fields exposed. Probably the placeable waypoint is purely " +
-			"client-side and only the in-world physical marker actor replicates — different RE " +
-			"angle needed (likely hook the place-marker UFunction to learn the storage path).",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Teleports to the target player's last-placed map waypoint. Implementation " +
+			"snapshots ServerCreateMarker RPC args via a mini-UE4SS Func-swap hook (the actual " +
+			"storage on PlayerMapMarkerComponent.m_PersonalMarkerActor / .m_MarkerMap doesn't " +
+			"hold the placed location — that hunt is in [[dune-gm-command-envelope]] notes). " +
+			"Caveat: snapshots clear on server restart, so the player must have placed at least " +
+			"one marker since the last boot.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("TeleportToPersonalMarker"),
 	},
 	"PatrolShipTeleportToNearest": {
 		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "live",
