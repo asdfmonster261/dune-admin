@@ -85,6 +85,10 @@ export default function AdminActionsTab() {
   const [result, setResult] = useState<ExecuteResponse | null>(null)
   const [err, setErr] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  // Destructive-tier confirm-gate: operator must type "CONFIRM" before
+  // Execute enables. Cleared on every selection change so the gate
+  // re-arms when switching between destructive commands.
+  const [destructiveConfirm, setDestructiveConfirm] = useState('')
 
   useEffect(() => {
     api
@@ -158,6 +162,7 @@ export default function AdminActionsTab() {
     setArgs({})
     setResult(null)
     setErr(null)
+    setDestructiveConfirm('')
   }, [selected])
 
   const opsbridgeOffline = !!status && !status.opsbridge_connected
@@ -196,11 +201,15 @@ export default function AdminActionsTab() {
     }
   }
 
+  const isDestructive = selectedEntry?.tier === 'destructive'
+  const destructiveConfirmed = !isDestructive || destructiveConfirm === 'CONFIRM'
+
   const canExecute =
     !!selectedEntry &&
     selectedEntry.status === 'live' &&
     !opsbridgeOffline &&
-    !submitting
+    !submitting &&
+    destructiveConfirmed
 
   return (
     <>
@@ -297,6 +306,30 @@ export default function AdminActionsTab() {
                     }
                   />
                 ))}
+                {isDestructive && (
+                  <div
+                    style={{
+                      margin: '12px 0',
+                      padding: '10px 12px',
+                      border: '1px solid #b91c1c',
+                      borderRadius: '4px',
+                      background: 'rgba(185, 28, 28, 0.08)',
+                    }}
+                  >
+                    <label className="field-label" style={{ color: '#fca5a5' }}>
+                      Irrecoverable — type <code>CONFIRM</code> to enable
+                      Execute
+                    </label>
+                    <input
+                      className="input wide"
+                      value={destructiveConfirm}
+                      onChange={(e) => setDestructiveConfirm(e.target.value)}
+                      placeholder="CONFIRM"
+                      autoComplete="off"
+                      spellCheck={false}
+                    />
+                  </div>
+                )}
                 <div className="actions-row">
                   <button
                     className="btn primary"
@@ -308,6 +341,11 @@ export default function AdminActionsTab() {
                   {selectedEntry.status !== 'live' && (
                     <span className="hint">
                       Not yet implemented (status={selectedEntry.status})
+                    </span>
+                  )}
+                  {isDestructive && !destructiveConfirmed && (
+                    <span className="hint">
+                      Confirm gate not satisfied
                     </span>
                   )}
                 </div>

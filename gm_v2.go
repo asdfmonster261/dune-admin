@@ -239,9 +239,10 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── player ─────────────────────────────────────────────────────
 	"KickPlayer": {
-		Name: "KickPlayer", Tier: "player", Kind: "native", Status: "deferred",
-		Notes:  "Disconnects the target player.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "KickPlayer", Tier: "player", Kind: "native", Status: "live",
+		Notes:   "Disconnects the target player. Engine native — registry slot 1; envelope shape is single-PC. Client gets a 'connection lost' on their side.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerNative("KickPlayer"),
 	},
 	"BattlEyeMegaKick": {
 		Name: "BattlEyeMegaKick", Tier: "player", Kind: "synth", Status: "needs-probe",
@@ -251,14 +252,16 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── destructive ────────────────────────────────────────────────
 	"ResetProgression": {
-		Name: "ResetProgression", Tier: "destructive", Kind: "native", Status: "deferred",
-		Notes:  "Wipes the target player's progression. Irrecoverable — D4 will gate with type-to-confirm.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "ResetProgression", Tier: "destructive", Kind: "native", Status: "live",
+		Notes:   "Wipes the target player's progression. Irrecoverable. UI requires typing CONFIRM in the destructive-confirm field before Execute enables.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerNative("ResetProgression"),
 	},
 	"CleanPlayerInventory": {
-		Name: "CleanPlayerInventory", Tier: "destructive", Kind: "native", Status: "deferred",
-		Notes:  "Empties the target player's inventory. Irrecoverable.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "CleanPlayerInventory", Tier: "destructive", Kind: "native", Status: "live",
+		Notes:   "Empties the target player's inventory. Irrecoverable. UI requires typing CONFIRM in the destructive-confirm field before Execute enables.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerNative("CleanPlayerInventory"),
 	},
 	"DestroyTargetVehicle": {
 		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "deferred",
@@ -358,9 +361,10 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── global ─────────────────────────────────────────────────────
 	"UpdateAllWaterFillables": {
-		Name: "UpdateAllWaterFillables", Tier: "global", Kind: "native", Status: "deferred",
-		Notes:  "Engine-wide refresh of water-fillable actors. No player target; no args expected.",
-		Params: nil,
+		Name: "UpdateAllWaterFillables", Tier: "global", Kind: "native", Status: "live",
+		Notes:   "Engine-wide refresh of water-fillable actors. No player target; no args. Useful if a sietch's water yields drift out of sync after a config change.",
+		Params:  nil,
+		builder: buildNoArgNative("UpdateAllWaterFillables"),
 	},
 
 	// ── cheat (stock UE UCheatManager — Fly/Ghost/Walk) ────────────
@@ -652,6 +656,36 @@ func buildJourneyOp(handlerName string) func(map[string]any) (string, map[string
 			"PlayerId":    playerId,
 			"StoryNodeId": nodeId,
 		}, nil
+	}
+}
+
+// buildSinglePlayerNative returns a builder for any native dispatcher
+// command whose envelope shape is just { ServerCommand, PlayerId }.
+// Covers KickPlayer / ResetProgression / CleanPlayerInventory and any
+// future single-PC native we wire up.
+func buildSinglePlayerNative(command string) func(map[string]any) (string, map[string]any, error) {
+	return func(args map[string]any) (string, map[string]any, error) {
+		playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		return wrapNative(command, []map[string]any{
+			{
+				"ServerCommand": command,
+				"PlayerId":      playerId,
+			},
+		})
+	}
+}
+
+// buildNoArgNative returns a builder for any native dispatcher command
+// that takes no parameters. The envelope still needs the ServerCommand
+// field so the dispatcher's switch lands on the right case.
+func buildNoArgNative(command string) func(map[string]any) (string, map[string]any, error) {
+	return func(_ map[string]any) (string, map[string]any, error) {
+		return wrapNative(command, []map[string]any{
+			{"ServerCommand": command},
+		})
 	}
 }
 
