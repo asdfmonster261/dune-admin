@@ -137,21 +137,53 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildTeleportToPlayer,
 	},
 	"TeleportToMap": {
-		Name: "TeleportToMap", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Moves player to a named map. Synth via engine travel call; map ID list TBD.",
+		Name: "TeleportToMap", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Calls DuneCheatManager.TeleportToMap on the target PC's cheat manager. " +
+			"Cross-map teleport with explicit position + camera. MapName is the bare " +
+			"map name per [[dune-actors-map-column]] (HaggaBasin, DeepDesert, etc.). " +
+			"Signature RE'd 2026-06-12 via UFunction lookup at " +
+			"/Script/DuneSandbox.DuneCheatManager.TeleportToMap.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "Map", Type: "string", Required: true, Placeholder: "HaggaBasin"},
+			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
+				Help: "Bare map name — HaggaBasin / DeepDesert / etc."},
+			{Name: "X", Type: "float", Required: true},
+			{Name: "Y", Type: "float", Required: true},
+			{Name: "Z", Type: "float", Required: true},
+			{Name: "Yaw", Type: "float", Required: true,
+				Help: "Character yaw in degrees (0 = +X, 90 = +Y)."},
+			{Name: "CamPitch", Type: "float", Required: false, Placeholder: "0",
+				Help: "Optional camera pitch override (default 0)."},
+			{Name: "CamYaw", Type: "float", Required: false, Placeholder: "0",
+				Help: "Optional camera yaw override (default 0)."},
+			{Name: "CamRoll", Type: "float", Required: false, Placeholder: "0",
+				Help: "Optional camera roll override (default 0)."},
 		},
+		builder: buildTeleportToMap,
 	},
 	"TravelTo": {
-		Name: "TravelTo", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Engine travel. Arg shape TBD.",
-		Params: nil,
+		Name: "TravelTo", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Calls DuneCheatManager.TravelTo on the target PC's cheat manager. " +
+			"Same as TeleportToMap but without camera angles — engine picks the default " +
+			"camera. Signature RE'd 2026-06-12 via UFunction lookup at " +
+			"/Script/DuneSandbox.DuneCheatManager.TravelTo.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
+				Help: "Bare map name — HaggaBasin / DeepDesert / etc."},
+			{Name: "X", Type: "float", Required: true},
+			{Name: "Y", Type: "float", Required: true},
+			{Name: "Z", Type: "float", Required: true},
+			{Name: "Yaw", Type: "float", Required: true,
+				Help: "Character yaw in degrees (0 = +X, 90 = +Y)."},
+		},
+		builder: buildTravelTo,
 	},
 	"TravelToDimension": {
 		Name: "TravelToDimension", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes:  "Travel to a specific Deep Desert dimension. Arg shape TBD.",
+		Notes: "Cross-sietch travel (one Survival_1 partition → another). Deferred " +
+			"until multi-sietch is enabled on this stack — see [[dune-multi-sietch-plan]]. " +
+			"With one sietch active the destination set is empty so nothing to wire.",
 		Params: nil,
 	},
 	"TeleportToSandworm": {
@@ -828,6 +860,109 @@ func buildTeleportTo(args map[string]any) (string, map[string]any, error) {
 		}
 	}
 	return wrapNative("TeleportTo", []map[string]any{envelope})
+}
+
+// buildTeleportToMap — synth. Routes to DuneOpsBridgeMod's TeleportToMap
+// handler which calls DuneCheatManager.TeleportToMap on the resolved PC's
+// cheat manager. Signature verified via live REPL probe 2026-06-12:
+// TeleportToMap(MapName: str, X/Y/Z: float, Yaw: float,
+// CamPitch/CamYaw/CamRoll: float).
+func buildTeleportToMap(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	mapName, err := coerceString("MapName", args["MapName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	requiredFloat := func(name string) (float64, error) {
+		v, ok := args[name]
+		if !ok || v == nil || v == "" {
+			return 0, fmt.Errorf("%s is required", name)
+		}
+		return coerceFloat(name, v)
+	}
+	x, err := requiredFloat("X")
+	if err != nil {
+		return "", nil, err
+	}
+	y, err := requiredFloat("Y")
+	if err != nil {
+		return "", nil, err
+	}
+	z, err := requiredFloat("Z")
+	if err != nil {
+		return "", nil, err
+	}
+	yaw, err := requiredFloat("Yaw")
+	if err != nil {
+		return "", nil, err
+	}
+	envelope := map[string]any{
+		"PlayerId": playerId,
+		"MapName":  mapName,
+		"X":        x,
+		"Y":        y,
+		"Z":        z,
+		"Yaw":      yaw,
+	}
+	for _, cam := range []string{"CamPitch", "CamYaw", "CamRoll"} {
+		if v, ok := args[cam]; ok && v != nil && v != "" {
+			f, err := coerceFloat(cam, v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope[cam] = f
+		}
+	}
+	return "TeleportToMap", envelope, nil
+}
+
+// buildTravelTo — synth. Routes to DuneOpsBridgeMod's TravelTo handler
+// which calls DuneCheatManager.TravelTo. Same as TeleportToMap minus the
+// camera triplet. Signature verified 2026-06-12: TravelTo(MapName: str,
+// X/Y/Z: float, Yaw: float).
+func buildTravelTo(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	mapName, err := coerceString("MapName", args["MapName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	requiredFloat := func(name string) (float64, error) {
+		v, ok := args[name]
+		if !ok || v == nil || v == "" {
+			return 0, fmt.Errorf("%s is required", name)
+		}
+		return coerceFloat(name, v)
+	}
+	x, err := requiredFloat("X")
+	if err != nil {
+		return "", nil, err
+	}
+	y, err := requiredFloat("Y")
+	if err != nil {
+		return "", nil, err
+	}
+	z, err := requiredFloat("Z")
+	if err != nil {
+		return "", nil, err
+	}
+	yaw, err := requiredFloat("Yaw")
+	if err != nil {
+		return "", nil, err
+	}
+	return "TravelTo", map[string]any{
+		"PlayerId": playerId,
+		"MapName":  mapName,
+		"X":        x,
+		"Y":        y,
+		"Z":        z,
+		"Yaw":      yaw,
+	}, nil
 }
 
 // buildUpdateAllWaterFillables — PlayerId + optional WaterAmount.
