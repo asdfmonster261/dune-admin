@@ -286,11 +286,6 @@ var gmCatalog = map[string]*GMEntry{
 		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
 		builder: buildSinglePlayerNative("KickPlayer"),
 	},
-	"BattlEyeMegaKick": {
-		Name: "BattlEyeMegaKick", Tier: "player", Kind: "synth", Status: "needs-probe",
-		Notes:  "Harsher disconnect through BattlEye. Probe-first: not clear if Funcom exposes a BattlEye kick API to UScript.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-	},
 
 	// ── destructive ────────────────────────────────────────────────
 	"ResetProgression": {
