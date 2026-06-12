@@ -171,17 +171,6 @@ var gmCatalog = map[string]*GMEntry{
 		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
 		builder: buildSinglePlayerSynth("TeleportToVehicleSpawner"),
 	},
-	"TeleportToPersonalMarker": {
-		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "live",
-		Notes: "Teleports to the target player's last-placed map waypoint. Implementation " +
-			"snapshots ServerCreateMarker RPC args via a mini-UE4SS Func-swap hook (the actual " +
-			"storage on PlayerMapMarkerComponent.m_PersonalMarkerActor / .m_MarkerMap doesn't " +
-			"hold the placed location — that hunt is in [[dune-gm-command-envelope]] notes). " +
-			"Caveat: snapshots clear on server restart, so the player must have placed at least " +
-			"one marker since the last boot.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("TeleportToPersonalMarker"),
-	},
 	"PatrolShipTeleportToNearest": {
 		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "live",
 		Notes: "Finds the closest BP_PatrolShip_C instance to the target PC's pawn and " +
