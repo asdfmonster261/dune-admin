@@ -139,11 +139,12 @@ var gmCatalog = map[string]*GMEntry{
 	},
 	"TeleportToMap": {
 		Name: "TeleportToMap", Tier: "movement", Kind: "synth", Status: "live",
-		Notes: "Calls DuneCheatManager.TeleportToMap on the target PC's cheat manager. " +
-			"Cross-map teleport with explicit position + camera. MapName is the bare " +
-			"map name per [[dune-actors-map-column]] (HaggaBasin, DeepDesert, etc.). " +
-			"Signature RE'd 2026-06-12 via UFunction lookup at " +
-			"/Script/DuneSandbox.DuneCheatManager.TeleportToMap.",
+		Notes: "Raw cheat-driven map jump — calls DuneCheatManager.TeleportToMap, " +
+			"which bypasses Dune's travel API and just shoves the character into " +
+			"the named UE level. Sets position + camera after arrival. MapName is " +
+			"the bare map name (HaggaBasin / DeepDesert / ...). For travel that " +
+			"honors visitor/dimension routing, use TravelTo instead. RE'd 2026-06-12 " +
+			"@ 0d57dd70; see [[dune-travelto-vs-teleporttomap]].",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
@@ -165,10 +166,14 @@ var gmCatalog = map[string]*GMEntry{
 	},
 	"TravelTo": {
 		Name: "TravelTo", Tier: "movement", Kind: "synth", Status: "live",
-		Notes: "Calls DuneCheatManager.TravelTo on the target PC's cheat manager. " +
-			"Same as TeleportToMap but without camera angles — engine picks the default " +
-			"camera. Signature RE'd 2026-06-12 via UFunction lookup at " +
-			"/Script/DuneSandbox.DuneCheatManager.TravelTo.",
+		Notes: "Dune travel-API path — calls DuneCheatManager.TravelTo, which routes " +
+			"through UDuneTravelApi (same flow as RequestTravelToFriend / " +
+			"RequestTravelToHomeDimension). Honors visitor + dimension routing. On a " +
+			"single-sietch stack this collapses to the same outcome as TeleportToMap, " +
+			"but once multi-sietch is enabled TravelTo will pick the right Survival_1 " +
+			"partition while TeleportToMap won't. No camera args by design — the " +
+			"client picks its own. RE'd 2026-06-12 @ 0d5698e0; see " +
+			"[[dune-travelto-vs-teleporttomap]].",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "MapName", Type: "string", Required: true, Placeholder: "HaggaBasin",
