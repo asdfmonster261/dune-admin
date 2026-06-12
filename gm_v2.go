@@ -278,9 +278,16 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildAddItemToInventory,
 	},
 	"AddBasicInventoryToCharacter": {
-		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "deferred",
-		Notes:  "Wrapper that grants the canonical starter kit via repeated AddItemToInventory calls.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "live",
+		Notes: "Calls DuneCheatManager.AddBasicInventoryToCharacter on the target PC, " +
+			"granting the \"basic\" kit (EBasicInventoryId=1 row out of " +
+			"DuneGameInstance.m_BasicInventoryDataTable). Most likely the default " +
+			"starter inventory a character spawns with, but kit contents are data-" +
+			"driven so check in-game to verify what shows up. RE'd 2026-06-12 @ " +
+			"0d55b460. UFunction takes the player's display name; we resolve PC by " +
+			"FLS and pull PlayerNamePrivate server-side.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("AddBasicInventoryToCharacter"),
 	},
 
 	// ── spawn ──────────────────────────────────────────────────────
