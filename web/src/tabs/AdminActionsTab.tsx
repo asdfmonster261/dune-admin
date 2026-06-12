@@ -12,7 +12,7 @@ import { api, type Status } from '../api'
 // every command's name, tier, kind (native/synth), status, and param
 // schema. UI renders dynamically from that.
 
-type GMParamType = 'string' | 'int' | 'float' | 'player' | 'node'
+type GMParamType = 'string' | 'int' | 'float' | 'player' | 'node' | 'item'
 
 type GMParam = {
   name: string
@@ -68,6 +68,9 @@ export default function AdminActionsTab() {
   // (the Go-side cache TTL is 10 min, the Lua-side is the same — design
   // data doesn't change between server restarts).
   const [journeyNodes, setJourneyNodes] = useState<string[]>([])
+  // Item-template autocomplete list. Static embed in dune-admin binary
+  // (regenerated from server paks via /workspace/dune-pak-tools).
+  const [items, setItems] = useState<string[]>([])
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -100,6 +103,15 @@ export default function AdminActionsTab() {
     if (!(entry.params ?? []).some((p) => p.type === 'node')) return
     api.get<string[]>('/gm/v2/journey/nodes').then(setJourneyNodes).catch(() => {})
   }, [selected, catalog, journeyNodes.length])
+
+  // Same lazy-load pattern for the item-template list.
+  useEffect(() => {
+    if (items.length > 0) return
+    const entry = catalog.find((c) => c.name === selected)
+    if (!entry) return
+    if (!(entry.params ?? []).some((p) => p.type === 'item')) return
+    api.get<string[]>('/gm/v2/items').then(setItems).catch(() => {})
+  }, [selected, catalog, items.length])
 
   const filtered = useMemo(() => {
     if (!filter) return catalog
@@ -272,6 +284,7 @@ export default function AdminActionsTab() {
                     value={args[p.name]}
                     players={players}
                     journeyNodes={journeyNodes}
+                    items={items}
                     onChange={(v) =>
                       setArgs((prev) => ({ ...prev, [p.name]: v }))
                     }
@@ -314,12 +327,14 @@ function ParamInput({
   value,
   players,
   journeyNodes,
+  items,
   onChange,
 }: {
   param: GMParam
   value: string | undefined
   players: GMPlayer[]
   journeyNodes: string[]
+  items: string[]
   onChange: (v: string) => void
 }) {
   if (param.type === 'player') {
@@ -382,6 +397,36 @@ function ParamInput({
           {journeyNodes.length > 0
             ? `${journeyNodes.length} known node IDs — start typing to filter, or paste a full path. Completing a parent cascades to descendants.`
             : 'Loading node list from game-server…'}
+        </p>
+        {param.help && <p className="hint">{param.help}</p>}
+      </>
+    )
+  }
+  if (param.type === 'item') {
+    // Item template autocomplete — same datalist pattern as `node`,
+    // backed by the static catalog regenerated from server paks.
+    return (
+      <>
+        <label className="field-label">
+          {param.name}
+          {param.required && <span className="req">*</span>}
+        </label>
+        <input
+          className="input wide"
+          list="gm-item-templates"
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={param.placeholder ?? 'SalvageMetal'}
+        />
+        <datalist id="gm-item-templates">
+          {items.map((n) => (
+            <option key={n} value={n} />
+          ))}
+        </datalist>
+        <p className="hint">
+          {items.length > 0
+            ? `${items.length} known item templates — autocomplete is a best-effort catalog from server paks; the dispatcher accepts any valid template name even if it isn't listed.`
+            : 'Loading item template list…'}
         </p>
         {param.help && <p className="hint">{param.help}</p>}
       </>

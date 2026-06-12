@@ -193,14 +193,20 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── inventory ──────────────────────────────────────────────────
 	"AddItemToInventory": {
-		Name: "AddItemToInventory", Tier: "inventory", Kind: "native", Status: "deferred",
-		Notes:  "Grants an item to the target player. Template names from the inventory_type enum (already RE'd).",
+		Name: "AddItemToInventory", Tier: "inventory", Kind: "native", Status: "live",
+		Notes: "Grants an item to the target player. Template names autocomplete from " +
+			"the catalog regenerated via /workspace/dune-pak-tools/dump_templates_v2.py.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "Template", Type: "string", Required: true},
-			{Name: "Count", Type: "int", Required: false, Min: 1, Placeholder: "1"},
-			{Name: "Quality", Type: "int", Required: false, Min: 0, Placeholder: "0"},
+			{Name: "ItemName", Type: "item", Required: true,
+				Placeholder: "SalvageMetal"},
+			{Name: "Quantity", Type: "int", Required: false,
+				Placeholder: "1", Min: 1},
+			{Name: "Durability", Type: "float", Required: false,
+				Placeholder: "1.0",
+				Help: "0.0-1.0 fraction of max durability. Default 1.0 (full)."},
 		},
+		builder: buildAddItemToInventory,
 	},
 	"AddBasicInventoryToCharacter": {
 		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "deferred",
@@ -567,6 +573,51 @@ func buildPrintPos(args map[string]any) (string, map[string]any, error) {
 	return "PrintPos", map[string]any{"PlayerId": playerId}, nil
 }
 
+// buildAddItemToInventory wraps the AddItemToInventory dispatcher envelope.
+// Field names confirmed via [[dune-gm-command-envelope]] memory:
+// PlayerId, ItemName, Quantity (default 1), Durability (default 1.0).
+func buildAddItemToInventory(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	itemName, err := coerceString("ItemName", args["ItemName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	quantity := 1
+	if v, ok := args["Quantity"]; ok && v != nil && v != "" {
+		n, err := coerceInt("Quantity", v)
+		if err != nil {
+			return "", nil, err
+		}
+		quantity = n
+	}
+	if quantity < 1 {
+		return "", nil, fmt.Errorf("Quantity must be >= 1")
+	}
+	durability := 1.0
+	if v, ok := args["Durability"]; ok && v != nil && v != "" {
+		f, err := coerceFloat("Durability", v)
+		if err != nil {
+			return "", nil, err
+		}
+		durability = f
+	}
+	if durability < 0.0 || durability > 1.0 {
+		return "", nil, fmt.Errorf("Durability must be in [0.0, 1.0]")
+	}
+	return wrapNative("AddItemToInventory", []map[string]any{
+		{
+			"ServerCommand": "AddItemToInventory",
+			"PlayerId":      playerId,
+			"ItemName":      itemName,
+			"Quantity":      quantity,
+			"Durability":    durability,
+		},
+	})
+}
+
 // buildJourneyOp returns a builder for one of the five Journey synth
 // handlers in DuneOpsBridgeMod. All five take the same two args
 // (PlayerId + StoryNodeId); the difference is which OpsBridge handler
@@ -799,6 +850,16 @@ var (
 	gmJourneyNodesCacheUntil time.Time
 	gmJourneyNodesCacheTTL   = 10 * time.Minute
 )
+
+// handleGMv2Items serves the static item-template catalog embedded from
+// /workspace/dune-admin/items.json at build time. The catalog is the
+// source-of-truth for the AddItemToInventory's ItemName autocomplete.
+// To regenerate after a Funcom build: re-run
+// /workspace/dune-pak-tools/dump_templates_v2.py, copy the resulting
+// items.json into this directory, and rebuild dune-admin.
+func handleGMv2Items(w http.ResponseWriter, r *http.Request) {
+	jsonOK(w, itemsCatalogList)
+}
 
 func handleGMv2JourneyNodes(w http.ResponseWriter, r *http.Request) {
 	gmJourneyNodesCacheMu.Lock()
