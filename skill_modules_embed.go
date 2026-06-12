@@ -2,26 +2,32 @@ package main
 
 import (
 	_ "embed"
-	"strings"
+	"encoding/json"
 )
 
-// Embedded list of valid SkillsSetModuleLevel "Module" values, RE'd from
-// DT_TrainingModules at runtime via the mini-UE4SS REPL (2026-06-12).
-// The dispatcher's UExperienceUtils::SetSkillsModuleLevel(player, FName, level)
-// looks the module up via UGameplayTagsManager — passing a tag NOT in this
-// list silently no-ops. Regenerate after a Funcom rebuild by re-running the
-// REPL dump (probe_envelope.py path / see commit message).
+// Embedded skill-module catalog for SkillsSetModuleLevel's Module
+// field. Each entry carries:
+//   - tag:     the gameplay tag the dispatcher matches against
+//   - tree:    ESkillTree enum name (BeneGesserit / Mentat / Trooper /
+//              Swordmaster / Planetologist / Hidden / Dev)
+//   - display: human-readable name from the DT row's DisplayName FText
+//
+// Source: live REPL dump of DT_TrainingModules rows (Tag.TagName +
+// SkillArea enum + DisplayName). Regenerate after a Funcom rebuild by
+// re-running the Lua snippet in the commit-message footer of the
+// pak-tools probe script.
 
-//go:embed skill_modules.txt
-var skillModulesRaw string
+//go:embed skill_modules.json
+var skillModulesJSON []byte
 
-var skillModulesList = func() []string {
-	var out []string
-	for _, line := range strings.Split(skillModulesRaw, "\n") {
-		line = strings.TrimSpace(line)
-		if line != "" {
-			out = append(out, line)
-		}
-	}
+type SkillModule struct {
+	Tag     string `json:"tag"`
+	Tree    string `json:"tree"`
+	Display string `json:"display"`
+}
+
+var skillModulesList = func() []SkillModule {
+	var out []SkillModule
+	_ = json.Unmarshal(skillModulesJSON, &out)
 	return out
 }()

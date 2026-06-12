@@ -1,0 +1,727 @@
+[
+  {
+    "tag": "Skills.Spice.BinduDodge",
+    "tree": "BeneGesserit",
+    "display": "Bindu Dodge"
+  },
+  {
+    "tag": "Skills.Ability.Hypersprint",
+    "tree": "BeneGesserit",
+    "display": "Bindu Sprint"
+  },
+  {
+    "tag": "Skills.Attribute.WeirdingWay1",
+    "tree": "BeneGesserit",
+    "display": "Blade Damage"
+  },
+  {
+    "tag": "Skills.Ability.VoiceCompel",
+    "tree": "BeneGesserit",
+    "display": "Compel"
+  },
+  {
+    "tag": "Skills.Ability.Blindspot",
+    "tree": "BeneGesserit",
+    "display": "Ignore"
+  },
+  {
+    "tag": "Skills.Ability.LitanyAgainstFear",
+    "tree": "BeneGesserit",
+    "display": "Litany Against Fear"
+  },
+  {
+    "tag": "Skills.Perk.Backstabber",
+    "tree": "BeneGesserit",
+    "display": "Manipulate Instability"
+  },
+  {
+    "tag": "Skills.Perk.MetabolizePoison",
+    "tree": "BeneGesserit",
+    "display": "Metabolize Poison"
+  },
+  {
+    "tag": "Skills.Attribute.SelfControl5",
+    "tree": "BeneGesserit",
+    "display": "Poison Tolerance"
+  },
+  {
+    "tag": "Skills.Perk.BinduStability",
+    "tree": "BeneGesserit",
+    "display": "Prana-Bindu Stability"
+  },
+  {
+    "tag": "Skills.Ability.BinduNerveStrike",
+    "tree": "BeneGesserit",
+    "display": "Prana-Bindu Strikes"
+  },
+  {
+    "tag": "Skills.Perk.VoiceAnalysis",
+    "tree": "BeneGesserit",
+    "display": "Rapid Register"
+  },
+  {
+    "tag": "Skills.Attribute.SelfControl1",
+    "tree": "BeneGesserit",
+    "display": "Recovery"
+  },
+  {
+    "tag": "Skills.Spice.VoiceSplash",
+    "tree": "BeneGesserit",
+    "display": "Screech"
+  },
+  {
+    "tag": "Skills.Attribute.SelfControl4",
+    "tree": "BeneGesserit",
+    "display": "Self-Healing"
+  },
+  {
+    "tag": "Skills.Attribute.WeirdingWay2",
+    "tree": "BeneGesserit",
+    "display": "Short Blade Damage"
+  },
+  {
+    "tag": "Skills.Ability.VoiceStop",
+    "tree": "BeneGesserit",
+    "display": "Stop"
+  },
+  {
+    "tag": "Skills.Attribute.SelfControl2",
+    "tree": "BeneGesserit",
+    "display": "Sun Tolerance"
+  },
+  {
+    "tag": "Skills.Perk.RegenCap",
+    "tree": "BeneGesserit",
+    "display": "Trauma Recovery"
+  },
+  {
+    "tag": "Skills.Attribute.SelfControl3",
+    "tree": "BeneGesserit",
+    "display": "Vitality"
+  },
+  {
+    "tag": "Skills.Attribute.Manipulation1",
+    "tree": "BeneGesserit",
+    "display": "Voice Training"
+  },
+  {
+    "tag": "Skills.Ability.WeirdingStep",
+    "tree": "BeneGesserit",
+    "display": "Weirding Step"
+  },
+  {
+    "tag": "Skills.Key.BeneGesserit1",
+    "tree": "BeneGesserit",
+    "display": "XX_Bene Gesserit Phase 1"
+  },
+  {
+    "tag": "Skills.Key.BeneGesserit2",
+    "tree": "BeneGesserit",
+    "display": "XX_Bene Gesserit Phase 2"
+  },
+  {
+    "tag": "Skills.Key.BeneGesserit3",
+    "tree": "BeneGesserit",
+    "display": "XX_Bene Gesserit Phase 3"
+  },
+  {
+    "tag": "Skills.Key.CapstoneManipulation",
+    "tree": "BeneGesserit",
+    "display": "XX_Manipulation Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneSelfControl",
+    "tree": "BeneGesserit",
+    "display": "XX_Self Control Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneWeirdingWay",
+    "tree": "BeneGesserit",
+    "display": "XX_Weirding Way Capstone"
+  },
+  {
+    "tag": "Skills.Ability.ControlSpace",
+    "tree": "Hidden",
+    "display": "Control Space"
+  },
+  {
+    "tag": "Skills.Perk.Gunsmith",
+    "tree": "Hidden",
+    "display": "Gunsmith"
+  },
+  {
+    "tag": "Skills.Ability.HealerSeeker",
+    "tree": "Hidden",
+    "display": "LOC_Ability: Healer Seeker"
+  },
+  {
+    "tag": "Skills.Ability.HealingCapsule",
+    "tree": "Hidden",
+    "display": "LOC_Ability: Healing Capsule"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorMine_Stabilization",
+    "tree": "Hidden",
+    "display": "Remote Stabilization Mine"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorGrenade_Stabilization",
+    "tree": "Hidden",
+    "display": "Stabilization Bomb"
+  },
+  {
+    "tag": "Skills.Attribute.Blade3",
+    "tree": "Hidden",
+    "display": "XX_"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorMine_Reduction",
+    "tree": "Mentat",
+    "display": "Anti-gravity Mine"
+  },
+  {
+    "tag": "Skills.Attribute.Assassination2",
+    "tree": "Mentat",
+    "display": "Assassin's Shot"
+  },
+  {
+    "tag": "Skills.Perk.ExploitWeakness",
+    "tree": "Mentat",
+    "display": "Exploit Weakness"
+  },
+  {
+    "tag": "Skills.Attribute.MentalCalculus1",
+    "tree": "Mentat",
+    "display": "Garment Keeper"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorMine_Amplification",
+    "tree": "Mentat",
+    "display": "Gravity Mine"
+  },
+  {
+    "tag": "Skills.Attribute.Assassination1",
+    "tree": "Mentat",
+    "display": "Headshot Damage"
+  },
+  {
+    "tag": "Skills.Ability.HunterSeeker",
+    "tree": "Mentat",
+    "display": "Hunter-Seeker"
+  },
+  {
+    "tag": "Skills.Perk.IronWill",
+    "tree": "Mentat",
+    "display": "Iron Will"
+  },
+  {
+    "tag": "Skills.Perk.HeadShots",
+    "tree": "Mentat",
+    "display": "Marksman"
+  },
+  {
+    "tag": "Skills.Attribute.MentalCalculus4",
+    "tree": "Mentat",
+    "display": "Pistol Damage"
+  },
+  {
+    "tag": "Skills.Ability.PoisonCapsuleLauncher",
+    "tree": "Mentat",
+    "display": "Poison Capsule"
+  },
+  {
+    "tag": "Skills.Ability.PoisonMine",
+    "tree": "Mentat",
+    "display": "Poison Mine"
+  },
+  {
+    "tag": "Skills.Perk.PoisonTooth",
+    "tree": "Mentat",
+    "display": "Poison Tooth"
+  },
+  {
+    "tag": "Skills.Attribute.MentalCalculus2",
+    "tree": "Mentat",
+    "display": "Ranged Damage"
+  },
+  {
+    "tag": "Skills.Attribute.MentalCalculus5",
+    "tree": "Mentat",
+    "display": "Rifle Damage"
+  },
+  {
+    "tag": "Skills.Perk.ShieldWeakpoint",
+    "tree": "Mentat",
+    "display": "Shield Overcharge"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorWall",
+    "tree": "Mentat",
+    "display": "Shield Wall"
+  },
+  {
+    "tag": "Skills.Ability.SolidoDecoy",
+    "tree": "Mentat",
+    "display": "Solido Decoy"
+  },
+  {
+    "tag": "Skills.Ability.PortableGenerator",
+    "tree": "Mentat",
+    "display": "Source of Power"
+  },
+  {
+    "tag": "Skills.Ability.StunDart",
+    "tree": "Mentat",
+    "display": "Stunner"
+  },
+  {
+    "tag": "Skills.Attribute.MentalCalculus3",
+    "tree": "Mentat",
+    "display": "Tailoring"
+  },
+  {
+    "tag": "Skills.Ability.TurretSeeker",
+    "tree": "Mentat",
+    "display": "The Sentinel"
+  },
+  {
+    "tag": "Skills.Key.CapstoneAssassination",
+    "tree": "Mentat",
+    "display": "XX_Assassination Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneMentalCalculus",
+    "tree": "Mentat",
+    "display": "XX_MentalCalculus Capstone"
+  },
+  {
+    "tag": "Skills.Key.Mentat1",
+    "tree": "Mentat",
+    "display": "XX_Mentat Phase 1"
+  },
+  {
+    "tag": "Skills.Key.Mentat2",
+    "tree": "Mentat",
+    "display": "XX_Mentat Phase 2"
+  },
+  {
+    "tag": "Skills.Key.Mentat3",
+    "tree": "Mentat",
+    "display": "XX_Mentat Phase 3"
+  },
+  {
+    "tag": "Skills.Key.CapstoneTactician",
+    "tree": "Mentat",
+    "display": "XX_Tactician Capstone"
+  },
+  {
+    "tag": "Skills.Attribute.Explorer1",
+    "tree": "Planetologist",
+    "display": "Cartographer"
+  },
+  {
+    "tag": "Skills.Attribute.Scientist5",
+    "tree": "Planetologist",
+    "display": "Compaction"
+  },
+  {
+    "tag": "Skills.Perk.BatteryExpert",
+    "tree": "Planetologist",
+    "display": "Conservation of Energy"
+  },
+  {
+    "tag": "Skills.Attribute.Scientist1",
+    "tree": "Planetologist",
+    "display": "Cutteray Mining"
+  },
+  {
+    "tag": "Skills.Attribute.Scientist4",
+    "tree": "Planetologist",
+    "display": "Deep Analysis"
+  },
+  {
+    "tag": "Skills.Attribute.Scientist2",
+    "tree": "Planetologist",
+    "display": "Dew Gathering"
+  },
+  {
+    "tag": "Skills.Attribute.Driver2",
+    "tree": "Planetologist",
+    "display": "Fuel Efficient Driver"
+  },
+  {
+    "tag": "Skills.Attribute.Driver5",
+    "tree": "Planetologist",
+    "display": "Fuel Efficient Pilot"
+  },
+  {
+    "tag": "Skills.Spice.VehicleHeat",
+    "tree": "Planetologist",
+    "display": "Heat Management"
+  },
+  {
+    "tag": "Skills.Attribute.Explorer2",
+    "tree": "Planetologist",
+    "display": "Mountaineer"
+  },
+  {
+    "tag": "Skills.Science.m_PowerMax",
+    "tree": "Planetologist",
+    "display": "Overcharge"
+  },
+  {
+    "tag": "Skills.Attribute.Scientist3",
+    "tree": "Planetologist",
+    "display": "Rerouting"
+  },
+  {
+    "tag": "Skills.Attribute.Driver6",
+    "tree": "Planetologist",
+    "display": "Sandcrawler Yield"
+  },
+  {
+    "tag": "Skills.Attribute.Explorer3",
+    "tree": "Planetologist",
+    "display": "Scanner Mastery"
+  },
+  {
+    "tag": "Skills.Attribute.Explorer5",
+    "tree": "Planetologist",
+    "display": "Spice Surveyor"
+  },
+  {
+    "tag": "Skills.Attribute.Explorer4",
+    "tree": "Planetologist",
+    "display": "Stillsuit Seals"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorPad",
+    "tree": "Planetologist",
+    "display": "Suspensor Pad"
+  },
+  {
+    "tag": "Skills.Attribute.Driver3",
+    "tree": "Planetologist",
+    "display": "Vehicle Mining"
+  },
+  {
+    "tag": "Skills.Attribute.Driver1",
+    "tree": "Planetologist",
+    "display": "Vehicle Repair"
+  },
+  {
+    "tag": "Skills.Attribute.Driver4",
+    "tree": "Planetologist",
+    "display": "Vehicle Scanning"
+  },
+  {
+    "tag": "Skills.Key.CapstoneDriver",
+    "tree": "Planetologist",
+    "display": "XX_Driver Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneExplorer",
+    "tree": "Planetologist",
+    "display": "XX_Explorer Capstone"
+  },
+  {
+    "tag": "Skills.Key.Planetologist1",
+    "tree": "Planetologist",
+    "display": "XX_Planetologist Phase 1"
+  },
+  {
+    "tag": "Skills.Key.Planetologist2",
+    "tree": "Planetologist",
+    "display": "XX_Planetologist Phase 2"
+  },
+  {
+    "tag": "Skills.Key.Planetologist3",
+    "tree": "Planetologist",
+    "display": "XX_Planetologist Phase 3"
+  },
+  {
+    "tag": "Skills.Key.CapstoneScientist",
+    "tree": "Planetologist",
+    "display": "XX_Scientist Capstone"
+  },
+  {
+    "tag": "Skills.Attribute.Blade1",
+    "tree": "Swordmaster",
+    "display": "Blade Damage"
+  },
+  {
+    "tag": "Skills.Attribute.Resolve1",
+    "tree": "Swordmaster",
+    "display": "Bleed Tolerance"
+  },
+  {
+    "tag": "Skills.Attribute.UnstoppableAttacks",
+    "tree": "Swordmaster",
+    "display": "Confidence"
+  },
+  {
+    "tag": "Skills.Ability.CripplingStrike",
+    "tree": "Swordmaster",
+    "display": "Crippling Strike"
+  },
+  {
+    "tag": "Skills.Perk.MeleeChain",
+    "tree": "Swordmaster",
+    "display": "Dance of Blades"
+  },
+  {
+    "tag": "Skills.Ability.DeflectionSlow",
+    "tree": "Swordmaster",
+    "display": "Deflection"
+  },
+  {
+    "tag": "Skills.Attribute.Aggression4",
+    "tree": "Swordmaster",
+    "display": "Desert Conditioning"
+  },
+  {
+    "tag": "Skills.Perk.SprintStamina",
+    "tree": "Swordmaster",
+    "display": "Disciplined Breathing"
+  },
+  {
+    "tag": "Skills.Ability.Whirlwind",
+    "tree": "Swordmaster",
+    "display": "Eye of the Storm"
+  },
+  {
+    "tag": "Skills.Attribute.Aggression1",
+    "tree": "Swordmaster",
+    "display": "Field Medicine"
+  },
+  {
+    "tag": "Skills.Ability.RiposteBreak",
+    "tree": "Swordmaster",
+    "display": "Foil"
+  },
+  {
+    "tag": "Skills.Attribute.Aggression3",
+    "tree": "Swordmaster",
+    "display": "General Conditioning"
+  },
+  {
+    "tag": "Skills.Ability.BattleCry",
+    "tree": "Swordmaster",
+    "display": "Inspiration"
+  },
+  {
+    "tag": "Skills.Ability.KneeCharge",
+    "tree": "Swordmaster",
+    "display": "Knee Charge"
+  },
+  {
+    "tag": "Skills.Attribute.Blade2",
+    "tree": "Swordmaster",
+    "display": "Long Blade Damage"
+  },
+  {
+    "tag": "Skills.Attribute.Aggression2",
+    "tree": "Swordmaster",
+    "display": "Optimized Hydration"
+  },
+  {
+    "tag": "Skills.Spice.ParryBoost",
+    "tree": "Swordmaster",
+    "display": "Precise Parry"
+  },
+  {
+    "tag": "Skills.Spice.ShadowStrike",
+    "tree": "Swordmaster",
+    "display": "Prescient Strike"
+  },
+  {
+    "tag": "Skills.Perk.ToughLunge",
+    "tree": "Swordmaster",
+    "display": "Reckless Lunge"
+  },
+  {
+    "tag": "Skills.Ability.RiposteInjure",
+    "tree": "Swordmaster",
+    "display": "Retaliate"
+  },
+  {
+    "tag": "Skills.Attribute.Resolve2",
+    "tree": "Swordmaster",
+    "display": "Solid Stance"
+  },
+  {
+    "tag": "Skills.Perk.ThriveOnDanger",
+    "tree": "Swordmaster",
+    "display": "Thrive on Danger"
+  },
+  {
+    "tag": "Skills.Key.CapstoneAggression",
+    "tree": "Swordmaster",
+    "display": "XX_Aggression Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneBlade",
+    "tree": "Swordmaster",
+    "display": "XX_Blade Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneResolve",
+    "tree": "Swordmaster",
+    "display": "XX_Resolve Capstone"
+  },
+  {
+    "tag": "Skills.Key.Swordmaster1",
+    "tree": "Swordmaster",
+    "display": "XX_Swordmaster Phase 1"
+  },
+  {
+    "tag": "Skills.Key.Swordmaster2",
+    "tree": "Swordmaster",
+    "display": "XX_Swordmaster Phase 2"
+  },
+  {
+    "tag": "Skills.Key.Swordmaster3",
+    "tree": "Swordmaster",
+    "display": "XX_Swordmaster Phase 3"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorGrenade_Reduction",
+    "tree": "Trooper",
+    "display": "Anti-gravity Field"
+  },
+  {
+    "tag": "Skills.Ability.AssaultSeeker",
+    "tree": "Trooper",
+    "display": "Assault Seeker"
+  },
+  {
+    "tag": "Skills.Ability.MagneticAttractor",
+    "tree": "Trooper",
+    "display": "Attractor Field"
+  },
+  {
+    "tag": "Skills.Perk.TrooperCooldowns",
+    "tree": "Trooper",
+    "display": "Battle Hardened"
+  },
+  {
+    "tag": "Skills.Perk.BodyShots",
+    "tree": "Trooper",
+    "display": "Center of Mass"
+  },
+  {
+    "tag": "Skills.Ability.CollapseGrenade",
+    "tree": "Trooper",
+    "display": "Collapse Grenade"
+  },
+  {
+    "tag": "Skills.Perk.DeathFromAbove",
+    "tree": "Trooper",
+    "display": "Death from Above"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry2",
+    "tree": "Trooper",
+    "display": "Disruptor Damage"
+  },
+  {
+    "tag": "Skills.Ability.EnergyCapsule",
+    "tree": "Trooper",
+    "display": "Energy Capsule"
+  },
+  {
+    "tag": "Skills.Ability.FragGrenade",
+    "tree": "Trooper",
+    "display": "Explosive Grenade"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry4",
+    "tree": "Trooper",
+    "display": "Field Maintenance"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorGrenade_Amplification",
+    "tree": "Trooper",
+    "display": "Gravity Field"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry6",
+    "tree": "Trooper",
+    "display": "Gunsmith"
+  },
+  {
+    "tag": "Skills.Perk.HeavyWeaponNaib",
+    "tree": "Trooper",
+    "display": "Heavy Weapon Agility"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry5",
+    "tree": "Trooper",
+    "display": "Heavy Weapon Damage"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry1",
+    "tree": "Trooper",
+    "display": "Ranged Damage"
+  },
+  {
+    "tag": "Skills.Spice.GadgetReload",
+    "tree": "Trooper",
+    "display": "Reflexive Reload"
+  },
+  {
+    "tag": "Skills.Attribute.Weaponry3",
+    "tree": "Trooper",
+    "display": "Scattergun Damage"
+  },
+  {
+    "tag": "Skills.Ability.CablePull",
+    "tree": "Trooper",
+    "display": "Shigawire Claw"
+  },
+  {
+    "tag": "Skills.Ability.SuspensorBlast",
+    "tree": "Trooper",
+    "display": "Suspensor Blast"
+  },
+  {
+    "tag": "Skills.Perk.SuspensorDash",
+    "tree": "Trooper",
+    "display": "Suspensor Dash"
+  },
+  {
+    "tag": "Skills.Attribute.SuspensorTech1",
+    "tree": "Trooper",
+    "display": "Suspensor Efficiency"
+  },
+  {
+    "tag": "Skills.Key.CapstoneGadgets",
+    "tree": "Trooper",
+    "display": "XX_Gadgets Capstone"
+  },
+  {
+    "tag": "Skills.Key.CapstoneSuspensorTech",
+    "tree": "Trooper",
+    "display": "XX_Suspensor Tech Capstone"
+  },
+  {
+    "tag": "Skills.Key.Trooper1",
+    "tree": "Trooper",
+    "display": "XX_Trooper Phase 1"
+  },
+  {
+    "tag": "Skills.Key.Trooper2",
+    "tree": "Trooper",
+    "display": "XX_Trooper Phase 2"
+  },
+  {
+    "tag": "Skills.Key.Trooper3",
+    "tree": "Trooper",
+    "display": "XX_Trooper Phase 3"
+  },
+  {
+    "tag": "Skills.Key.CapstoneWeaponry",
+    "tree": "Trooper",
+    "display": "XX_Weaponry Capstone"
+  }
+]

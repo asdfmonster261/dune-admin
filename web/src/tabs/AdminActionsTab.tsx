@@ -44,6 +44,12 @@ type ItemRow = {
   name?: string
 }
 
+type SkillModule = {
+  tag: string
+  tree: string
+  display: string
+}
+
 type ExecuteResponse = {
   ok: boolean
   command: string
@@ -78,7 +84,7 @@ export default function AdminActionsTab() {
   // Shape: { id: "Radiation_Suit", name: "Radiation Suit Mk4" } — name
   // is optional and falls back to the id in the UI.
   const [items, setItems] = useState<ItemRow[]>([])
-  const [skillModules, setSkillModules] = useState<string[]>([])
+  const [skillModules, setSkillModules] = useState<SkillModule[]>([])
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -131,7 +137,7 @@ export default function AdminActionsTab() {
     const entry = catalog.find((c) => c.name === selected)
     if (!entry) return
     if (!(entry.params ?? []).some((p) => p.type === 'module')) return
-    api.get<string[]>('/gm/v2/skill-modules').then(setSkillModules).catch(() => {})
+    api.get<SkillModule[]>('/gm/v2/skill-modules').then(setSkillModules).catch(() => {})
   }, [selected, catalog, skillModules.length])
 
   const filtered = useMemo(() => {
@@ -392,7 +398,7 @@ function ParamInput({
   players: GMPlayer[]
   journeyNodes: string[]
   items: ItemRow[]
-  skillModules: string[]
+  skillModules: SkillModule[]
   onChange: (v: string) => void
 }) {
   if (param.type === 'player') {
@@ -508,12 +514,12 @@ function ParamInput({
 // display name. We need the display name to be primary and the id to
 // be secondary, so we render our own list.
 // Cascading two-dropdown picker for the SkillsSetModuleLevel Module
-// field. The backend still expects a single tag like
-// `Skills.Ability.Hypersprint`, so the picker just splits the choice
-// into Tree (second segment, e.g. "Ability") + Skill (everything after,
-// e.g. "Hypersprint") and joins them on submit. Pasting a full tag into
-// either field still works — when the value parses back into a known
-// Tree+Skill pair we round-trip cleanly.
+// field, grouped by the row's ESkillTree enum (BeneGesserit / Mentat /
+// Trooper / Swordmaster / Planetologist / Hidden / Dev). The backend
+// still expects a single tag like `Skills.Ability.Hypersprint`; the
+// picker just resolves Tree+Skill → tag from the embedded catalog.
+// Skill labels use the row's DisplayName so operators see "Bindu Sprint"
+// rather than "Skills.Ability.Hypersprint".
 function ModuleCascadePicker({
   param,
   value,
@@ -522,60 +528,56 @@ function ModuleCascadePicker({
 }: {
   param: GMParam
   value: string | undefined
-  skillModules: string[]
+  skillModules: SkillModule[]
   onChange: (v: string) => void
 }) {
-  // Split each tag on the second dot: prefix=Skills, tree=second, skill=rest.
-  // E.g. "Skills.Ability.Hypersprint" → tree="Ability", skill="Hypersprint".
-  const parsed = useMemo(() => {
-    const buckets = new Map<string, string[]>()
-    for (const tag of skillModules) {
-      const parts = tag.split('.')
-      if (parts.length < 3 || parts[0] !== 'Skills') continue
-      const tree = parts[1]
-      const skill = parts.slice(2).join('.')
-      const list = buckets.get(tree) ?? []
-      list.push(skill)
-      buckets.set(tree, list)
+  // Index by tree → list of {tag, display}. Sort the trees so the
+  // five canonical classes lead, with Hidden/Dev tucked after.
+  const TREE_ORDER = [
+    'BeneGesserit',
+    'Mentat',
+    'Planetologist',
+    'Swordmaster',
+    'Trooper',
+    'Hidden',
+    'Dev',
+  ]
+  const byTree = useMemo(() => {
+    const m = new Map<string, SkillModule[]>()
+    for (const s of skillModules) {
+      const list = m.get(s.tree) ?? []
+      list.push(s)
+      m.set(s.tree, list)
     }
-    return buckets
+    for (const list of m.values()) {
+      list.sort((a, b) =>
+        (a.display || a.tag).localeCompare(b.display || b.tag),
+      )
+    }
+    return m
   }, [skillModules])
 
-  const trees = useMemo(
-    () => [...parsed.keys()].sort(),
-    [parsed],
-  )
+  const trees = useMemo(() => {
+    const present = [...byTree.keys()]
+    return present.sort((a, b) => {
+      const ai = TREE_ORDER.indexOf(a)
+      const bi = TREE_ORDER.indexOf(b)
+      if (ai === -1 && bi === -1) return a.localeCompare(b)
+      if (ai === -1) return 1
+      if (bi === -1) return -1
+      return ai - bi
+    })
+  }, [byTree])
 
-  // Parse incoming value into (tree, skill). If the caller already set
-  // the field externally we recover the dropdown state from it.
-  const currentParts = (value ?? '').split('.')
-  const currentTree =
-    currentParts.length >= 3 && currentParts[0] === 'Skills'
-      ? currentParts[1]
-      : ''
-  const currentSkill =
-    currentParts.length >= 3 && currentParts[0] === 'Skills'
-      ? currentParts.slice(2).join('.')
-      : ''
-
-  const skillsForTree = useMemo(
-    () => (parsed.get(currentTree) ?? []).slice().sort(),
-    [parsed, currentTree],
-  )
-
-  const setTree = (t: string) => {
-    if (!t) {
-      onChange('')
-      return
-    }
-    // Switching trees clears the skill — the previous skill almost
-    // never exists in the new tree.
-    onChange(`Skills.${t}.`)
-  }
-  const setSkill = (s: string) => {
-    if (!currentTree) return
-    onChange(s ? `Skills.${currentTree}.${s}` : `Skills.${currentTree}.`)
-  }
+  // Tree selection is local state so the operator can pick a tree
+  // first and then browse its skills without the dropdown bouncing
+  // back to empty after each tag-clear. When a tag IS selected the
+  // tree is derived from it (so pasting a full tag round-trips).
+  const treeFromValue =
+    skillModules.find((s) => s.tag === value)?.tree ?? ''
+  const [pickedTree, setPickedTree] = useState('')
+  const currentTree = treeFromValue || pickedTree
+  const skillsForTree = byTree.get(currentTree) ?? []
 
   return (
     <>
@@ -588,20 +590,25 @@ function ModuleCascadePicker({
           className="input"
           style={{ flex: '0 0 35%' }}
           value={currentTree}
-          onChange={(e) => setTree(e.target.value)}
+          onChange={(e) => {
+            const t = e.target.value
+            setPickedTree(t)
+            // Clear the skill — old skill almost never exists in new tree.
+            onChange('')
+          }}
         >
           <option value="">(tree)</option>
           {trees.map((t) => (
             <option key={t} value={t}>
-              {t} ({parsed.get(t)?.length ?? 0})
+              {t} ({byTree.get(t)?.length ?? 0})
             </option>
           ))}
         </select>
         <select
           className="input"
           style={{ flex: '1' }}
-          value={currentSkill}
-          onChange={(e) => setSkill(e.target.value)}
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
           disabled={!currentTree}
         >
           <option value="">
@@ -610,8 +617,8 @@ function ModuleCascadePicker({
               : '(pick a tree first)'}
           </option>
           {skillsForTree.map((s) => (
-            <option key={s} value={s}>
-              {s}
+            <option key={s.tag} value={s.tag}>
+              {s.display || s.tag}
             </option>
           ))}
         </select>
@@ -620,7 +627,7 @@ function ModuleCascadePicker({
         {value
           ? `Sending: ${value}`
           : skillModules.length > 0
-          ? `${skillModules.length} tags across ${trees.length} trees`
+          ? `${skillModules.length} modules across ${trees.length} trees`
           : 'Loading skill-module list…'}
       </p>
       {param.help && <p className="hint">{param.help}</p>}
