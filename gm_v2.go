@@ -172,12 +172,16 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("TeleportToVehicleSpawner"),
 	},
 	"TeleportToPersonalMarker": {
-		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "live",
-		Notes: "Reads PlayerMapMarkerComponent.m_PersonalMarkerActor on the target PC's " +
-			"DunePlayerController and teleports to its world location. Errors out if the player " +
-			"hasn't placed a personal marker.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("TeleportToPersonalMarker"),
+		Name: "TeleportToPersonalMarker", Tier: "movement", Kind: "synth", Status: "deferred",
+		Notes: "Storage hunt incomplete. PlayerMapMarkerComponent.m_PersonalMarkerActor reads " +
+			"<invalid> even when a waypoint is placed. m_MapMarkers.m_MarkerMap contains the " +
+			"base/respawn home (payload=1) but NOT the user-placeable map waypoint (verified " +
+			"2026-06-12 with marker placed far from base — map state unchanged). PingComponent " +
+			".m_GenericPingMarker / .m_EnemyPingMarker are also candidates but their EMapMarker " +
+			"structs have no UPROPERTY fields exposed. Probably the placeable waypoint is purely " +
+			"client-side and only the in-world physical marker actor replicates — different RE " +
+			"angle needed (likely hook the place-marker UFunction to learn the storage path).",
+		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
 	},
 	"PatrolShipTeleportToNearest": {
 		Name: "PatrolShipTeleportToNearest", Tier: "movement", Kind: "synth", Status: "live",
