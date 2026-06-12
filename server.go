@@ -49,6 +49,7 @@ func registerRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/v1/gm/v2/players", handleGMv2Players)
 	mux.HandleFunc("GET /api/v1/gm/v2/journey/nodes", handleGMv2JourneyNodes)
 	mux.HandleFunc("GET /api/v1/gm/v2/items", handleGMv2Items)
+	mux.HandleFunc("GET /api/v1/gm/v2/skill-modules", handleGMv2SkillModules)
 
 	// Phase 7 — ops (announcements + scheduled restarts)
 	mux.HandleFunc("GET /api/v1/ops/announcements", handleOpsAnnouncementsList)

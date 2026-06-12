@@ -207,9 +207,9 @@ var gmCatalog = map[string]*GMEntry{
 			"no-ops with 'No Module data found' logged at LogVerbose. RE'd 2026-06-12.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "Module", Type: "string", Required: true,
+			{Name: "Module", Type: "module", Required: true,
 				Placeholder: "Skills.Key.Mentat",
-				Help: "Skill-key gameplay tag. Verified-valid: Skills.Key.{Mentat,Swordmaster,Planetologist,Trooper,BeneGesserit} or any of those + '1' for the advanced specialization."},
+				Help: "Skill-module gameplay tag. Autocomplete pulls from DT_TrainingModules (145 tags: Abilities, Attributes, Keys, Perks, Spice). Unknown tags silently no-op."},
 			{Name: "Level", Type: "int", Required: true, Min: 0,
 				Placeholder: "5"},
 		},
@@ -1052,6 +1052,13 @@ var (
 // items.json into this directory, and rebuild dune-admin.
 func handleGMv2Items(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, itemsCatalogList)
+}
+
+// handleGMv2SkillModules serves the embedded list of valid module tags
+// for SkillsSetModuleLevel's Module field. Source: DT_TrainingModules
+// runtime dump (see skill_modules.txt).
+func handleGMv2SkillModules(w http.ResponseWriter, r *http.Request) {
+	jsonOK(w, skillModulesList)
 }
 
 func handleGMv2JourneyNodes(w http.ResponseWriter, r *http.Request) {

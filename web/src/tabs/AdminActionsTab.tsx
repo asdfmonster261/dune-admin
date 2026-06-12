@@ -12,7 +12,7 @@ import { api, type Status } from '../api'
 // every command's name, tier, kind (native/synth), status, and param
 // schema. UI renders dynamically from that.
 
-type GMParamType = 'string' | 'int' | 'float' | 'player' | 'node' | 'item'
+type GMParamType = 'string' | 'int' | 'float' | 'player' | 'node' | 'item' | 'module'
 
 type GMParam = {
   name: string
@@ -78,6 +78,7 @@ export default function AdminActionsTab() {
   // Shape: { id: "Radiation_Suit", name: "Radiation Suit Mk4" } — name
   // is optional and falls back to the id in the UI.
   const [items, setItems] = useState<ItemRow[]>([])
+  const [skillModules, setSkillModules] = useState<string[]>([])
   const [status, setStatus] = useState<Status | null>(null)
   const [selected, setSelected] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
@@ -123,6 +124,15 @@ export default function AdminActionsTab() {
     if (!(entry.params ?? []).some((p) => p.type === 'item')) return
     api.get<ItemRow[]>('/gm/v2/items').then(setItems).catch(() => {})
   }, [selected, catalog, items.length])
+
+  // Lazy-load the 145 skill-module tags for SkillsSetModuleLevel.
+  useEffect(() => {
+    if (skillModules.length > 0) return
+    const entry = catalog.find((c) => c.name === selected)
+    if (!entry) return
+    if (!(entry.params ?? []).some((p) => p.type === 'module')) return
+    api.get<string[]>('/gm/v2/skill-modules').then(setSkillModules).catch(() => {})
+  }, [selected, catalog, skillModules.length])
 
   const filtered = useMemo(() => {
     if (!filter) return catalog
@@ -301,6 +311,7 @@ export default function AdminActionsTab() {
                     players={players}
                     journeyNodes={journeyNodes}
                     items={items}
+                    skillModules={skillModules}
                     onChange={(v) =>
                       setArgs((prev) => ({ ...prev, [p.name]: v }))
                     }
@@ -373,6 +384,7 @@ function ParamInput({
   players,
   journeyNodes,
   items,
+  skillModules,
   onChange,
 }: {
   param: GMParam
@@ -380,6 +392,7 @@ function ParamInput({
   players: GMPlayer[]
   journeyNodes: string[]
   items: ItemRow[]
+  skillModules: string[]
   onChange: (v: string) => void
 }) {
   if (param.type === 'player') {
@@ -455,6 +468,36 @@ function ParamInput({
         items={items}
         onChange={onChange}
       />
+    )
+  }
+  if (param.type === 'module') {
+    // Skill-module tag autocomplete — datalist of the 145 module tags
+    // from DT_TrainingModules. Same shape as the journey-node field.
+    return (
+      <>
+        <label className="field-label">
+          {param.name}
+          {param.required && <span className="req">*</span>}
+        </label>
+        <input
+          className="input wide"
+          list="gm-skill-modules"
+          value={value ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder={param.placeholder ?? 'Skills.Key.Mentat'}
+        />
+        <datalist id="gm-skill-modules">
+          {skillModules.map((m) => (
+            <option key={m} value={m} />
+          ))}
+        </datalist>
+        <p className="hint">
+          {skillModules.length > 0
+            ? `${skillModules.length} skill-module tags loaded from DT_TrainingModules — start typing to filter (Ability, Attribute, Key, Perk, Spice).`
+            : 'Loading skill-module list…'}
+        </p>
+        {param.help && <p className="hint">{param.help}</p>}
+      </>
     )
   }
   const isNumeric = param.type === 'int' || param.type === 'float'
