@@ -217,8 +217,13 @@ export default function AdminActionsTab() {
     }
   }
 
-  const isDestructive = selectedEntry?.tier === 'destructive'
-  const destructiveConfirmed = !isDestructive || destructiveConfirm === 'CONFIRM'
+  // Confirm-gate tiers: destructive (data wipes) and console (freeform
+  // execution power tools). Both require typing CONFIRM before Execute
+  // enables — same UI, same magic word.
+  const isGated =
+    selectedEntry?.tier === 'destructive' || selectedEntry?.tier === 'console'
+  const isDestructive = isGated   // legacy alias, used by the existing JSX
+  const destructiveConfirmed = !isGated || destructiveConfirm === 'CONFIRM'
 
   const canExecute =
     !!selectedEntry &&

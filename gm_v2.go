@@ -241,25 +241,42 @@ var gmCatalog = map[string]*GMEntry{
 
 	// ── spawn ──────────────────────────────────────────────────────
 	"SpawnVehicleAt": {
-		Name: "SpawnVehicleAt", Tier: "spawn", Kind: "native", Status: "deferred",
-		Notes:  "Native — spawns ClassName/TemplateName at (X,Y,Z) for PlayerId. Vehicle catalog already RE'd this session.",
+		Name: "SpawnVehicleAt", Tier: "spawn", Kind: "native", Status: "live",
+		Notes: "Spawns ClassName/TemplateName at (X,Y,Z) for PlayerId. Shape RE'd via " +
+			"[[dune-gm-command-envelope]]. Rotation defaults to 1 (yaw degrees), TemplateName to " +
+			"'Default', Persistent to 1.0, Faction to the binary default.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "ClassName", Type: "string", Required: true, Placeholder: "OrnithopterLight"},
-			{Name: "TemplateName", Type: "string", Required: true, Placeholder: "T6_Combat"},
-			{Name: "X", Type: "float", Required: true},
-			{Name: "Y", Type: "float", Required: true},
-			{Name: "Z", Type: "float", Required: true},
+			{Name: "ClassName", Type: "string", Required: true,
+				Placeholder: "BP_Ornithopter_Scout_Atreides_C",
+				Help: "Vehicle class FName (BP_Ornithopter_*_Atreides_C / BP_Sandbike_*_C etc.)."},
+			{Name: "X", Type: "float", Required: false, Placeholder: "0"},
+			{Name: "Y", Type: "float", Required: false, Placeholder: "0"},
+			{Name: "Z", Type: "float", Required: false, Placeholder: "0"},
+			{Name: "Rotation", Type: "float", Required: false, Placeholder: "0",
+				Help: "Yaw in degrees (default 0)."},
+			{Name: "TemplateName", Type: "string", Required: false, Placeholder: "Default"},
+			{Name: "Persistent", Type: "float", Required: false, Placeholder: "1.0",
+				Help: "1.0 = persisted to DB; 0.0 = transient (despawns)."},
+			{Name: "Faction", Type: "string", Required: false, Placeholder: "(binary default)"},
 		},
+		builder: buildSpawnVehicleAt,
 	},
 	"SpawnVehicle": {
-		Name: "SpawnVehicle", Tier: "spawn", Kind: "synth", Status: "deferred",
-		Notes:  "Synth wrapper — reads target player's coords and dispatches SpawnVehicleAt there.",
+		Name: "SpawnVehicle", Tier: "spawn", Kind: "synth", Status: "live",
+		Notes: "Reads target player's pawn position and dispatches SpawnVehicleAt there. " +
+			"Same vehicle parameters as SpawnVehicleAt minus X/Y/Z.",
 		Params: []GMParam{
-			{Name: "PlayerId", Type: "player", Required: true},
-			{Name: "ClassName", Type: "string", Required: true, Placeholder: "OrnithopterLight"},
-			{Name: "TemplateName", Type: "string", Required: true, Placeholder: "T6_Combat"},
+			{Name: "PlayerId", Type: "player", Required: true,
+				Help: "Whose pawn position to spawn next to."},
+			{Name: "ClassName", Type: "string", Required: true,
+				Placeholder: "BP_Ornithopter_Scout_Atreides_C"},
+			{Name: "Rotation", Type: "float", Required: false, Placeholder: "0"},
+			{Name: "TemplateName", Type: "string", Required: false, Placeholder: "Default"},
+			{Name: "Persistent", Type: "float", Required: false, Placeholder: "1.0"},
+			{Name: "Faction", Type: "string", Required: false},
 		},
+		builder: buildSpawnVehicle,
 	},
 
 	// ── player ─────────────────────────────────────────────────────
@@ -387,9 +404,15 @@ var gmCatalog = map[string]*GMEntry{
 	// ── global ─────────────────────────────────────────────────────
 	"UpdateAllWaterFillables": {
 		Name: "UpdateAllWaterFillables", Tier: "global", Kind: "native", Status: "live",
-		Notes:   "Engine-wide refresh of water-fillable actors. No player target; no args. Useful if a sietch's water yields drift out of sync after a config change.",
-		Params:  nil,
-		builder: buildNoArgNative("UpdateAllWaterFillables"),
+		Notes: "Refills every water-fillable actor owned by the target PC up to WaterAmount. " +
+			"Pass PlayerId='*' to refill for ALL connected players. Shape RE'd via [[dune-gm-command-envelope]].",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true,
+				Help: "Player whose owned water-fillables to refill. Use '*' to target everyone."},
+			{Name: "WaterAmount", Type: "int", Required: false, Min: 0,
+				Placeholder: "1000000", Help: "Amount to refill to (default 1000000)."},
+		},
+		builder: buildUpdateAllWaterFillables,
 	},
 
 	// ── cheat (stock UE UCheatManager — Fly/Ghost/Walk) ────────────
@@ -423,26 +446,46 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildCheatManagerOp("Walk"),
 	},
 
-	// ── console (power tools — gated) ──────────────────────────────
+	// ── console (power tools — confirm-gate required) ──────────────
 	"CheatScript": {
-		Name: "CheatScript", Tier: "console", Kind: "native", Status: "deferred",
-		Notes:  "Runs a freeform cheat script string. D4 confirm-gate.",
-		Params: []GMParam{{Name: "Script", Type: "string", Required: true}},
-	},
-	"ServerExec": {
-		Name: "ServerExec", Tier: "console", Kind: "native", Status: "deferred",
-		Notes:  "Runs a freeform UE console command. D4 confirm-gate.",
-		Params: []GMParam{{Name: "Command", Type: "string", Required: true}},
+		Name: "CheatScript", Tier: "console", Kind: "native", Status: "live",
+		Notes: "Runs a NAMED server-side cheat script for the target player. " +
+			"ScriptName is a curated identifier (NOT freeform Lua/UE code), looked up by the engine. " +
+			"Shape RE'd via [[dune-gm-command-envelope]].",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ScriptName", Type: "string", Required: true,
+				Help: "Name of the cheat script as registered with the engine."},
+		},
+		builder: buildPlayerScript("CheatScript", "ScriptName"),
 	},
 	"RunLuaScriptFile": {
-		Name: "RunLuaScriptFile", Tier: "console", Kind: "synth", Status: "deferred",
-		Notes:  "Synth — loadstrings the passed script body in the mod's hook_L. D4 confirm-gate.",
-		Params: []GMParam{{Name: "Script", Type: "string", Required: true}},
+		Name: "RunLuaScriptFile", Tier: "console", Kind: "native", Status: "live",
+		Notes: "Wraps to 'Auto.RunLuaScriptFile <ScriptName>' then dispatches via the target PC's " +
+			"console-exec. Same shape as CheatScript. ScriptName is the file/identifier, not raw code.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ScriptName", Type: "string", Required: true,
+				Help: "Script identifier — engine looks up the file."},
+		},
+		builder: buildPlayerScript("RunLuaScriptFile", "ScriptName"),
+	},
+	"ServerExec": {
+		Name: "ServerExec", Tier: "console", Kind: "native", Status: "live",
+		Notes: "Runs a freeform UE console command against the server's UWorld. " +
+			"No PlayerId — applies globally. Most powerful and dangerous command in the registry; " +
+			"verified live with envelopes like 'slomo 0.5'. Shape RE'd via [[dune-gm-command-envelope]].",
+		Params: []GMParam{
+			{Name: "Exec", Type: "string", Required: true,
+				Placeholder: "slomo 1.0",
+				Help: "Raw UE console command. Be sure."},
+		},
+		builder: buildServerExec,
 	},
 	"obj": {
 		Name: "obj", Tier: "console", Kind: "synth", Status: "deferred",
-		Notes:  "Synth — pipes through a live PC's ProcessConsoleExec.",
-		Params: []GMParam{{Name: "Command", Type: "string", Required: true}},
+		Notes:  "Synth — pipes through a live PC's ProcessConsoleExec. Different invocation path than ServerExec; deferred until use case warrants.",
+		Params: nil,
 	},
 }
 
@@ -786,6 +829,142 @@ func buildTeleportTo(args map[string]any) (string, map[string]any, error) {
 		}
 	}
 	return wrapNative("TeleportTo", []map[string]any{envelope})
+}
+
+// buildUpdateAllWaterFillables — PlayerId + optional WaterAmount.
+// Per [[dune-gm-command-envelope]], default WaterAmount is 1000000.
+func buildUpdateAllWaterFillables(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	envelope := map[string]any{
+		"ServerCommand": "UpdateAllWaterFillables",
+		"PlayerId":      playerId,
+	}
+	if v, ok := args["WaterAmount"]; ok && v != nil && v != "" {
+		n, err := coerceInt("WaterAmount", v)
+		if err != nil {
+			return "", nil, err
+		}
+		if n < 0 {
+			return "", nil, fmt.Errorf("WaterAmount must be >= 0")
+		}
+		envelope["WaterAmount"] = n
+	}
+	return wrapNative("UpdateAllWaterFillables", []map[string]any{envelope})
+}
+
+// buildSpawnVehicleAt — verified shape from [[dune-gm-command-envelope]].
+// PlayerId + ClassName required; X/Y/Z/Rotation/TemplateName/Persistent/
+// Faction are optional with binary defaults.
+func buildSpawnVehicleAt(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	className, err := coerceString("ClassName", args["ClassName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	envelope := map[string]any{
+		"ServerCommand": "SpawnVehicleAt",
+		"PlayerId":      playerId,
+		"ClassName":     className,
+	}
+	for _, name := range []string{"X", "Y", "Z", "Rotation", "Persistent"} {
+		if v, ok := args[name]; ok && v != nil && v != "" {
+			f, err := coerceFloat(name, v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope[name] = f
+		}
+	}
+	for _, name := range []string{"TemplateName", "Faction"} {
+		if v, ok := args[name]; ok && v != nil && v != "" {
+			s, _ := v.(string)
+			s = strings.TrimSpace(s)
+			if s != "" {
+				envelope[name] = s
+			}
+		}
+	}
+	return wrapNative("SpawnVehicleAt", []map[string]any{envelope})
+}
+
+// buildSpawnVehicle — synth wrapper. Routes to DuneOpsBridgeMod's
+// SpawnVehicle handler which reads the target PC's pawn position and
+// dispatches SpawnVehicleAt there.
+func buildSpawnVehicle(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	className, err := coerceString("ClassName", args["ClassName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	out := map[string]any{
+		"PlayerId":  playerId,
+		"ClassName": className,
+	}
+	for _, name := range []string{"Rotation", "Persistent"} {
+		if v, ok := args[name]; ok && v != nil && v != "" {
+			f, err := coerceFloat(name, v)
+			if err != nil {
+				return "", nil, err
+			}
+			out[name] = f
+		}
+	}
+	for _, name := range []string{"TemplateName", "Faction"} {
+		if v, ok := args[name]; ok && v != nil && v != "" {
+			s, _ := v.(string)
+			s = strings.TrimSpace(s)
+			if s != "" {
+				out[name] = s
+			}
+		}
+	}
+	return "SpawnVehicle", out, nil
+}
+
+// buildPlayerScript — for CheatScript / RunLuaScriptFile. Both have
+// the same envelope shape: PlayerId + ScriptName.
+func buildPlayerScript(command, scriptField string) func(map[string]any) (string, map[string]any, error) {
+	return func(args map[string]any) (string, map[string]any, error) {
+		playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, err
+		}
+		script, err := coerceString(scriptField, args[scriptField], true)
+		if err != nil {
+			return "", nil, err
+		}
+		return wrapNative(command, []map[string]any{
+			{
+				"ServerCommand": command,
+				"PlayerId":      playerId,
+				scriptField:     script,
+			},
+		})
+	}
+}
+
+// buildServerExec — freeform UE console command. No PlayerId; runs on
+// the server's UWorld. Verified envelope: {"Exec":"slomo 0.5"}.
+func buildServerExec(args map[string]any) (string, map[string]any, error) {
+	exec, err := coerceString("Exec", args["Exec"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	return wrapNative("ServerExec", []map[string]any{
+		{
+			"ServerCommand": "ServerExec",
+			"Exec":          exec,
+		},
+	})
 }
 
 // buildSinglePlayerNative returns a builder for any native dispatcher
