@@ -1285,7 +1285,13 @@ func buildSetBypassBuildingPermissions(args map[string]any) (string, map[string]
 	if err != nil {
 		return "", nil, err
 	}
-	enable := strings.EqualFold(strings.TrimSpace(enableStr), "true")
+	// Send Enable as a string ("true"/"false") because the Lua handler
+	// parses with json_string_field which only matches quoted values;
+	// a raw JSON bool would silently land as nil and be treated as off.
+	enable := "false"
+	if strings.EqualFold(strings.TrimSpace(enableStr), "true") {
+		enable = "true"
+	}
 	return "SetBypassBuildingPermissions", map[string]any{
 		"PlayerId": playerId,
 		"Enable":   enable,
