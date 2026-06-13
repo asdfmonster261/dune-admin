@@ -460,7 +460,7 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildDestroyTotem,
 	},
 	"DestroyPlaceable": {
-		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "live",
 		Notes: "Aim-trace destroy — wipes the placeable (storage container, work " +
 			"bench, deployable) the target player is looking at. Orphan dispatch " +
 			"via body-direct call (skips the Funcom exec wrapper).",
@@ -468,7 +468,7 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyPlaceable"),
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
 		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
 			"looking at (every connected piece). Orphan dispatch via body-direct " +
 			"call. Use DestroyBuildingPiece for a single piece.",
@@ -476,7 +476,7 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyEntireBuilding"),
 	},
 	"DestroyBuildingPiece": {
-		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "live",
 		Notes: "Aim-trace destroy — wipes only the single building piece the target " +
 			"player is looking at (not the whole structure). Orphan dispatch via " +
 			"body-direct call.",
