@@ -178,11 +178,8 @@ function PlayerDetail({ id }: { id: number }) {
               </tbody>
             </table>
           )}
-          {d.player.player_controller_id && (
-            <GiveCurrencyForm
-              playerControllerId={d.player.player_controller_id}
-              onDone={reload}
-            />
+          {d.player.fls_id && (
+            <GiveCurrencyForm flsId={d.player.fls_id} onDone={reload} />
           )}
         </div>
 
@@ -208,6 +205,9 @@ function PlayerDetail({ id }: { id: number }) {
               </tbody>
             </table>
           )}
+          {d.player.fls_id && (
+            <SetFactionRepForm flsId={d.player.fls_id} onDone={reload} />
+          )}
         </div>
       </div>
 
@@ -222,21 +222,27 @@ function PlayerDetail({ id }: { id: number }) {
             <InventoryTable rows={d.inventory} />
           </div>
         )}
-        <GiveItemForm onDone={reload} />
+        {d.player.fls_id && (
+          <GiveItemForm flsId={d.player.fls_id} onDone={reload} />
+        )}
       </div>
     </>
   )
 }
 
+// All three write forms now route through OpsBridge → DuneCheatManager
+// instead of direct DB writes, so changes take effect immediately on
+// the live game-server (no player relog required — see the
+// dune-db-edit-cache memory).
+
 function GiveCurrencyForm({
-  playerControllerId,
+  flsId,
   onDone,
 }: {
-  playerControllerId: number
+  flsId: string
   onDone: () => void
 }) {
-  const [currencyId, setCurrencyId] = useState('')
-  const [balance, setBalance] = useState('')
+  const [qty, setQty] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -246,13 +252,11 @@ function GiveCurrencyForm({
     setErr(null)
     try {
       await api.post('/players/give-currency', {
-        player_controller_id: playerControllerId,
-        currency_id: Number(currencyId),
-        balance: Number(balance),
+        player_id: flsId,
+        quantity: Number(qty),
       })
       onDone()
-      setCurrencyId('')
-      setBalance('')
+      setQty('')
     } catch (e) {
       setErr((e as Error).message)
     } finally {
@@ -264,28 +268,27 @@ function GiveCurrencyForm({
     <form className="action-row" onSubmit={submit}>
       <input
         className="input small"
-        placeholder="currency id"
-        value={currencyId}
-        onChange={(e) => setCurrencyId(e.target.value)}
+        placeholder="solaris to add"
+        value={qty}
+        onChange={(e) => setQty(e.target.value)}
       />
-      <input
-        className="input small"
-        placeholder="new balance"
-        value={balance}
-        onChange={(e) => setBalance(e.target.value)}
-      />
-      <button className="btn" type="submit" disabled={busy || !currencyId || !balance}>
-        Set
+      <button className="btn" type="submit" disabled={busy || !qty}>
+        Add solaris
       </button>
       {err && <span className="alert inline">{err}</span>}
     </form>
   )
 }
 
-function GiveItemForm({ onDone }: { onDone: () => void }) {
-  const [inventoryId, setInventoryId] = useState('')
-  const [templateId, setTemplateId] = useState('')
-  const [stack, setStack] = useState('1')
+function GiveItemForm({
+  flsId,
+  onDone,
+}: {
+  flsId: string
+  onDone: () => void
+}) {
+  const [itemName, setItemName] = useState('')
+  const [qty, setQty] = useState('1')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<string | null>(null)
 
@@ -295,13 +298,13 @@ function GiveItemForm({ onDone }: { onDone: () => void }) {
     setErr(null)
     try {
       await api.post('/players/give-item', {
-        inventory_id: Number(inventoryId),
-        template_id: templateId,
-        stack_size: Number(stack),
+        player_id: flsId,
+        item_name: itemName,
+        quantity: Number(qty),
       })
       onDone()
-      setTemplateId('')
-      setStack('1')
+      setItemName('')
+      setQty('1')
     } catch (e) {
       setErr((e as Error).message)
     } finally {
@@ -312,25 +315,86 @@ function GiveItemForm({ onDone }: { onDone: () => void }) {
   return (
     <form className="action-row" onSubmit={submit}>
       <input
-        className="input small"
-        placeholder="inventory id"
-        value={inventoryId}
-        onChange={(e) => setInventoryId(e.target.value)}
-      />
-      <input
         className="input"
-        placeholder="template id (e.g. SolarisCoin)"
-        value={templateId}
-        onChange={(e) => setTemplateId(e.target.value)}
+        placeholder="item name (e.g. SalvageMetal)"
+        value={itemName}
+        onChange={(e) => setItemName(e.target.value)}
       />
       <input
         className="input small"
-        placeholder="stack"
-        value={stack}
-        onChange={(e) => setStack(e.target.value)}
+        placeholder="qty"
+        value={qty}
+        onChange={(e) => setQty(e.target.value)}
       />
-      <button className="btn" type="submit" disabled={busy || !inventoryId || !templateId}>
+      <button className="btn" type="submit" disabled={busy || !itemName || !qty}>
         Give item
+      </button>
+      {err && <span className="alert inline">{err}</span>}
+    </form>
+  )
+}
+
+function SetFactionRepForm({
+  flsId,
+  onDone,
+}: {
+  flsId: string
+  onDone: () => void
+}) {
+  const [faction, setFaction] = useState('Atreides')
+  const [amount, setAmount] = useState('')
+  const [mode, setMode] = useState<'set' | 'add'>('set')
+  const [busy, setBusy] = useState(false)
+  const [err, setErr] = useState<string | null>(null)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setErr(null)
+    try {
+      await api.post('/players/set-faction-rep', {
+        player_id: flsId,
+        faction_name: faction,
+        amount: Number(amount),
+        mode,
+      })
+      onDone()
+      setAmount('')
+    } catch (e) {
+      setErr((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <form className="action-row" onSubmit={submit}>
+      <select
+        className="input small"
+        value={faction}
+        onChange={(e) => setFaction(e.target.value)}
+      >
+        <option value="Atreides">Atreides</option>
+        <option value="Harkonnen">Harkonnen</option>
+        <option value="Neutral">Neutral</option>
+        <option value="Smugglers">Smugglers</option>
+      </select>
+      <select
+        className="input small"
+        value={mode}
+        onChange={(e) => setMode(e.target.value as 'set' | 'add')}
+      >
+        <option value="set">Set</option>
+        <option value="add">Add</option>
+      </select>
+      <input
+        className="input small"
+        placeholder="amount"
+        value={amount}
+        onChange={(e) => setAmount(e.target.value)}
+      />
+      <button className="btn" type="submit" disabled={busy || !amount}>
+        Apply
       </button>
       {err && <span className="alert inline">{err}</span>}
     </form>

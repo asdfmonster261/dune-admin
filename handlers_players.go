@@ -271,105 +271,105 @@ func addItemToInventory(ctx context.Context, inventoryID int64, templateID strin
 	})
 }
 
-func handleGiveItem(w http.ResponseWriter, r *http.Request) {
-	if globalDB == nil {
-		jsonErr(w, fmt.Errorf("db not connected"), 503)
+// callOpsBridgeWrite is the shared shape for the three write handlers
+// migrated off direct DB. Routes through globalOpsBridge.Call and
+// returns 503 if OpsBridge is unavailable so the operator gets a clean
+// signal instead of a half-applied state.
+func callOpsBridgeWrite(w http.ResponseWriter, r *http.Request, op, audit string, envelope map[string]any) {
+	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
 		return
 	}
+	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+	if _, err := globalOpsBridge.Call(callCtx, op, envelope); err != nil {
+		auditErr(r, audit, envelope, err)
+		jsonErr(w, err, 500)
+		return
+	}
+	auditOK(r, audit, envelope)
+	jsonOK(w, map[string]any{"ok": true})
+}
+
+func handleGiveItem(w http.ResponseWriter, r *http.Request) {
 	var req struct {
-		InventoryID int64  `json:"inventory_id"`
-		TemplateID  string `json:"template_id"`
-		StackSize   int    `json:"stack_size"`
+		PlayerId   string  `json:"player_id"`
+		ItemName   string  `json:"item_name"`
+		Quantity   int     `json:"quantity"`
+		Durability float64 `json:"durability"`
 	}
 	if err := decode(r, &req); err != nil {
 		jsonErr(w, err, 400)
 		return
 	}
-	if req.InventoryID == 0 || req.TemplateID == "" || req.StackSize <= 0 {
-		jsonErr(w, fmt.Errorf("inventory_id, template_id, and positive stack_size required"), 400)
+	if req.PlayerId == "" || req.ItemName == "" || req.Quantity <= 0 {
+		jsonErr(w, fmt.Errorf("player_id, item_name, and positive quantity required"), 400)
 		return
 	}
-	fields := map[string]any{
-		"inventory_id": req.InventoryID,
-		"template_id":  req.TemplateID,
-		"stack_size":   req.StackSize,
+	durability := req.Durability
+	if durability <= 0 {
+		durability = 1.0
 	}
-	if err := addItemToInventory(r.Context(), req.InventoryID, req.TemplateID, req.StackSize); err != nil {
-		auditErr(r, "players.give-item", fields, err)
-		jsonErr(w, err, 500)
-		return
+	envelope := []map[string]any{
+		{
+			"ServerCommand": "AddItemToInventory",
+			"PlayerId":      req.PlayerId,
+			"ItemName":      req.ItemName,
+			"Quantity":      req.Quantity,
+			"Durability":    durability,
+		},
 	}
-	auditOK(r, "players.give-item", fields)
-	jsonOK(w, map[string]any{"ok": true})
+	envJSON, _ := json.Marshal(envelope)
+	callArgs := map[string]any{
+		"Envelope":    string(envJSON),
+		"Description": fmt.Sprintf("give-item %s x%d", req.ItemName, req.Quantity),
+	}
+	callOpsBridgeWrite(w, r, "GMCommand", "players.give-item", callArgs)
 }
 
 func handleGiveCurrency(w http.ResponseWriter, r *http.Request) {
-	if globalDB == nil {
-		jsonErr(w, fmt.Errorf("db not connected"), 503)
-		return
-	}
 	var req struct {
-		PlayerControllerID int64 `json:"player_controller_id"`
-		CurrencyID         int   `json:"currency_id"`
-		Balance            int64 `json:"balance"`
+		PlayerId string `json:"player_id"`
+		Quantity int    `json:"quantity"`
 	}
 	if err := decode(r, &req); err != nil {
 		jsonErr(w, err, 400)
 		return
 	}
-	if req.PlayerControllerID == 0 {
-		jsonErr(w, fmt.Errorf("player_controller_id required"), 400)
+	if req.PlayerId == "" {
+		jsonErr(w, fmt.Errorf("player_id required"), 400)
 		return
 	}
-	fields := map[string]any{
-		"player_controller_id": req.PlayerControllerID,
-		"currency_id":          req.CurrencyID,
-		"balance":              req.Balance,
-	}
-	_, err := globalDB.Exec(r.Context(), `
-		INSERT INTO dune.player_virtual_currency_balances
-			(player_controller_id, currency_id, balance)
-		VALUES ($1, $2, $3)
-		ON CONFLICT (player_controller_id, currency_id)
-			DO UPDATE SET balance = EXCLUDED.balance
-	`, req.PlayerControllerID, req.CurrencyID, req.Balance)
-	if err != nil {
-		auditErr(r, "players.give-currency", fields, err)
-		jsonErr(w, err, 500)
-		return
-	}
-	auditOK(r, "players.give-currency", fields)
-	jsonOK(w, map[string]any{"ok": true})
+	callOpsBridgeWrite(w, r, "AddSolarisToAccount", "players.give-currency",
+		map[string]any{
+			"PlayerId": req.PlayerId,
+			"Quantity": req.Quantity,
+		})
 }
 
 func handleSetFactionRep(w http.ResponseWriter, r *http.Request) {
-	if globalDB == nil {
-		jsonErr(w, fmt.Errorf("db not connected"), 503)
-		return
-	}
 	var req struct {
-		ActorID    int64 `json:"actor_id"`
-		FactionID  int   `json:"faction_id"`
-		Reputation int   `json:"reputation"`
+		PlayerId    string `json:"player_id"`
+		FactionName string `json:"faction_name"`
+		Amount      int    `json:"amount"`
+		Mode        string `json:"mode"` // "set" (default) or "add"
 	}
 	if err := decode(r, &req); err != nil {
 		jsonErr(w, err, 400)
 		return
 	}
-	fields := map[string]any{
-		"actor_id":   req.ActorID,
-		"faction_id": req.FactionID,
-		"reputation": req.Reputation,
-	}
-	// Use the canonical SRF — guarantees side-effects (tier evals) fire.
-	_, err := globalDB.Exec(r.Context(),
-		"SELECT dune.set_player_faction_reputation($1, $2, $3)",
-		req.ActorID, req.FactionID, req.Reputation)
-	if err != nil {
-		auditErr(r, "players.set-faction-rep", fields, err)
-		jsonErr(w, err, 500)
+	if req.PlayerId == "" || req.FactionName == "" {
+		jsonErr(w, fmt.Errorf("player_id and faction_name required"), 400)
 		return
 	}
-	auditOK(r, "players.set-faction-rep", fields)
-	jsonOK(w, map[string]any{"ok": true})
+	op := "FactionSetReputationAmount"
+	if strings.EqualFold(req.Mode, "add") {
+		op = "FactionAddReputationAmount"
+	}
+	callOpsBridgeWrite(w, r, op, "players.set-faction-rep",
+		map[string]any{
+			"PlayerId":         req.PlayerId,
+			"FactionName":      req.FactionName,
+			"ReputationAmount": req.Amount,
+		})
 }

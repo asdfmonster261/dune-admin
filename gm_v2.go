@@ -242,6 +242,45 @@ var gmCatalog = map[string]*GMEntry{
 		},
 		builder: buildSkillsSetUnspentSkillPoints,
 	},
+	"AddSolarisToAccount": {
+		Name: "AddSolarisToAccount", Tier: "progression", Kind: "synth", Status: "live",
+		Notes: "Adds solaris (the account-level currency) to a target player. " +
+			"DuneCheatManager UFunction. Quantity is additive — no SET form exists " +
+			"natively.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Quantity", Type: "int", Required: true, Placeholder: "1000",
+				Help: "Number of solaris to add (signed; negative subtracts)."},
+		},
+		builder: buildAddSolarisToAccount,
+	},
+	"FactionSetReputationAmount": {
+		Name: "FactionSetReputationAmount", Tier: "progression", Kind: "synth", Status: "live",
+		Notes: "Sets the target's reputation amount with one faction. DuneCheatManager " +
+			"UFunction; FactionName is an FName matched against the FactionSubsystem's " +
+			"loaded FactionDataAsset list (DA_Atreides / DA_Harkonnen / DA_Neutral / " +
+			"DA_Smugglers). The dropdown values are best-effort short names — if Funcom " +
+			"expects the DA_ prefix, switch to the long form.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "FactionName", Type: "string", Required: true,
+				Options: []string{"Atreides", "Harkonnen", "Neutral", "Smugglers"}},
+			{Name: "ReputationAmount", Type: "int", Required: true, Placeholder: "0"},
+		},
+		builder: buildFactionSetReputationAmount,
+	},
+	"FactionAddReputationAmount": {
+		Name: "FactionAddReputationAmount", Tier: "progression", Kind: "synth", Status: "live",
+		Notes: "Additive variant of FactionSetReputationAmount — adds the given amount " +
+			"to the current reputation instead of overwriting it. Same FactionName rules.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "FactionName", Type: "string", Required: true,
+				Options: []string{"Atreides", "Harkonnen", "Neutral", "Smugglers"}},
+			{Name: "ReputationAmount", Type: "int", Required: true, Placeholder: "100"},
+		},
+		builder: buildFactionAddReputationAmount,
+	},
 	"SkillsSetModuleLevel": {
 		Name: "SkillsSetModuleLevel", Tier: "progression", Kind: "native", Status: "live",
 		Notes: "Sets a skill module's level on the target. Module is an FGameplayTag — " +
@@ -1213,6 +1252,58 @@ func buildDestroyTotem(args map[string]any) (string, map[string]any, error) {
 // "DesertSurvivalHandbook"); unknown keys silently no-op (the binary
 // calls UDataTable::FindRow with bWarnIfMissing=true so the only
 // telltale is a log line if the row misses).
+// buildAddSolarisToAccount — synth. Routes to DuneOpsBridgeMod's
+// AddSolarisToAccount handler which calls
+// DuneCheatManager.AddSolarisToAccount(Quantity) on the target PC's
+// cheat manager.
+func buildAddSolarisToAccount(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	qty, err := coerceInt("Quantity", args["Quantity"])
+	if err != nil {
+		return "", nil, err
+	}
+	return "AddSolarisToAccount", map[string]any{
+		"PlayerId": playerId,
+		"Quantity": qty,
+	}, nil
+}
+
+// buildFactionSetReputationAmount / buildFactionAddReputationAmount —
+// synth. Calls the matching DuneCheatManager UFunction on the target PC.
+// FactionName is the FName matched against FactionSubsystem.m_FactionsArray
+// (DA_Atreides/Harkonnen/Neutral/Smugglers). Dropdown ships the short
+// names; if the cheat expects the DA_ prefix the Lua handler can prepend.
+func buildFactionSetReputationAmount(args map[string]any) (string, map[string]any, error) {
+	return buildFactionRepEnvelope("FactionSetReputationAmount", args)
+}
+
+func buildFactionAddReputationAmount(args map[string]any) (string, map[string]any, error) {
+	return buildFactionRepEnvelope("FactionAddReputationAmount", args)
+}
+
+func buildFactionRepEnvelope(op string, args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	faction, err := coerceString("FactionName", args["FactionName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	amount, err := coerceInt("ReputationAmount", args["ReputationAmount"])
+	if err != nil {
+		return "", nil, err
+	}
+	return op, map[string]any{
+		"PlayerId":         playerId,
+		"FactionName":      strings.TrimSpace(faction),
+		"ReputationAmount": amount,
+	}, nil
+}
+
 func buildAddBasicInventoryToCharacter(args map[string]any) (string, map[string]any, error) {
 	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
 	if err != nil {
