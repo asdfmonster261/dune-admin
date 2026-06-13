@@ -279,15 +279,44 @@ var gmCatalog = map[string]*GMEntry{
 	},
 	"AddBasicInventoryToCharacter": {
 		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "live",
-		Notes: "Calls DuneCheatManager.AddBasicInventoryToCharacter on the target PC, " +
-			"granting the \"basic\" kit (EBasicInventoryId=1 row out of " +
-			"DuneGameInstance.m_BasicInventoryDataTable). Most likely the default " +
-			"starter inventory a character spawns with, but kit contents are data-" +
-			"driven so check in-game to verify what shows up. RE'd 2026-06-12 @ " +
-			"0d55b460. UFunction takes the player's display name; we resolve PC by " +
-			"FLS and pull PlayerNamePrivate server-side.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("AddBasicInventoryToCharacter"),
+		Notes: "Grants a curated item kit to the target player. The UFunction parameter " +
+			"`InBasicInventoryName` is misleadingly named — it's the ROW KEY of an " +
+			"inventory kit in DT_ItemGiveItemsTable, not the player's name. RE'd " +
+			"2026-06-13 from FDuneInventoryUtils::GiveBasicInventoryToPlayer body @ " +
+			"0ec0f13d: function calls UDataTable::FindRow(KitName) and silently " +
+			"exits on miss. KitName dropdown lists the 22 rows verified live; pick " +
+			"one and it gets granted to the target character.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "KitName", Type: "string", Required: true,
+				Placeholder: "DesertSurvivalHandbook",
+				Help:        "Kit row key. Unknown keys silently no-op.",
+				Options: []string{
+					"DesertSurvivalHandbook",
+					"ArmorPack_Med_T1_Atre",
+					"ArmorPack_Med_T1_Hark",
+					"ArmorPack_Stillsuit_T1_Nati",
+					"AmmoPack_Dart_Light",
+					"AmmoPack_Dart_Heavy",
+					"AmmoPack_Napalm",
+					"AmmoPack_WeldingMaterial",
+					"MaterialPack_Stone",
+					"RepairPack_WeldingMaterial",
+					"ArmorPack_Heavy_T5_RedScorpion",
+					"ArmorPack_Stillsuit_T5_MaasKharet",
+					"VariantSet_Kirab_Light_03",
+					"VariantSet_Kirab_Light_04",
+					"ArmorPack_Swordmaster",
+					"ArmorPack_BeneGeserit",
+					"ArmorPack_Mentat",
+					"ArmorPack_Trooper",
+					"ArmorPack_Planetologist",
+					"BasePack_Copper",
+					"BasePack_Iron",
+					"BasePack_Steel",
+				}},
+		},
+		builder: buildAddBasicInventoryToCharacter,
 	},
 
 	// ── spawn ──────────────────────────────────────────────────────
@@ -977,6 +1006,28 @@ func buildTravelTo(args map[string]any) (string, map[string]any, error) {
 		"Y":        y,
 		"Z":        z,
 		"Yaw":      yaw,
+	}, nil
+}
+
+// buildAddBasicInventoryToCharacter — synth. Routes to DuneOpsBridgeMod's
+// AddBasicInventoryToCharacter handler which calls
+// DuneCheatManager.AddBasicInventoryToCharacter on the target PC's
+// cheat manager. KitName is the data-table row key (e.g.
+// "DesertSurvivalHandbook"); unknown keys silently no-op (the binary
+// calls UDataTable::FindRow with bWarnIfMissing=true so the only
+// telltale is a log line if the row misses).
+func buildAddBasicInventoryToCharacter(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	kit, err := coerceString("KitName", args["KitName"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	return "AddBasicInventoryToCharacter", map[string]any{
+		"PlayerId": playerId,
+		"KitName":  kit,
 	}, nil
 }
 
