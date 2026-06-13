@@ -280,40 +280,96 @@ var gmCatalog = map[string]*GMEntry{
 	"AddBasicInventoryToCharacter": {
 		Name: "AddBasicInventoryToCharacter", Tier: "inventory", Kind: "synth", Status: "live",
 		Notes: "Grants a curated item kit to the target player. The UFunction parameter " +
-			"`InBasicInventoryName` is misleadingly named — it's the ROW KEY of an " +
-			"inventory kit in DT_ItemGiveItemsTable, not the player's name. RE'd " +
-			"2026-06-13 from FDuneInventoryUtils::GiveBasicInventoryToPlayer body @ " +
-			"0ec0f13d: function calls UDataTable::FindRow(KitName) and silently " +
-			"exits on miss. KitName dropdown lists the 22 rows verified live; pick " +
-			"one and it gets granted to the target character.",
+			"`InBasicInventoryName` is misleadingly named — it's the ROW KEY into " +
+			"CDT_InventoryItems (the composite data table, NOT DT_ItemGiveItemsTable " +
+			"as I first guessed). RE'd 2026-06-13: FindRow miss logs a `LogDataTable` " +
+			"warning naming the table, which is how the right table was identified. " +
+			"118 rows dumped live; misc kits + checkpoint presets + class-specific " +
+			"bundles + vehicle assemblies + schematic bundles. Pick one and it gets " +
+			"granted to the target character.",
 		Params: []GMParam{
 			{Name: "PlayerId", Type: "player", Required: true},
 			{Name: "KitName", Type: "string", Required: true,
-				Placeholder: "DesertSurvivalHandbook",
-				Help:        "Kit row key. Unknown keys silently no-op.",
+				Placeholder: "Default",
+				Help:        "Kit row key in CDT_InventoryItems. Unknown keys silently no-op.",
 				Options: []string{
-					"DesertSurvivalHandbook",
-					"ArmorPack_Med_T1_Atre",
-					"ArmorPack_Med_T1_Hark",
-					"ArmorPack_Stillsuit_T1_Nati",
-					"AmmoPack_Dart_Light",
-					"AmmoPack_Dart_Heavy",
-					"AmmoPack_Napalm",
-					"AmmoPack_WeldingMaterial",
-					"MaterialPack_Stone",
-					"RepairPack_WeldingMaterial",
-					"ArmorPack_Heavy_T5_RedScorpion",
-					"ArmorPack_Stillsuit_T5_MaasKharet",
-					"VariantSet_Kirab_Light_03",
-					"VariantSet_Kirab_Light_04",
-					"ArmorPack_Swordmaster",
-					"ArmorPack_BeneGeserit",
-					"ArmorPack_Mentat",
-					"ArmorPack_Trooper",
-					"ArmorPack_Planetologist",
-					"BasePack_Copper",
-					"BasePack_Iron",
-					"BasePack_Steel",
+					"Default", "Empty", "Starting_Items", "Starting_Items2",
+					"Arrakis_Start", "R5_Basic_Start", "NPE_Start", "NPE_End",
+					"Preflight", "Sandbox_Building",
+					// Class kits
+					"Swordmaster", "Mentat", "BeneGesserit", "Trooper",
+					// Equipment categories
+					"BuildingTools", "BuildingPlaceables", "BuildingMaterials",
+					"Crafting", "Combat", "Gadgets", "Weapons_Ranged",
+					"Mining", "Mining_Unique", "Mining_Mods",
+					"Exploration", "Radiation",
+					// Armor / clothing
+					"Armor_AtreidesLight", "Armor_AtreidesHeavy",
+					"Armor_AtreidesScout", "Clothing_AtreidesFormal",
+					"Stillsuit_Choam1", "ScannerVariations",
+					"LightArmorSet_T6", "HeavyArmorSet_T6",
+					// Weapons sets
+					"WeaponsSet_T5", "WeaponsSet_T6",
+					// Tier balance
+					"T1-General", "T1.5-General",
+					"T2-Assault", "T2.5-Assault", "T2-Skirmish", "T2.5-Skirmish",
+					"T3-Assault", "T3.5-Assault", "T3-Skirmish", "T3.5-Skirmish",
+					// Vehicle assemblies
+					"VehicleCrafting",
+					"VehicleAssembly_Sandbike", "VehicleAssembly_Sandbike_T6",
+					"VehicleAssembly_Buggy", "VehicleAssembly_Buggy_T6",
+					"VehicleAssembly_Tank", "VehicleAssembly_Sandcrawler",
+					"VehicleAssembly_Treadwheel",
+					"VehicleAssembly_OrnithopterLight",
+					"VehicleAssembly_OrnithopterMedium",
+					"VehicleAssembly_OrnithopterTransport",
+					"VehicleAssembly_OrnithopterAssault_T6",
+					"VehicleAssembly_OrnithopterScout_T6",
+					// Schematic bundles
+					"AllToolSchematics", "AllWeaponSchematics",
+					"AllBuildingPatents", "AllClothingSchematics",
+					"AllVehicleSchematics", "AllDecorationPatents",
+					"MTXDecorationPatents",
+					// Shield + power pack tiers
+					"Shield+PowerPack_T02", "Shield+PowerPack_T03",
+					"Shield+PowerPack_T04", "Shield+PowerPack_T05",
+					"Shield+PowerPack_T06", "Shield+PowerPack_T07",
+					"Shield+PowerPack_T08", "Shield+PowerPack_T09",
+					"Shield+PowerPack_T10",
+					"Shield+PowerPack_FastCharge_T02",
+					"Shield+PowerPack_FastCharge_T03",
+					"Shield+PowerPack_FastCharge_T04",
+					"Shield+PowerPack_FastCharge_T05",
+					"Shield+PowerPack_FastCharge_T06",
+					"Shield+PowerPack_FastCharge_T07",
+					"Shield+PowerPack_FastCharge_T08",
+					"Shield+PowerPack_FastCharge_T09",
+					"Shield+PowerPack_FastCharge_T10",
+					// Standalone power packs
+					"PowerPack_T01", "PowerPack_T02", "PowerPack_T03",
+					"PowerPack_T04", "PowerPack_T05", "PowerPack_T06",
+					"PowerPack_T07", "PowerPack_T08", "PowerPack_T09",
+					"PowerPack_T10",
+					// Checkpoint presets (mostly for QA / test flows)
+					"Checkpoint_GameStart", "Checkpoint_BaseBuilding",
+					"Checkpoint_BaseRaiding", "Checkpoint_Windsack",
+					"Checkpoint_Windsack_SpiceMining",
+					"Checkpoint_Windsack_SpiceTrading",
+					"Checkpoint_Ecolab",
+					"Checkpoint_MP_AfterNPE", "Checkpoint_MP_ReachTradepost",
+					"Checkpoint_MP_ReachVillage", "Checkpoint_MP_SpiceSolo",
+					"Checkpoint_MP_SpiceGroup", "Checkpoint_MP_Ecolab",
+					"Checkpoint_RedDesert_R14",
+					"Checkpoint_RedDesert_R15_Part1",
+					"Checkpoint_RedDesert_R15_Part1_Items",
+					"Checkpoint_JabalEifrit_R15_Part1_Schematics",
+					"Checkpoint_JabalEifrit_R15_Part1_Items",
+					"Checkpoint_HaggaRift_R16_Items",
+					"Checkpoint_ShieldWall_R16_Items",
+					"Checkpoint_OodhamSheol_R16_Items",
+					// Misc
+					"ChallengeRoom_Start", "Standalone_TheBloodline",
+					"GAS_Items",
 				}},
 		},
 		builder: buildAddBasicInventoryToCharacter,
