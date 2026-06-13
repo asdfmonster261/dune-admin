@@ -437,46 +437,41 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerNative("CleanPlayerInventory"),
 	},
 	"DestroyTargetVehicle": {
-		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "live",
-		Notes: "Aim-trace destroy — wipes whatever vehicle the target PLAYER is " +
-			"currently looking at. The Destroy* family all do a line trace from the " +
-			"target's camera and destroy the hit actor if it matches the expected " +
-			"type. No coords or target-id input — the target player must be aiming " +
-			"at the thing they want gone. RE'd 2026-06-13 (FUN_0d14e050 = aim trace, " +
-			"FUN_0d0dbe80 = hit-type classifier).",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("DestroyTargetVehicle"),
+		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes: "Re-deferred 2026-06-13 after server crash during first test. " +
+			"Aim-trace destroy works in principle but call path needs more RE: " +
+			"this one IS in DuneCheatManager.Children but requires a " +
+			"bStoreForRecovery bool arg the synth handler wasn't passing. " +
+			"Calling a UFunction with missing required args reads stack garbage " +
+			"as the param, plausible crash candidate.",
+		Params: nil,
 	},
 	"DestroyTotem": {
-		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "live",
-		Notes: "Aim-trace destroy — wipes the totem the target player is looking at. " +
-			"Same shape as the rest of the Destroy* family.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("DestroyTotem"),
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes: "Re-deferred 2026-06-13. UFunction exists at " +
+			"/Script/DuneSandbox.DuneCheatManager.DestroyTotem but is NOT in the " +
+			"class's Children linked list, so cm[name] dispatch returns nil. " +
+			"Also takes a required ItemFilter string arg. Call path needs fn:Call " +
+			"on a resolved UFunction handle (bypasses Children walk) + correct arg.",
+		Params: nil,
 	},
 	"DestroyPlaceable": {
-		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "live",
-		Notes: "Aim-trace destroy — wipes the placeable (storage container, work bench, " +
-			"deployable) the target player is looking at.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("DestroyPlaceable"),
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
+			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
+		Params: nil,
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
-		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
-			"looking at (every connected piece). Walks the building piece array from " +
-			"the aim hit and destroys each one. Use DestroyBuildingPiece for a single " +
-			"piece.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("DestroyEntireBuilding"),
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
+			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
+		Params: nil,
 	},
 	"DestroyBuildingPiece": {
-		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "live",
-		Notes: "Aim-trace destroy — wipes only the single building piece the target " +
-			"player is looking at (not the whole structure). Use DestroyEntireBuilding " +
-			"to wipe the full building.",
-		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
-		builder: buildSinglePlayerSynth("DestroyBuildingPiece"),
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
+			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
+		Params: nil,
 	},
 
 	// ── journey ────────────────────────────────────────────────────
