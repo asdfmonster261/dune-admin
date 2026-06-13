@@ -2,13 +2,74 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 )
+
+// liveOnlineSet calls OpsBridge.ListPlayers and returns the set of FLS
+// hex strings of players currently in-world on the survival container.
+// Returns (nil, false) if OpsBridge is unavailable so callers can fall
+// back to the DB online_status column.
+func liveOnlineSet(ctx context.Context) (map[string]bool, bool) {
+	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+		return nil, false
+	}
+	callCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	defer cancel()
+	reply, err := globalOpsBridge.Call(callCtx, "ListPlayers", nil)
+	if err != nil {
+		return nil, false
+	}
+	var innerJSON string
+	if err := json.Unmarshal(reply, &innerJSON); err != nil {
+		return nil, false
+	}
+	type row struct {
+		PlayerId string `json:"PlayerId"`
+	}
+	var rows []row
+	if err := json.Unmarshal([]byte(innerJSON), &rows); err != nil {
+		return nil, false
+	}
+	out := make(map[string]bool, len(rows))
+	for _, r := range rows {
+		fls := strings.ToUpper(strings.TrimSpace(r.PlayerId))
+		if fls != "" {
+			out[fls] = true
+		}
+	}
+	return out, true
+}
+
+// overlayOnlineStatus mutates rows' online_status based on the live
+// online set, falling back to whatever the DB column said when
+// OpsBridge isn't available. Matches on accounts.user (FLS hex)
+// which is selected as fls_id in handleListPlayers / handleGetPlayer.
+func overlayOnlineStatus(rows []map[string]any, live map[string]bool) {
+	if live == nil {
+		return
+	}
+	for _, row := range rows {
+		var fls string
+		if v, ok := row["fls_id"].(string); ok {
+			fls = strings.ToUpper(strings.TrimSpace(v))
+		}
+		if fls == "" {
+			continue
+		}
+		if live[fls] {
+			row["online_status"] = "Online"
+		} else {
+			row["online_status"] = "Offline"
+		}
+	}
+}
 
 // Phase 3 — Players tab.
 //
@@ -55,7 +116,8 @@ func handleListPlayers(w http.ResponseWriter, r *http.Request) {
 		       ps.last_login_time    AS last_login,
 		       a.platform_name       AS platform_name,
 		       a.platform_id         AS platform_id,
-		       a.funcom_id           AS funcom_id
+		       a.funcom_id           AS funcom_id,
+		       a."user"              AS fls_id
 		FROM dune.player_state ps
 		LEFT JOIN dune.accounts a ON a.id = ps.account_id
 		%s
@@ -66,6 +128,9 @@ func handleListPlayers(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		jsonErr(w, err, 500)
 		return
+	}
+	if live, ok := liveOnlineSet(r.Context()); ok {
+		overlayOnlineStatus(rows, live)
 	}
 	jsonOK(w, rows)
 }
@@ -110,6 +175,9 @@ func handleGetPlayer(w http.ResponseWriter, r *http.Request) {
 	if len(playerRows) == 0 {
 		jsonErr(w, fmt.Errorf("player not found"), 404)
 		return
+	}
+	if live, ok := liveOnlineSet(ctx); ok {
+		overlayOnlineStatus(playerRows, live)
 	}
 	player := playerRows[0]
 	accountID := toInt64(player["account_id"])

@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
 // Phase 10 — Map tab.
@@ -61,38 +64,55 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Pull every player whose PlayerCharacter pawn is currently on the Hagga
-	// Basin partition. We surface online_status as well so the UI can dim
-	// offline characters — useful when chasing "where did so-and-so log out".
-	// `dune.actor_state.state` flips off `Default` whenever the actor is
-	// physically not in the world — VehicleBackup / BaseBackup / Travel /
-	// AbortedAuthorityTransfer / VehicleRecovery. The row stays in
-	// `dune.actors` (with stale coords) until the backup is restored.
-	// Filtering to `Default` (or no state row) is how we tell "actually
-	// present right now" from "stored somewhere."
-	players, _, err := queryAll(ctx, globalDB, `
-		SELECT a.id                                  AS actor_id,
-		       a.partition_id,
-		       ps.account_id,
-		       ps.player_state_id,
-		       ps.character_name,
-		       ps.online_status::text               AS online_status,
-		       ps.last_login_time,
-		       ((a.transform).location).x           AS world_x,
-		       ((a.transform).location).y           AS world_y,
-		       ((a.transform).location).z           AS world_z
-		FROM dune.actors a
-		JOIN dune.player_state ps
-		  ON ps.player_pawn_id = a.id
-		LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
-		WHERE a.class = '/Game/Dune/Characters/Player/BP_DunePlayerCharacter.BP_DunePlayerCharacter_C'
-		  AND a.map  = $1
-		  AND (ast.state IS NULL OR ast.state = 'Default')
-		ORDER BY ps.character_name
-	`, mapName)
-	if err != nil {
-		jsonErr(w, err, 500)
-		return
+	// Players layer — for HaggaBasin (this game-server-survival
+	// container's world), we read live PC positions over OpsBridge so
+	// coords are real-time instead of DB-flush-stale. DD (or any
+	// non-Hagga partition) doesn't have OpsBridge access from
+	// dune-admin, so it falls back to the actor_state-filtered DB query.
+	// The Lua handler emits the same field shape as the DB query, with
+	// account_id / player_state_id / last_login_time zeroed out (the
+	// React renderer ignores them with optional-chaining).
+	var players []map[string]any
+	usedOpsBridge := false
+	if mapName == "HaggaBasin" && globalOpsBridge != nil && globalOpsBridge.Connected() {
+		obCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		reply, obErr := globalOpsBridge.Call(obCtx, "MapPlayers", nil)
+		cancel()
+		if obErr == nil {
+			var innerJSON string
+			if err := json.Unmarshal(reply, &innerJSON); err == nil {
+				if err := json.Unmarshal([]byte(innerJSON), &players); err == nil {
+					usedOpsBridge = true
+				}
+			}
+		}
+	}
+	if !usedOpsBridge {
+		var err error
+		players, _, err = queryAll(ctx, globalDB, `
+			SELECT a.id                                  AS actor_id,
+			       a.partition_id,
+			       ps.account_id,
+			       ps.player_state_id,
+			       ps.character_name,
+			       ps.online_status::text               AS online_status,
+			       ps.last_login_time,
+			       ((a.transform).location).x           AS world_x,
+			       ((a.transform).location).y           AS world_y,
+			       ((a.transform).location).z           AS world_z
+			FROM dune.actors a
+			JOIN dune.player_state ps
+			  ON ps.player_pawn_id = a.id
+			LEFT JOIN dune.actor_state ast ON ast.actor_id = a.id
+			WHERE a.class = '/Game/Dune/Characters/Player/BP_DunePlayerCharacter.BP_DunePlayerCharacter_C'
+			  AND a.map  = $1
+			  AND (ast.state IS NULL OR ast.state = 'Default')
+			ORDER BY ps.character_name
+		`, mapName)
+		if err != nil {
+			jsonErr(w, err, 500)
+			return
+		}
 	}
 
 	// Deaths — one row per character whose last-known death was in Hagga.
