@@ -445,34 +445,43 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyTargetVehicle"),
 	},
 	"DestroyTotem": {
-		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Permanently deferred 2026-06-13. Orphan UFunction (not in " +
-			"DuneCheatManager.Children). Both call paths tried crash the server: " +
-			"(1) fn:Call via ProcessEvent — Children walk hits corrupt metadata; " +
-			"(2) Native.CallRuntime3 directly on NativeFunc — body crashes mid-" +
-			"execution, likely because it relies on UE script-stack thread-locals " +
-			"that ProcessEvent normally sets up. Need either a debugger session " +
-			"OR a working APlayerController::ConsoleCommand cheat-routing path " +
-			"to call these correctly. See [[dune-orphan-ufunction-dispatch]].",
-		Params: nil,
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the totem the target player is looking at. " +
+			"Orphan UFunction: NativeFunc points at a Funcom-specific 32-byte EXEC " +
+			"WRAPPER that derefs the FFrame arg; the synth handler skips it and " +
+			"jumps to NativeFunc+0x20 (the body) via Native.CallRuntime3. ItemFilter " +
+			"is an FString; empty = any totem.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ItemFilter", Type: "string", Required: false,
+				Placeholder: "(empty = any)",
+				Help:        "Optional totem-class filter string."},
+		},
+		builder: buildDestroyTotem,
 	},
 	"DestroyPlaceable": {
-		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Permanently deferred 2026-06-13. Same orphan-dispatch dead end " +
-			"as DestroyTotem — see [[dune-orphan-ufunction-dispatch]].",
-		Params: nil,
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the placeable (storage container, work " +
+			"bench, deployable) the target player is looking at. Orphan dispatch " +
+			"via body-direct call (skips the Funcom exec wrapper).",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyPlaceable"),
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Permanently deferred 2026-06-13. Same orphan-dispatch dead end " +
-			"as DestroyTotem — see [[dune-orphan-ufunction-dispatch]].",
-		Params: nil,
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
+			"looking at (every connected piece). Orphan dispatch via body-direct " +
+			"call. Use DestroyBuildingPiece for a single piece.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyEntireBuilding"),
 	},
 	"DestroyBuildingPiece": {
-		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Permanently deferred 2026-06-13. Same orphan-dispatch dead end " +
-			"as DestroyTotem — see [[dune-orphan-ufunction-dispatch]].",
-		Params: nil,
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes only the single building piece the target " +
+			"player is looking at (not the whole structure). Orphan dispatch via " +
+			"body-direct call.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyBuildingPiece"),
 	},
 
 	// ── journey ────────────────────────────────────────────────────
