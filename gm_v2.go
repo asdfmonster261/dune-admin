@@ -195,13 +195,19 @@ var gmCatalog = map[string]*GMEntry{
 		Params: nil,
 	},
 	"TeleportToSandworm": {
-		Name: "TeleportToSandworm", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes: "Sandworms aren't actor-classed — they're spline-managed by SandwormSubsystem, " +
-			"with SandwormRootComponent + SandwormDisplacementSplineComponent attached to a manager " +
-			"singleton. To target a 'live worm' we'd need to walk SandwormSubsystem's internal " +
-			"spawn array and pick a spline anchor point. Deferred until the use case justifies " +
-			"that RE pass.",
-		Params: []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		Name: "TeleportToSandworm", Tier: "movement", Kind: "synth", Status: "live",
+		Notes: "Teleports the target player onto a live sandworm. Walks USandwormSubsystem." +
+			"m_SandwormTerritories (TArray<ASandwormTerritory*>), reads each territory's " +
+			"currently-spawned sandworm pawn at +0x358, picks territory[Index % Count], and " +
+			"teleports to the worm's surface position + HeightOffset (cm). Returns a 'no live " +
+			"worms' error when the territory list is empty (typical when no players are in " +
+			"the deep desert / haven't triggered wormsign).",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Index", Type: "int", Required: true, Placeholder: "0", Help: "Territory index (modulo live worm count)"},
+			{Name: "HeightOffset", Type: "float", Required: true, Placeholder: "500", Help: "Centimeters above the worm's surface position"},
+		},
+		builder: buildTeleportToSandworm,
 	},
 	"TeleportToVehicleSpawner": {
 		Name: "TeleportToVehicleSpawner", Tier: "movement", Kind: "synth", Status: "live",
@@ -1084,6 +1090,34 @@ func buildTravelTo(args map[string]any) (string, map[string]any, error) {
 		"Y":        y,
 		"Z":        z,
 		"Yaw":      yaw,
+	}, nil
+}
+
+// buildTeleportToSandworm — synth. Routes to DuneOpsBridgeMod's
+// TeleportToSandworm handler which calls
+// DuneCheatManager.TeleportToSandworm(Index, HeightOffset) on the
+// resolved PC's cheat manager. The cheat reads SandwormSubsystem.
+// m_SandwormTerritories[Index % live-count], grabs the territory's
+// active sandworm pawn (+0x358), and teleports the PC to it.
+// Handler pre-checks territory count so an empty list returns a
+// friendly "no live worms" error instead of a silent no-op.
+func buildTeleportToSandworm(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	idxF, err := coerceFloat("Index", args["Index"])
+	if err != nil {
+		return "", nil, err
+	}
+	height, err := coerceFloat("HeightOffset", args["HeightOffset"])
+	if err != nil {
+		return "", nil, err
+	}
+	return "TeleportToSandworm", map[string]any{
+		"PlayerId":     playerId,
+		"Index":        int(idxF),
+		"HeightOffset": height,
 	}, nil
 }
 
