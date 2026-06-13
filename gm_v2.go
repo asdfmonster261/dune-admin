@@ -445,34 +445,43 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyTargetVehicle"),
 	},
 	"DestroyTotem": {
-		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13. Orphan UFunction — fn:Call crashes the " +
-			"server (confirmed via DestroyBuildingPiece on same call path). " +
-			"NativeFunc on orphans points at bad memory. Needs direct call via " +
-			"Native.CallRuntime to the inner cheat-manager body addr, bypassing " +
-			"ProcessEvent's frame setup.",
-		Params: nil,
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the totem the target player is looking at. " +
+			"Orphan UFunction; invoked via Native.CallRuntime3 directly on the " +
+			"NativeFunc pointer (verified 2026-06-13 to point at the body). " +
+			"ItemFilter is an FString; empty assumed = any totem.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ItemFilter", Type: "string", Required: false,
+				Placeholder: "(empty = any)",
+				Help:        "Optional totem-class filter string."},
+		},
+		builder: buildDestroyTotem,
 	},
 	"DestroyPlaceable": {
-		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13 — orphan UFunction, fn:Call crashes server. " +
-			"Same call-path issue as DestroyBuildingPiece.",
-		Params: nil,
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the placeable (storage container, work " +
+			"bench, deployable) the target player is looking at. Orphan UFunction; " +
+			"invoked via Native.CallRuntime3 on the NativeFunc body addr.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyPlaceable"),
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13 — orphan UFunction, fn:Call crashes server. " +
-			"Same call-path issue as DestroyBuildingPiece.",
-		Params: nil,
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
+			"looking at (every connected piece). Orphan UFunction; invoked via " +
+			"Native.CallRuntime3 on the NativeFunc body addr.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyEntireBuilding"),
 	},
 	"DestroyBuildingPiece": {
-		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13 after fn:Call crashed the server. Orphan " +
-			"UFunction — present at /Script/DuneSandbox.DuneCheatManager.<name> " +
-			"but not in Children list, and its NativeFunc pointer crashes when " +
-			"called via ProcessEvent. Needs direct call via Native.CallRuntime to " +
-			"the inner cheat-manager body addr (FUN_0d14c4b0 in 1988751).",
-		Params: nil,
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes only the single building piece the target " +
+			"player is looking at. Orphan UFunction; invoked via Native.CallRuntime3 " +
+			"on the NativeFunc body addr (verified 2026-06-13 to point at " +
+			"FUN_0d14c4b0). Use DestroyEntireBuilding to wipe the full structure.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyBuildingPiece"),
 	},
 
 	// ── journey ────────────────────────────────────────────────────
