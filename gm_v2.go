@@ -445,7 +445,7 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyTargetVehicle"),
 	},
 	"DestroyTotem": {
-		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "live",
 		Notes: "Aim-trace destroy — wipes the totem the target player is looking at. " +
 			"Orphan UFunction: NativeFunc points at a Funcom-specific 32-byte EXEC " +
 			"WRAPPER that derefs the FFrame arg; the synth handler skips it and " +
