@@ -1581,7 +1581,7 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		writeAudit(AuditEvent{
 			Action: "gm.execute",
 			OK:     false,
@@ -1597,7 +1597,10 @@ func handleGMv2Execute(w http.ResponseWriter, r *http.Request) {
 
 	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, opName, callArgs)
+	// Per-player ops succeed on whichever bridge holds the PC; server-
+	// wide ops (ServiceBroadcast) succeed on both. opsAnyCall returns
+	// the first success so per-player ops get a useful reply quickly.
+	reply, err := opsAnyCall(callCtx, opName, callArgs)
 	if err != nil {
 		writeAudit(AuditEvent{
 			Action: "gm.execute",
@@ -1662,46 +1665,47 @@ func handleGMv2Players(w http.ResponseWriter, r *http.Request) {
 	}
 	gmPlayersCacheMu.Unlock()
 
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
 		return
 	}
 
-	callCtx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
-	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "ListPlayers", nil)
-	if err != nil {
-		jsonErr(w, err, 500)
-		return
-	}
-
-	// The Lua handler can't return tables — the cppmod handler contract
-	// is string-or-nil. We get back a JSON-encoded STRING whose contents
-	// are themselves a JSON array. Unmarshal twice.
-	//
-	// Unmarshal-side tags MUST exactly match the keys the Lua mod emits
-	// (PascalCase: "Name", "PlayerId", "IdType"). Go's case-insensitive
-	// matcher fails on snake_case-vs-CamelCase pairs ("player_id" vs
-	// "playerid"), so the public GMPlayer tags can't double as parse
-	// tags. We parse into a transient struct + copy.
+	// Union both bridges' ListPlayers so the AdminActions dropdown
+	// includes players on either map. Dedup on PlayerId (FLS) in case
+	// the same player briefly shows up on both during a map travel.
 	type wireRow struct {
 		Name     string `json:"Name"`
 		PlayerId string `json:"PlayerId"`
 		IdType   string `json:"IdType"`
 	}
-	var innerJSON string
-	if err := json.Unmarshal(reply, &innerJSON); err != nil {
-		jsonErr(w, fmt.Errorf("decode outer: %w", err), 500)
-		return
-	}
-	var rows []wireRow
-	if err := json.Unmarshal([]byte(innerJSON), &rows); err != nil {
-		jsonErr(w, fmt.Errorf("decode inner: %w", err), 500)
-		return
-	}
-	players := make([]GMPlayer, len(rows))
-	for i, r := range rows {
-		players[i] = GMPlayer{Name: r.Name, PlayerId: r.PlayerId, IdType: r.IdType}
+	seen := make(map[string]struct{})
+	var players []GMPlayer
+	for _, b := range opsBridges() {
+		callCtx, cancel := context.WithTimeout(r.Context(), 3*time.Second)
+		reply, err := b.Call(callCtx, "ListPlayers", nil)
+		cancel()
+		if err != nil {
+			continue
+		}
+		var innerJSON string
+		if err := json.Unmarshal(reply, &innerJSON); err != nil {
+			continue
+		}
+		var rows []wireRow
+		if err := json.Unmarshal([]byte(innerJSON), &rows); err != nil {
+			continue
+		}
+		for _, wr := range rows {
+			key := strings.ToUpper(strings.TrimSpace(wr.PlayerId))
+			if key == "" {
+				continue
+			}
+			if _, dup := seen[key]; dup {
+				continue
+			}
+			seen[key] = struct{}{}
+			players = append(players, GMPlayer{Name: wr.Name, PlayerId: wr.PlayerId, IdType: wr.IdType})
+		}
 	}
 
 	gmPlayersCacheMu.Lock()
@@ -1753,14 +1757,17 @@ func handleGMv2JourneyNodes(w http.ResponseWriter, r *http.Request) {
 	}
 	gmJourneyNodesCacheMu.Unlock()
 
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
 		return
 	}
 
 	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "ListJourneyNodes", nil)
+	// Journey nodes come from a static design data asset that's the
+	// same in both worlds; any bridge can answer. opsAnyCall returns
+	// the first success so we don't wait on a slow second bridge.
+	reply, err := opsAnyCall(callCtx, "ListJourneyNodes", nil)
 	if err != nil {
 		jsonErr(w, err, 500)
 		return

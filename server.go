@@ -150,6 +150,7 @@ func handleStatus(w http.ResponseWriter, r *http.Request) {
 		"docker_connected":       globalDocker != nil,
 		"orchestrator_connected": globalOrchestrator != nil,
 		"opsbridge_connected":    globalOpsBridge != nil && globalOpsBridge.Connected(),
+		"opsbridge_dd_connected": globalOpsBridgeDD != nil && globalOpsBridgeDD.Connected(),
 		"battlegroup_ns":         battlegroupNS,
 	})
 }

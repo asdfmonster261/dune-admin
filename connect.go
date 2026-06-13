@@ -17,6 +17,14 @@ var (
 	globalDocker       *DockerClient
 	globalOrchestrator *OrchestratorClient
 	globalOpsBridge    *OpsBridgeClient
+
+	// Phase 10 — DD's mini-UE4SS runs the same OpsBridgeCppMod inside
+	// the deep desert container. dune-admin maintains a second
+	// persistent client so per-player ops (TeleportTo, AddItem, etc.)
+	// reach the player wherever they actually are, and live state
+	// queries (ListPlayers, MapPlayers) cover both worlds. nil-safe at
+	// every call site; DD being down just routes everything to survival.
+	globalOpsBridgeDD *OpsBridgeClient
 )
 
 // connect bootstraps the docker socket + orchestrator HTTPS clients + the
@@ -50,6 +58,15 @@ func connect(ctx context.Context) error {
 		log.Printf("opsbridge client configured (addr=%s)", opsBridgeAddr)
 	} else {
 		errs = append(errs, fmt.Errorf("OPSBRIDGE_ADDR or OPSBRIDGE_PASSWORD not set"))
+	}
+
+	// Deep Desert OpsBridge. Optional — empty addr means single-bridge
+	// mode (survival only). When configured, the per-player router
+	// fans out to both bridges so a player on DD gets the same admin
+	// surface as one on Hagga.
+	if opsBridgeDDAddr != "" && opsBridgeDDPassword != "" {
+		globalOpsBridgeDD = NewOpsBridgeClient(opsBridgeDDAddr, opsBridgeDDPassword)
+		log.Printf("opsbridge-dd client configured (addr=%s)", opsBridgeDDAddr)
 	}
 
 	// Postgres pool.

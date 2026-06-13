@@ -292,7 +292,7 @@ func opsWorkerTick(ctx context.Context) {
 // — survival-container restarts (1–2 min cycle) shouldn't permanently
 // fail scheduled broadcasts.
 func executeAnnouncement(ctx context.Context, a *AnnouncementJob) {
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		// Stay pending; worker retries every 15 s. Audit only once per
 		// minute would be ideal, but the audit log here would be noisy
 		// across long outages — emit a single log line instead.
@@ -307,7 +307,8 @@ func executeAnnouncement(ctx context.Context, a *AnnouncementJob) {
 	}
 	callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "Broadcast", args)
+	// Fan-out broadcast so players on DD see the HUD popup too.
+	reply, err := opsBroadcastCall(callCtx, "Broadcast", args)
 
 	a.UpdatedAt = nowRFC3339()
 	if err != nil {
@@ -376,7 +377,7 @@ func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
 		}
 	}
 
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		r.WarnError = "OpsBridge disconnected at warn time"
 		writeAudit(AuditEvent{
 			Action: "ops.restart.warn",
@@ -402,7 +403,8 @@ func emitRestartWarning(ctx context.Context, r *RestartJob, runAt time.Time) {
 	}
 	callCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "Broadcast", args)
+	// Fan-out so players on DD see the restart warning too.
+	reply, err := opsBroadcastCall(callCtx, "Broadcast", args)
 	if err != nil {
 		r.WarnError = err.Error()
 		writeAudit(AuditEvent{

@@ -12,41 +12,6 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-// liveOnlineSet calls OpsBridge.ListPlayers and returns the set of FLS
-// hex strings of players currently in-world on the survival container.
-// Returns (nil, false) if OpsBridge is unavailable so callers can fall
-// back to the DB online_status column.
-func liveOnlineSet(ctx context.Context) (map[string]bool, bool) {
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
-		return nil, false
-	}
-	callCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	defer cancel()
-	reply, err := globalOpsBridge.Call(callCtx, "ListPlayers", nil)
-	if err != nil {
-		return nil, false
-	}
-	var innerJSON string
-	if err := json.Unmarshal(reply, &innerJSON); err != nil {
-		return nil, false
-	}
-	type row struct {
-		PlayerId string `json:"PlayerId"`
-	}
-	var rows []row
-	if err := json.Unmarshal([]byte(innerJSON), &rows); err != nil {
-		return nil, false
-	}
-	out := make(map[string]bool, len(rows))
-	for _, r := range rows {
-		fls := strings.ToUpper(strings.TrimSpace(r.PlayerId))
-		if fls != "" {
-			out[fls] = true
-		}
-	}
-	return out, true
-}
-
 // overlayOnlineStatus mutates rows' online_status based on the live
 // online set, falling back to whatever the DB column said when
 // OpsBridge isn't available. Matches on accounts.user (FLS hex)
@@ -271,18 +236,17 @@ func addItemToInventory(ctx context.Context, inventoryID int64, templateID strin
 	})
 }
 
-// callOpsBridgeWrite is the shared shape for the three write handlers
-// migrated off direct DB. Routes through globalOpsBridge.Call and
-// returns 503 if OpsBridge is unavailable so the operator gets a clean
-// signal instead of a half-applied state.
+// callOpsBridgeWrite routes the call through opsAnyCall so it reaches
+// the player wherever they are (Hagga or DD). Returns 503 if no
+// OpsBridge is reachable at all.
 func callOpsBridgeWrite(w http.ResponseWriter, r *http.Request, op, audit string, envelope map[string]any) {
-	if globalOpsBridge == nil || !globalOpsBridge.Connected() {
+	if !opsAnyConnected() {
 		jsonErr(w, fmt.Errorf("OpsBridge disconnected"), 503)
 		return
 	}
 	callCtx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-	if _, err := globalOpsBridge.Call(callCtx, op, envelope); err != nil {
+	if _, err := opsAnyCall(callCtx, op, envelope); err != nil {
 		auditErr(r, audit, envelope, err)
 		jsonErr(w, err, 500)
 		return

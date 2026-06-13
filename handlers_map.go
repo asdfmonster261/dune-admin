@@ -64,19 +64,18 @@ func handleMapPlayers(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	// Players layer — for HaggaBasin (this game-server-survival
-	// container's world), we read live PC positions over OpsBridge so
-	// coords are real-time instead of DB-flush-stale. DD (or any
-	// non-Hagga partition) doesn't have OpsBridge access from
-	// dune-admin, so it falls back to the actor_state-filtered DB query.
-	// The Lua handler emits the same field shape as the DB query, with
-	// account_id / player_state_id / last_login_time zeroed out (the
-	// React renderer ignores them with optional-chaining).
+	// Players layer — route by map name. HaggaBasin → survival
+	// OpsBridge, DeepDesert(_<n>) → DD OpsBridge. Either container
+	// only sees players physically connected to its own world, so the
+	// per-map routing is correct. Falls back to the DB query when no
+	// bridge is reachable for the requested map (e.g. DD container
+	// down on-demand) — the React renderer ignores the zero-default
+	// fields that the Lua handler can't populate.
 	var players []map[string]any
 	usedOpsBridge := false
-	if mapName == "HaggaBasin" && globalOpsBridge != nil && globalOpsBridge.Connected() {
+	if bridge := opsBridgeForMap(mapName); bridge != nil {
 		obCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		reply, obErr := globalOpsBridge.Call(obCtx, "MapPlayers", nil)
+		reply, obErr := bridge.Call(obCtx, "MapPlayers", nil)
 		cancel()
 		if obErr == nil {
 			var innerJSON string

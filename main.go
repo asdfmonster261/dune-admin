@@ -44,6 +44,13 @@ var (
 
 	opsBridgeAddr     string
 	opsBridgePassword string
+
+	// Phase 10 — second OpsBridge connection for the deep desert
+	// game-server. Empty addr disables it. Each container runs the
+	// same mini-UE4SS .so so the cppmod listener is on the same
+	// in-container port (9877); only the docker hostname differs.
+	opsBridgeDDAddr     string
+	opsBridgeDDPassword string
 )
 
 func envOr(key, def string) string {
@@ -89,6 +96,8 @@ func init() {
 	flag.StringVar(&allowedOrigins, "allowed-origins", envOr("ALLOWED_ORIGINS", ""), "Comma-separated extra CORS origins (same-origin always allowed)")
 	flag.StringVar(&opsBridgeAddr, "opsbridge-addr", envOr("OPSBRIDGE_ADDR", "game-server-survival:9877"), "OpsBridgeCppMod listener address (host:port)")
 	flag.StringVar(&opsBridgePassword, "opsbridge-password", envOr("OPSBRIDGE_PASSWORD", "devonly"), "OpsBridgeCppMod auth password — must match [Bridge].Password in the cppmod's config.ini")
+	flag.StringVar(&opsBridgeDDAddr, "opsbridge-dd-addr", envOr("OPSBRIDGE_DD_ADDR", "game-server-deepdesert-1:9877"), "Deep Desert OpsBridgeCppMod listener address (host:port). Empty disables the second bridge.")
+	flag.StringVar(&opsBridgeDDPassword, "opsbridge-dd-password", envOr("OPSBRIDGE_DD_PASSWORD", "devonly"), "Deep Desert OpsBridgeCppMod auth password")
 }
 
 func main() {
@@ -114,6 +123,9 @@ func main() {
 	// callers in C2+ get a "currently connected" snapshot via Connected().
 	if globalOpsBridge != nil {
 		go globalOpsBridge.Run(rootCtx)
+	}
+	if globalOpsBridgeDD != nil {
+		go globalOpsBridgeDD.Run(rootCtx)
 	}
 
 	mux := http.NewServeMux()
