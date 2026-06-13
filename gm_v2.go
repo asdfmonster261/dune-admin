@@ -636,6 +636,21 @@ var gmCatalog = map[string]*GMEntry{
 		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
 		builder: buildCheatManagerOp("Walk"),
 	},
+	"SetBypassBuildingPermissions": {
+		Name: "SetBypassBuildingPermissions", Tier: "cheat", Kind: "synth", Status: "live",
+		Notes: "Toggles the target player's 'bypass building permissions' flag on " +
+			"DuneCheatManager. RE'd as a candidate for skipping the base-backup tool " +
+			"cooldown / DD restriction since setting BuildingSettings.m_BaseBackupToolTime" +
+			"RestrictionInSeconds=0 server-side doesn't unblock placement on its own. " +
+			"Pair with `Enable=true` to allow, `Enable=false` to restore the gate.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "Enable", Type: "string", Required: true,
+				Options: []string{"true", "false"},
+				Help:    "true = bypass on; false = bypass off"},
+		},
+		builder: buildSetBypassBuildingPermissions,
+	},
 
 	// ── console (power tools — confirm-gate required) ──────────────
 	"CheatScript": {
@@ -1256,6 +1271,27 @@ func buildDestroyTotem(args map[string]any) (string, map[string]any, error) {
 // AddSolarisToAccount handler which calls
 // DuneCheatManager.AddSolarisToAccount(Quantity) on the target PC's
 // cheat manager.
+// buildSetBypassBuildingPermissions — synth. Routes to DuneOpsBridgeMod's
+// SetBypassBuildingPermissions handler which calls
+// DuneCheatManager.SetBypassBuildingPermissions(Enable) on the target
+// PC's cheat manager. Candidate for unblocking the base-backup tool
+// when the duration setting alone isn't enough.
+func buildSetBypassBuildingPermissions(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	enableStr, err := coerceString("Enable", args["Enable"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	enable := strings.EqualFold(strings.TrimSpace(enableStr), "true")
+	return "SetBypassBuildingPermissions", map[string]any{
+		"PlayerId": playerId,
+		"Enable":   enable,
+	}, nil
+}
+
 func buildAddSolarisToAccount(args map[string]any) (string, map[string]any, error) {
 	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
 	if err != nil {
