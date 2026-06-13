@@ -187,13 +187,6 @@ var gmCatalog = map[string]*GMEntry{
 		},
 		builder: buildTravelTo,
 	},
-	"TravelToDimension": {
-		Name: "TravelToDimension", Tier: "movement", Kind: "synth", Status: "deferred",
-		Notes: "Cross-sietch travel (one Survival_1 partition → another). Deferred " +
-			"until multi-sietch is enabled on this stack — see [[dune-multi-sietch-plan]]. " +
-			"With one sietch active the destination set is empty so nothing to wire.",
-		Params: nil,
-	},
 	"TeleportToSandworm": {
 		Name: "TeleportToSandworm", Tier: "movement", Kind: "synth", Status: "live",
 		Notes: "Teleports the target player onto a live sandworm. Walks USandwormSubsystem." +
@@ -642,9 +635,29 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildServerExec,
 	},
 	"obj": {
-		Name: "obj", Tier: "console", Kind: "synth", Status: "deferred",
-		Notes:  "Synth — pipes through a live PC's ProcessConsoleExec. Different invocation path than ServerExec; deferred until use case warrants.",
-		Params: nil,
+		Name: "obj", Tier: "console", Kind: "synth", Status: "live",
+		Notes: "UE engine UObject debug commands. Known subcommands (list/count/classes) " +
+			"are reimplemented in Lua via DuneOpsBridgeMod so the output comes back as " +
+			"structured JSON in the reply. Anything else (refs/mark/load/savepackage/etc.) " +
+			"is passed through to the target PC's ConsoleCommand — those write to the UE " +
+			"log; admin reply is just 'sent, see docker logs'.\n" +
+			"  • list class=X  — count + names of every live instance of class X\n" +
+			"  • count          — top-N classes by live instance count\n" +
+			"  • classes        — list of every UClass\n" +
+			"  • raw            — passthrough (provide Args)",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true,
+				Help: "Whose PC routes the passthrough. Ignored by list/count/classes."},
+			{Name: "Subcommand", Type: "string", Required: true,
+				Options: []string{"list", "count", "classes", "raw"}},
+			{Name: "ClassName", Type: "string", Required: false,
+				Help: "list only — class FName to match. Example: SandwormPawn, BP_DunePlayerController_C."},
+			{Name: "Args", Type: "string", Required: false,
+				Help: "raw only — appended to 'obj '. Example: 'refs name=BP_Foo_C_2147000123'."},
+			{Name: "Limit", Type: "int", Required: false, Min: 1, Max: 5000,
+				Help: "list/count only — cap result rows. Default 200."},
+		},
+		builder: buildObj,
 	},
 }
 
@@ -1119,6 +1132,62 @@ func buildTeleportToSandworm(args map[string]any) (string, map[string]any, error
 		"Index":        int(idxF),
 		"HeightOffset": height,
 	}, nil
+}
+
+// buildObj — synth router for UE's `obj` engine console family.
+// `list`, `count`, `classes` are Lua-reimplemented in DuneOpsBridgeMod
+// so the result lands as structured JSON in the reply. `raw` falls
+// through to the target PC's ConsoleCommand which writes to the UE
+// log; admin reply for that path is the OpsBridge ack only.
+func buildObj(args map[string]any) (string, map[string]any, error) {
+	sub, err := coerceString("Subcommand", args["Subcommand"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	sub = strings.ToLower(strings.TrimSpace(sub))
+	envelope := map[string]any{"Subcommand": sub}
+	switch sub {
+	case "list":
+		cn, err := coerceString("ClassName", args["ClassName"], true)
+		if err != nil {
+			return "", nil, fmt.Errorf("obj list: ClassName required")
+		}
+		envelope["ClassName"] = strings.TrimSpace(cn)
+		if v, ok := args["Limit"]; ok && v != nil && v != "" {
+			n, err := coerceFloat("Limit", v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope["Limit"] = int(n)
+		}
+	case "count":
+		if v, ok := args["Limit"]; ok && v != nil && v != "" {
+			n, err := coerceFloat("Limit", v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope["Limit"] = int(n)
+		}
+	case "classes":
+		if v, ok := args["Limit"]; ok && v != nil && v != "" {
+			n, err := coerceFloat("Limit", v)
+			if err != nil {
+				return "", nil, err
+			}
+			envelope["Limit"] = int(n)
+		}
+	case "raw":
+		pid, err := coerceString("PlayerId", args["PlayerId"], true)
+		if err != nil {
+			return "", nil, fmt.Errorf("obj raw: PlayerId required")
+		}
+		envelope["PlayerId"] = pid
+		rawArgs, _ := coerceString("Args", args["Args"], false)
+		envelope["Args"] = strings.TrimSpace(rawArgs)
+	default:
+		return "", nil, fmt.Errorf("obj: unknown Subcommand %q (expected list|count|classes|raw)", sub)
+	}
+	return "Obj", envelope, nil
 }
 
 // buildDestroyTotem — synth, PlayerId + optional ItemFilter.
