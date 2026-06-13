@@ -468,7 +468,7 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerSynth("DestroyPlaceable"),
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
 		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
 			"looking at (every connected piece). Orphan dispatch via body-direct " +
 			"call. Use DestroyBuildingPiece for a single piece.",
