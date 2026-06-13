@@ -437,41 +437,49 @@ var gmCatalog = map[string]*GMEntry{
 		builder: buildSinglePlayerNative("CleanPlayerInventory"),
 	},
 	"DestroyTargetVehicle": {
-		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13 after server crash during first test. " +
-			"Aim-trace destroy works in principle but call path needs more RE: " +
-			"this one IS in DuneCheatManager.Children but requires a " +
-			"bStoreForRecovery bool arg the synth handler wasn't passing. " +
-			"Calling a UFunction with missing required args reads stack garbage " +
-			"as the param, plausible crash candidate.",
-		Params: nil,
+		Name: "DestroyTargetVehicle", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the vehicle the target player is looking at. " +
+			"Invoked via fn:Call(cm, false) — the false is bStoreForRecovery " +
+			"(destroy outright vs. move to recovery bin). RE'd 2026-06-13.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyTargetVehicle"),
 	},
 	"DestroyTotem": {
-		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13. UFunction exists at " +
-			"/Script/DuneSandbox.DuneCheatManager.DestroyTotem but is NOT in the " +
-			"class's Children linked list, so cm[name] dispatch returns nil. " +
-			"Also takes a required ItemFilter string arg. Call path needs fn:Call " +
-			"on a resolved UFunction handle (bypasses Children walk) + correct arg.",
-		Params: nil,
+		Name: "DestroyTotem", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the totem the target player is looking at. " +
+			"ItemFilter param shape RE'd via UFunction probe; semantics not yet " +
+			"verified. Empty filter assumed = any totem.",
+		Params: []GMParam{
+			{Name: "PlayerId", Type: "player", Required: true},
+			{Name: "ItemFilter", Type: "string", Required: false,
+				Placeholder: "(empty = any)",
+				Help:        "Optional totem-class filter string. Leave empty for any totem."},
+		},
+		builder: buildDestroyTotem,
 	},
 	"DestroyPlaceable": {
-		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
-			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
-		Params: nil,
+		Name: "DestroyPlaceable", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the placeable (storage container, work bench, " +
+			"deployable) the target player is looking at. Orphan UFunction (not in " +
+			"Children list); invoked via fn:Call(cm) on the path-resolved handle.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyPlaceable"),
 	},
 	"DestroyEntireBuilding": {
-		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
-			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
-		Params: nil,
+		Name: "DestroyEntireBuilding", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes the WHOLE building the target player is " +
+			"looking at (every connected piece). Orphan UFunction; invoked via " +
+			"fn:Call(cm). Use DestroyBuildingPiece for a single piece.",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyEntireBuilding"),
 	},
 	"DestroyBuildingPiece": {
-		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "deferred",
-		Notes: "Re-deferred 2026-06-13. Orphan UFunction (not in Children list). " +
-			"Zero args. Needs fn:Call(cm) via the StaticFindObject-resolved handle.",
-		Params: nil,
+		Name: "DestroyBuildingPiece", Tier: "destructive", Kind: "synth", Status: "live",
+		Notes: "Aim-trace destroy — wipes only the single building piece the target " +
+			"player is looking at (not the whole structure). Orphan UFunction; " +
+			"invoked via fn:Call(cm).",
+		Params:  []GMParam{{Name: "PlayerId", Type: "player", Required: true}},
+		builder: buildSinglePlayerSynth("DestroyBuildingPiece"),
 	},
 
 	// ── journey ────────────────────────────────────────────────────
@@ -1075,6 +1083,22 @@ func buildTravelTo(args map[string]any) (string, map[string]any, error) {
 		"Z":        z,
 		"Yaw":      yaw,
 	}, nil
+}
+
+// buildDestroyTotem — synth, PlayerId + optional ItemFilter.
+// The UFunction takes a required FString ItemFilter; we pass empty
+// when the operator leaves it blank.
+func buildDestroyTotem(args map[string]any) (string, map[string]any, error) {
+	playerId, err := coerceString("PlayerId", args["PlayerId"], true)
+	if err != nil {
+		return "", nil, err
+	}
+	envelope := map[string]any{"PlayerId": playerId}
+	if v, ok := args["ItemFilter"]; ok && v != nil && v != "" {
+		s, _ := v.(string)
+		envelope["ItemFilter"] = strings.TrimSpace(s)
+	}
+	return "DestroyTotem", envelope, nil
 }
 
 // buildAddBasicInventoryToCharacter — synth. Routes to DuneOpsBridgeMod's
